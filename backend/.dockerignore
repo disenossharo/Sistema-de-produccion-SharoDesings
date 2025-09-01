@@ -1,0 +1,43 @@
+# Archivos y carpetas que NO se incluirán en la imagen Docker
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.env.local
+.env.production
+.env.test
+
+# Archivos de prueba
+test-*.js
+*.test.js
+*.spec.js
+
+# Logs
+logs
+*.log
+
+# Archivos temporales
+tmp
+temp
+.tmp
+.temp
+
+# Archivos de desarrollo
+.vscode
+.idea
+*.swp
+*.swo
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración local
+config/local.js
+config/development.js
+
+# Archivos de backup
+*.bak
+*.backup

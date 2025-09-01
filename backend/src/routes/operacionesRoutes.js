@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const operacionesController = require('../controllers/operacionesController');
+const { authenticateToken, requireAdmin } = require('../middleware/authMiddleware');
+
+// Rutas para operaciones
+router.get('/', authenticateToken, operacionesController.getOperaciones); // Admin ve todas
+router.get('/activas', authenticateToken, operacionesController.getOperacionesActivas); // Empleados ven solo activas
+router.get('/:id', authenticateToken, operacionesController.getOperacion);
+router.post('/', authenticateToken, requireAdmin, operacionesController.createOperacion);
+router.put('/:id', authenticateToken, requireAdmin, operacionesController.updateOperacion);
+router.delete('/:id', authenticateToken, requireAdmin, operacionesController.deleteOperacion);
+
+module.exports = router;

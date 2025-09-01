@@ -1,0 +1,437 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* =====================================================
+   LOGIN ELEGANTE Y CENTRADO
+   ===================================================== */
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+/* Fondo con elementos decorativos */
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  animation: float 20s ease-in-out infinite;
+}
+
+.bg-circle-1 {
+  width: 300px;
+  height: 300px;
+  top: -150px;
+  right: -150px;
+  animation-delay: 0s;
+}
+
+.bg-circle-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -100px;
+  left: -100px;
+  animation-delay: 5s;
+}
+
+.bg-circle-3 {
+  width: 150px;
+  height: 150px;
+  top: 50%;
+  right: 10%;
+  animation-delay: 10s;
+}
+
+.bg-circle-4 {
+  width: 100px;
+  height: 100px;
+  bottom: 20%;
+  left: 10%;
+  animation-delay: 15s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.1;
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+    opacity: 0.2;
+  }
+}
+
+/* Contenido principal */
+.login-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+/* Header con logo y título */
+.login-header {
+  margin-bottom: 3rem;
+}
+
+.logo-container {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  animation: logoGlow 3s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+}
+
+.logo-image {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.company-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 0.5rem;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 2px;
+  animation: titleSlideIn 1s ease-out;
+}
+
+.company-subtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 300;
+  animation: subtitleSlideIn 1s ease-out 0.2s both;
+}
+
+@keyframes titleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtitleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Formulario */
+.login-form-wrapper {
+  margin-bottom: 2rem;
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: cardSlideIn 1s ease-out 0.4s both;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-card-body {
+  padding: 3rem 2.5rem;
+}
+
+.login-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-description {
+  font-size: 1.1rem;
+  color: #718096;
+  margin: 0 0 2.5rem;
+  font-weight: 400;
+}
+
+.login-alert {
+  border-radius: 12px;
+  border: none;
+  margin-bottom: 2rem;
+  font-weight: 500;
+  animation: alertShake 0.5s ease-in-out;
+}
+
+@keyframes alertShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.login-form {
+  text-align: left;
+}
+
+.form-group {
+  margin-bottom: 2rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  display: block;
+}
+
+.form-control-custom {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1.1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-control-custom:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.form-control-custom::placeholder {
+  color: #a0aec0;
+  font-weight: 400;
+}
+
+.form-control-custom:disabled {
+  background: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+/* Botón de login */
+.login-button {
+  width: 100%;
+  padding: 1.25rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 16px;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+}
+
+.login-button:hover::before {
+  left: 100%;
+}
+
+.login-button:active {
+  transform: translateY(-1px);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Footer */
+.login-footer {
+  margin-top: 2rem;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+  animation: footerFadeIn 1s ease-out 0.6s both;
+}
+
+@keyframes footerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 1rem;
+  }
+  
+  .company-title {
+    font-size: 2.5rem;
+  }
+  
+  .login-card-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  .bg-circle-1,
+  .bg-circle-2 {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .company-title {
+    font-size: 2rem;
+  }
+  
+  .company-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .login-title {
+    font-size: 1.75rem;
+  }
+  
+  .login-card-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .form-control-custom {
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+  }
+  
+  .login-button {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+  }
+}

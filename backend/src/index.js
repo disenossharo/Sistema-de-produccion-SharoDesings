@@ -65,6 +65,37 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
 });
 
+// Middleware de logging para debug
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
+// Verificar que las rutas estén registradas
+console.log('📋 Rutas registradas:');
+console.log('- /api/auth/*');
+console.log('- /api/empleados/*');
+console.log('- /api/produccion/*');
+console.log('- /api/referencias/*');
+console.log('- /api/operaciones/*');
+
+// Middleware de manejo de errores 404
+app.use('*', (req, res) => {
+  console.log(`❌ Ruta no encontrada: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ 
+    error: 'Ruta no encontrada', 
+    method: req.method, 
+    path: req.originalUrl,
+    availableRoutes: [
+      'GET /health',
+      'POST /api/auth/login',
+      'GET /api/empleados',
+      'GET /api/produccion',
+      'GET /api/referencias'
+    ]
+  });
+});
+
 // Inicializar base de datos y servidor
 async function initializeServer() {
   try {

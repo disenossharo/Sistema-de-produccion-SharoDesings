@@ -152,10 +152,11 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v7.0 - SIN CORS_ORIGIN');
+    console.log('🔧 CORS configurado para Railway - v8.0 - CONFIGURACIÓN NIXPACKS');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
     console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');
+    console.log('🔧 Usando nixpacks.toml para configuración específica');
     
     // Probar conexión a PostgreSQL
     const isConnected = await testConnection();

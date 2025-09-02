@@ -100,7 +100,7 @@ console.log('- /api/auth/*');
 console.log('- /api/empleados/*');
 console.log('- /api/produccion/*');
 console.log('- /api/referencias/*');
-console.log('- /api/operaciones/*');
+console.log('- /api/operaciones/*');  
 
 // Middleware de manejo de errores 404
 app.use('*', (req, res) => {
@@ -123,7 +123,8 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v4.0 - MIDDLEWARE CORREGIDO');
+    console.log('🔧 CORS configurado para Railway - v5.0 - REDESPLEGUE FORZADO');
+    console.log('📅 Timestamp:', new Date().toISOString());
     
     // Probar conexión a PostgreSQL
     const isConnected = await testConnection();

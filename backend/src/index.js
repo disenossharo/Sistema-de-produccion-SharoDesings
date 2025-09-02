@@ -58,7 +58,7 @@ async function initializeServer() {
     await createTables();
     
     // Iniciar servidor
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor backend escuchando en el puerto ${PORT}`);
       console.log(`📊 Base de datos PostgreSQL conectada exitosamente`);
       console.log(`🔗 API disponible en: http://localhost:${PORT}/api`);

@@ -23,7 +23,7 @@ Una vez desplegado, tu aplicación estará disponible en:
 ### 1.2 Conectar repositorio
 1. En Railway, haz clic en "New Project"
 2. Selecciona "Deploy from GitHub repo"
-3. Busca y selecciona: `jeronimoMC/Sistema-de-produccion-Sharo`
+3. Busca y selecciona: `jermix8/SharoDesigns`
 4. Railway detectará automáticamente que es un proyecto Node.js
 
 ### 1.3 Configurar variables de entorno
@@ -63,7 +63,7 @@ cd backend && npm install && npm start
 
 ### 2.2 Importar proyecto
 1. En Vercel, haz clic en "New Project"
-2. Busca y selecciona: `jeronimoMC/Sistema-de-produccion-Sharo`
+2. Busca y selecciona: `jermix8/SharoDesigns`
 3. Vercel detectará automáticamente la configuración de `vercel.json`
 
 ### 2.3 Configurar variables de entorno

@@ -12,9 +12,9 @@ Esta guía te ayudará a desplegar el **Sistema de Producción Sharo Designs** e
 ## 🌐 URLs de Producción
 
 Una vez desplegado, tu aplicación estará disponible en:
-- **Frontend**: `https://tu-app.vercel.app`
-- **Backend**: `https://tu-backend.railway.app`
-- **API**: `https://tu-backend.railway.app/api`
+- **Frontend**: `https://sistema-produccion-sharo.vercel.app`
+- **Backend**: `https://sharo-backend-production.railway.app`
+- **API**: `https://sharo-backend-production.railway.app/api`
 
 ## 🎯 PASO 1: Desplegar Backend en Railway
 
@@ -26,7 +26,7 @@ Una vez desplegado, tu aplicación estará disponible en:
 ### 1.2 Conectar repositorio
 1. En Railway, haz clic en "New Project"
 2. Selecciona "Deploy from GitHub repo"
-3. Busca y selecciona: `jermix8/SharoDesigns`
+3. Busca y selecciona: `disenossharo/Sistema-de-produccion-SharoDesings`
 4. Railway detectará automáticamente que es un proyecto Node.js
 
 ### 1.3 Configurar variables de entorno
@@ -66,14 +66,14 @@ cd backend && npm install && npm start
 
 ### 2.2 Importar proyecto
 1. En Vercel, haz clic en "New Project"
-2. Busca y selecciona: `jermix8/SharoDesigns`
+2. Busca y selecciona: `disenossharo/Sistema-de-produccion-SharoDesings`
 3. Vercel detectará automáticamente la configuración de `vercel.json`
 
 ### 2.3 Configurar variables de entorno
 En Vercel, ve a "Settings" → "Environment Variables" y agrega:
 
 ```env
-VITE_API_URL=https://tu-backend.railway.app/api
+VITE_API_URL=https://sharo-backend-production.railway.app/api
 ```
 
 ### 2.4 Configurar build
@@ -163,6 +163,14 @@ Si tienes problemas:
 1. Revisa los logs en Railway y Vercel
 2. Verifica las variables de entorno
 3. Asegúrate de que el repositorio esté actualizado
+
+## 🏢 **Información de la Empresa**
+
+**Sharo Designs**
+- **Email**: disenossharo1302@gmail.com
+- **Repositorio**: [Sistema-de-produccion-SharoDesings](https://github.com/disenossharo/Sistema-de-produccion-SharoDesings)
+- **Desarrollador**: Jermix8 (Prácticas Profesionales)
+- **Email del desarrollador**: 8jermix@gmail.com
 
 ## 🎉 ¡Listo!
 

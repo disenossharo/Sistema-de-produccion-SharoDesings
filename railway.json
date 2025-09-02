@@ -3,7 +3,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd backend && npm start",
-    "buildCommand": "cd backend && npm install"
+    "startCommand": "cd backend && npm start"
   }
 }

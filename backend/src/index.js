@@ -51,6 +51,7 @@ app.get('/health', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
+console.log('🔧 CORS configurado para Railway - v2.0');
     
     // Probar conexión a PostgreSQL
     const isConnected = await testConnection();

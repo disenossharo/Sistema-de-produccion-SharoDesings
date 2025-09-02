@@ -1,6 +1,9 @@
-# SharoDesigns - Sistema de Producción
+# Sistema de Producción Sharo Designs
 
-Sistema de gestión de producción para la empresa Sharo, desarrollado con React + Vite (frontend) y Node.js + Express + PostgreSQL (backend).
+Sistema de gestión de producción para la empresa **Sharo Designs**, desarrollado con React + Vite (frontend) y Node.js + Express + PostgreSQL (backend).
+
+## 🏢 **Empresa**
+**Sharo Designs** - Sistema de gestión de producción textil
 
 ## 🚀 Características
 
@@ -37,8 +40,8 @@ Sistema de gestión de producción para la empresa Sharo, desarrollado con React
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/jermix8/SharoDesigns.git
-cd SharoDesigns
+git clone git@github.com:disenossharo/Sistema-de-produccion-SharoDesings.git
+cd Sistema-de-produccion-SharoDesings
 ```
 
 ### 2. Configurar la base de datos
@@ -161,10 +164,17 @@ VITE_API_URL=http://localhost:3001/api
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-## 👨‍💻 Autor
+## 👨‍💻 Desarrollador
 
-**Jermix8**
+**Jermix8** - Prácticas Profesionales
 - GitHub: [@jermix8](https://github.com/jermix8)
+- Email: 8jermix@gmail.com
+
+## 🏢 **Empresa Propietaria**
+
+**Sharo Designs**
+- Email: disenossharo1302@gmail.com
+- Repositorio: [Sistema-de-produccion-SharoDesings](https://github.com/disenossharo/Sistema-de-produccion-SharoDesings)
 
 ## 📞 Soporte
 

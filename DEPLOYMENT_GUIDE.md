@@ -1,8 +1,11 @@
-# 🚀 Guía de Despliegue - Sistema de Producción Sharo
+# 🚀 Guía de Despliegue - Sistema de Producción Sharo Designs
+
+## 🏢 **Empresa**
+**Sharo Designs** - Sistema de gestión de producción textil
 
 ## 📋 Resumen
 
-Esta guía te ayudará a desplegar tu aplicación en producción usando:
+Esta guía te ayudará a desplegar el **Sistema de Producción Sharo Designs** en producción usando:
 - **Vercel** para el frontend (React)
 - **Railway** para el backend (Node.js) y base de datos (PostgreSQL)
 

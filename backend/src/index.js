@@ -31,6 +31,14 @@ app.use((req, res, next) => {
   
   next();
 });
+
+// Middleware adicional para forzar CORS después de las rutas
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
 app.use(express.json());
 app.use(express.static('uploads'));
 
@@ -47,11 +55,21 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
 });
 
+// Middleware final para sobrescribir headers de Railway
+app.use((req, res, next) => {
+  // Forzar headers CORS en cada respuesta
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  next();
+});
+
 // Inicializar base de datos y servidor
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-console.log('🔧 CORS configurado para Railway - v2.0');
+    console.log('🔧 CORS configurado para Railway - v3.0 - FORZADO');
     
     // Probar conexión a PostgreSQL
     const isConnected = await testConnection();

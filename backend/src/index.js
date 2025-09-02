@@ -42,6 +42,16 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('uploads'));
 
+// Middleware final para sobrescribir headers de Railway
+app.use((req, res, next) => {
+  // Forzar headers CORS en cada respuesta
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  next();
+});
+
 // Usar rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuariosRoutes);
@@ -53,16 +63,6 @@ app.use('/api/operaciones', operacionesRoutes);
 // Endpoint de salud
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
-});
-
-// Middleware final para sobrescribir headers de Railway
-app.use((req, res, next) => {
-  // Forzar headers CORS en cada respuesta
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'false');
-  next();
 });
 
 // Inicializar base de datos y servidor

@@ -17,7 +17,12 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: true, // Permitir cualquier origen
+  origin: process.env.CORS_ORIGIN || [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://sistema-de-produccion-sharo.vercel.app',
+    'https://sistema-de-produccion-sharo-8lrd1zjzj-sharodesings-projects.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']

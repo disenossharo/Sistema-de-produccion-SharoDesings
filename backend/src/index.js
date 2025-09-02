@@ -65,6 +65,35 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
 });
 
+// Endpoint de debug
+app.get('/debug', (req, res) => {
+  res.json({
+    status: 'OK',
+    version: 'v6.0 - CONFIGURACIÓN CORREGIDA',
+    timestamp: new Date().toISOString(),
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
+      DB_PORT: process.env.DB_PORT ? 'SET' : 'NOT SET',
+      DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET',
+      DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
+      DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
+      JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET'
+    },
+    routes: [
+      'GET /health',
+      'GET /debug',
+      'GET /test',
+      'GET /api/test',
+      'POST /api/auth/login',
+      'GET /api/empleados',
+      'GET /api/produccion',
+      'GET /api/referencias'
+    ]
+  });
+});
+
 // Ruta de prueba simple
 app.get('/test', (req, res) => {
   res.json({ 

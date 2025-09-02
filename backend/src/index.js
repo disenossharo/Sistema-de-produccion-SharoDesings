@@ -17,26 +17,10 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (como mobile apps o curl)
-    if (!origin) return callback(null, true);
-    
-    // Permitir localhost para desarrollo
-    if (origin.includes('localhost')) return callback(null, true);
-    
-    // Permitir cualquier dominio de Vercel
-    if (origin.includes('.vercel.app')) return callback(null, true);
-    
-    // Permitir cualquier dominio de Netlify
-    if (origin.includes('.netlify.app')) return callback(null, true);
-    
-    // Permitir el dominio específico de la aplicación
-    if (origin === 'https://sistema-de-produccion-sharo.vercel.app') return callback(null, true);
-    
-    // Rechazar otros orígenes
-    callback(new Error('No permitido por CORS'));
-  },
-  credentials: true
+  origin: true, // Permitir cualquier origen
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json());
 app.use(express.static('uploads'));

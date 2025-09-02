@@ -21,6 +21,7 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:5173',
     'https://*.vercel.app',
+    'https://sistema-de-produccion-sharo.vercel.app',
     'https://*.netlify.app'
   ],
   credentials: true

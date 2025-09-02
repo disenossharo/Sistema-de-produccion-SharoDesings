@@ -152,9 +152,10 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v6.0 - CONFIGURACIÓN CORREGIDA');
+    console.log('🔧 CORS configurado para Railway - v7.0 - SIN CORS_ORIGIN');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
+    console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');
     
     // Probar conexión a PostgreSQL
     const isConnected = await testConnection();

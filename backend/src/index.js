@@ -65,6 +65,29 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
 });
 
+// Ruta de prueba simple
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Ruta de prueba funcionando',
+    timestamp: new Date().toISOString(),
+    routes: [
+      '/health',
+      '/test',
+      '/api/auth/login',
+      '/api/empleados',
+      '/api/produccion'
+    ]
+  });
+});
+
+// Ruta de prueba para API
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API de prueba funcionando',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Middleware de logging para debug
 app.use((req, res, next) => {
   console.log(`🔍 ${req.method} ${req.path} - ${new Date().toISOString()}`);

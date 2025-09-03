@@ -5,7 +5,7 @@ console.log('================================\n');
 
 // URLs a probar
 const baseUrl = 'https://sistema-de-produccion-sharodesings-production.up.railway.app';
-const vercelUrl = 'https://sistema-de-produccion-sharo.vercel.app';
+const vercelUrl = 'https://sistema-de-produccion-sharo-hyn0y050a-sharodesings-projects.vercel.app';
 
 const endpoints = [
   // Railway directo

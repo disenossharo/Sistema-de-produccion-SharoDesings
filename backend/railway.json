@@ -4,8 +4,5 @@
   },
   "deploy": {
     "startCommand": "npm start"
-  },
-  "nixpacks": {
-    "providers": ["nodejs"]
   }
 }

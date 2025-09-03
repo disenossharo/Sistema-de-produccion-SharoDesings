@@ -64,9 +64,10 @@ app.use('/api/operaciones', operacionesRoutes);
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Servidor funcionando correctamente - v11.0 REDESPLEGADO',
+    message: 'Servidor funcionando correctamente - v12.0 FORZANDO REDESPLIEGUE COMPLETO',
     timestamp: new Date().toISOString(),
-    version: 'v11.0'
+    version: 'v12.0',
+    routes: ['/health', '/debug', '/api/auth/login', '/api/empleados']
   });
 });
 

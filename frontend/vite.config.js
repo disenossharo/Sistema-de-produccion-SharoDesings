@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://sharo-backend-production.railway.app',
+        target: 'https://sistema-de-produccion-sharodesings-production.up.railway.app',
         changeOrigin: true,
         secure: true,
       }

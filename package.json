@@ -13,5 +13,10 @@
   },
   "keywords": ["react", "vite", "express", "postgresql"],
   "author": "SharoDesigns",
-  "license": "MIT"
+  "license": "MIT",
+  "vercel": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "frontend/dist",
+    "installCommand": "npm run install"
+  }
 }

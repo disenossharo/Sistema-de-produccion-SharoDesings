@@ -152,7 +152,7 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v10.0 - CONFIGURACIÓN SIMPLIFICADA');
+    console.log('🔧 CORS configurado para Railway - v11.0 - FORZANDO REDESPLIEGUE');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
     console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');

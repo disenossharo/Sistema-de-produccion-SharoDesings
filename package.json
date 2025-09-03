@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "cd frontend && npm run build",
-    "install": "cd frontend && npm install",
+    "install-deps": "cd frontend && npm install",
     "dev": "cd frontend && npm run dev"
   },
   "engines": {
@@ -17,6 +17,6 @@
   "vercel": {
     "buildCommand": "npm run build",
     "outputDirectory": "frontend/dist",
-    "installCommand": "npm run install"
+    "installCommand": "npm run install-deps"
   }
 }

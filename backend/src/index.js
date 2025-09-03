@@ -62,7 +62,12 @@ app.use('/api/operaciones', operacionesRoutes);
 
 // Endpoint de salud
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
+  res.json({ 
+    status: 'OK', 
+    message: 'Servidor funcionando correctamente - v11.0 REDESPLEGADO',
+    timestamp: new Date().toISOString(),
+    version: 'v11.0'
+  });
 });
 
 // Endpoint de debug

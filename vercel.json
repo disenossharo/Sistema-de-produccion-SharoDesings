@@ -46,5 +46,6 @@
   },
   "github": {
     "enabled": true
-  }
+  },
+  "cleanUrls": true
 }

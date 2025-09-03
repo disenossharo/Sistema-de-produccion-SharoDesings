@@ -33,5 +33,8 @@
       "runtime": "nodejs18.x"
     }
   },
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

@@ -67,7 +67,7 @@ app.get('/health', (req, res) => {
     message: 'Servidor funcionando correctamente - v12.0 FORZANDO REDESPLIEGUE COMPLETO',
     timestamp: new Date().toISOString(),
     version: 'v12.0',
-    routes: ['/health', '/debug', '/api/auth/login', '/api/empleados']
+    routes: ['/health', '/debug', '/api/auth/login', '/api/empleados', '/api/produccion', '/api/referencias', '/api/operaciones']
   });
 });
 
@@ -158,7 +158,7 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v11.0 - FORZANDO REDESPLIEGUE');
+    console.log('🔧 CORS configurado para Railway - v13.0 - REDESPLIEGUE MANUAL FORZADO');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
     console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');

@@ -76,6 +76,34 @@ async function createTables() {
       )
     `);
 
+    // Tabla de referencias (para gestión de producción)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS referencias (
+        id SERIAL PRIMARY KEY,
+        codigo VARCHAR(100) UNIQUE NOT NULL,
+        nombre VARCHAR(255) NOT NULL,
+        descripcion TEXT,
+        categoria VARCHAR(100),
+        activa BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Tabla de operaciones (para gestión de producción)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS operaciones (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(255) UNIQUE NOT NULL,
+        descripcion TEXT,
+        tiempo_por_unidad DECIMAL(10,2) NOT NULL,
+        video_tutorial TEXT,
+        activa BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('✅ Tablas creadas exitosamente');
   } catch (error) {
     console.error('❌ Error creando tablas:', error);

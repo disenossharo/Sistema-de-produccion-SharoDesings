@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { pool } = require('../src/config/database');
+const { populateProductionTables } = require('./populate-production-tables');
 
 /**
  * Script para crear usuario administrador inicial
@@ -154,6 +155,9 @@ async function initializeDatabase() {
         
         // Crear usuario administrador
         await createAdminUser();
+        
+        // Poblar tablas de producción
+        await populateProductionTables();
         
         // Preguntar si crear usuarios de prueba (solo en desarrollo)
         if (process.env.NODE_ENV !== 'production') {

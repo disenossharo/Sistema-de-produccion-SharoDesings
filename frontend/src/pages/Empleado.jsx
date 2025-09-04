@@ -24,7 +24,6 @@ import { useAuth } from "../context/AuthContext";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Datos por defecto (se cargarán desde la base de datos)
-// export const tareas = []; // Ya no se usa, se cargan dinámicamente
 const referencias = [];
 
 
@@ -43,7 +42,7 @@ const Empleado = () => {
     const updateClock = () => {
       const now = new Date();
       setHoraActual(now);
-      setHoraFormateada(now.toLocaleTimeString('es-ES', { 
+      setHoraFormateada(now.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
         minute: '2-digit', 
         second: '2-digit',
@@ -108,18 +107,6 @@ const Empleado = () => {
   const [operacionesCargando, setOperacionesCargando] = useState(true);
   const [referenciasCargando, setReferenciasCargando] = useState(true);
 
-  // Debug: log usuario y carga
-  console.log('usuario', usuario, 'usuarioCargando', usuarioCargando);
-
-  // Listener de autenticación para mantener usuario actualizado
-  useEffect(() => {
-    // Aquí deberás llamar a la API del backend para obtener el usuario autenticado
-    // Por ejemplo: const user = await fetchUser(); setUsuario(user);
-    // setUsuarioCargando(false);
-    // if (!user) {
-    //   navigate("/login");
-    // }
-  }, [navigate]);
 
   // Presencia en línea: marcar online al entrar y offline al salir
   useEffect(() => {
@@ -128,7 +115,6 @@ const Empleado = () => {
       const sendHeartbeat = async () => {
         try {
           await api.updateHeartbeat(token);
-          console.log('💓 Heartbeat enviado:', usuario.email);
         } catch (error) {
           console.error('❌ Error enviando heartbeat:', error);
           // Si hay error de autenticación, redirigir al login
@@ -150,7 +136,6 @@ const Empleado = () => {
         try {
           if (usuario && usuario.email && token) {
             await api.logout(token);
-            console.log('✅ Usuario marcado como offline al cerrar pestaña:', usuario.email);
           }
         } catch (error) {
           console.error('❌ Error al marcar usuario como offline:', error);
@@ -163,7 +148,6 @@ const Empleado = () => {
       // Event listener para cuando se pierde el foco de la ventana
       const handleVisibilityChange = () => {
         if (document.hidden) {
-          console.log('👁️ Ventana oculta, marcando usuario como offline');
           handleOffline();
         }
       };
@@ -232,8 +216,6 @@ const Empleado = () => {
         setReferencias(referenciasData);
         setReferenciasCargando(false);
         
-        console.log('Operaciones cargadas:', operacionesData.length);
-        console.log('Referencias cargadas:', referenciasData.length);
       } catch (e) {
         console.error('Error al cargar operaciones/referencias:', e);
         setOperacionesCargando(false);
@@ -254,30 +236,6 @@ const Empleado = () => {
     return () => clearInterval(interval);
   }, [token, logout, navigate]);
 
-  // Leer datos de perfil al cargar la pestaña de perfil (mantener para refrescar si el usuario edita)
-  useEffect(() => {
-    if (activeTab === "perfil" && usuario) {
-      const fetchPerfil = async () => {
-        setPerfilCargando(true);
-        setPerfilError("");
-        setPerfilGuardado(false);
-        try {
-          // const docRef = doc(db, "empleados", usuario.email);
-          // const docSnap = await getDoc(docRef);
-          // if (docSnap.exists()) {
-          //   const data = docSnap.data();
-          //   // Eliminar especialidad si existe
-          //   if ('especialidad' in data) delete data.especialidad;
-          //   setPerfil(data);
-          // }
-        } catch (e) {
-          setPerfilError("Error al cargar el perfil.");
-        }
-        setPerfilCargando(false);
-      };
-      fetchPerfil();
-    }
-  }, [activeTab, usuario]);
 
   // Obtener historial al cargar
   useEffect(() => {
@@ -286,7 +244,6 @@ const Empleado = () => {
       
       try {
         const historialData = await api.getHistorial(token);
-        console.log('Historial recibido:', historialData);
         setHistorial(historialData);
       } catch (e) {
         console.error('Error al cargar historial:', e);
@@ -309,7 +266,6 @@ const Empleado = () => {
       setTareaEnProgresoCargando(true);
       try {
         const tareaData = await api.getTareaEnProgreso(token);
-        console.log('Tarea en progreso recibida:', tareaData);
         
         if (tareaData) {
           setTareaEnProgreso(tareaData);
@@ -358,7 +314,6 @@ const Empleado = () => {
           }
         }
               } catch (e) {
-          console.log('No hay tarea en progreso o error al obtenerla:', e);
           setTareaEnProgreso(null);
           setTareaIdEnProgreso(null);
           setTareasSeleccionadas([]);
@@ -695,7 +650,6 @@ const Empleado = () => {
       if (usuario && usuario.email && token) {
         // Marcar empleado como offline en la base de datos
         await api.logout(token);
-        console.log('✅ Usuario marcado como offline:', usuario.email);
       }
     } catch (error) {
       console.error('❌ Error al marcar usuario como offline:', error);
@@ -716,7 +670,7 @@ const Empleado = () => {
   // Formato de hora
   const formatHora = (date) => {
     if (!date || isNaN(date.getTime())) return "No disponible";
-    return date.toLocaleTimeString('es-ES', { 
+    return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit', 
       second: '2-digit',
@@ -726,7 +680,7 @@ const Empleado = () => {
   
   const formatHoraSimple = (date) => {
     if (!date || isNaN(date.getTime())) return "No disponible";
-    return date.toLocaleTimeString('es-ES', { 
+    return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
       hour12: true 
@@ -737,14 +691,12 @@ const Empleado = () => {
   const tiempoEstimado = (() => {
     // Validar que tengamos todos los datos necesarios
     if (!cantidad || !tareasSeleccionadas || tareasSeleccionadas.length === 0 || !operaciones || operaciones.length === 0) {
-      console.log('⚠️ Datos insuficientes para calcular tiempo:', { cantidad, tareasSeleccionadas: tareasSeleccionadas?.length, operaciones: operaciones?.length });
       return 0;
     }
 
     try {
       const cantidadNum = Number(cantidad);
       if (isNaN(cantidadNum) || cantidadNum <= 0) {
-        console.log('⚠️ Cantidad inválida:', cantidad);
         return 0;
       }
 
@@ -752,23 +704,19 @@ const Empleado = () => {
       const tiempoTotalOperaciones = tareasSeleccionadas.reduce((acc, nombreTarea) => {
         const operacionObj = operaciones.find(op => op.nombre === nombreTarea);
         if (!operacionObj) {
-          console.log(`⚠️ Operación no encontrada: ${nombreTarea}`);
           return acc;
         }
         
         const tiempoOperacion = Number(operacionObj.tiempo_por_unidad);
         if (isNaN(tiempoOperacion) || tiempoOperacion <= 0) {
-          console.log(`⚠️ Tiempo inválido para operación ${nombreTarea}:`, tiempoOperacion);
           return acc;
         }
         
-        console.log(`✅ Tarea: ${nombreTarea}, Tiempo por unidad: ${tiempoOperacion} min`);
         return acc + tiempoOperacion;
       }, 0);
 
       // Multiplicar por la cantidad
       const tiempoTotal = tiempoTotalOperaciones * cantidadNum;
-      console.log(`📊 Tiempo total calculado: ${tiempoTotalOperaciones} min × ${cantidadNum} = ${tiempoTotal} min`);
       
       return tiempoTotal;
     } catch (error) {
@@ -780,24 +728,9 @@ const Empleado = () => {
   // Validar que el tiempo estimado sea un número válido
   const tiempoEstimadoValido = isNaN(tiempoEstimado) || tiempoEstimado <= 0 ? 0 : tiempoEstimado;
 
-  // Debug: mostrar información del cálculo
-  useEffect(() => {
-    if (tareasSeleccionadas.length > 0 && cantidad) {
-      console.log('🔍 Cálculo de tiempo estimado:', {
-        tareasSeleccionadas,
-        cantidad,
-        operaciones: operaciones.map(op => ({ nombre: op.nombre, tiempo: op.tiempo_por_unidad })),
-        tiempoEstimado,
-        tiempoEstimadoValido,
-        esValido: !isNaN(tiempoEstimado)
-      });
-    }
-  }, [tareasSeleccionadas, cantidad, operaciones, tiempoEstimado, tiempoEstimadoValido]);
 
   // Iniciar tarea
   const handleComenzar = async () => {
-    console.log('handleComenzar iniciado'); // Debug
-    
     // Validaciones mejoradas
     if (tareasSeleccionadas.length === 0) {
       setError("Por favor selecciona al menos una operación.");
@@ -829,13 +762,6 @@ const Empleado = () => {
     setHoraEstimadaFin(fin);
     setEnProgreso(true);
     
-    console.log('Datos de tarea a enviar:', {
-      tareas: tareasSeleccionadas,
-      referencia: referencia.trim(),
-      cantidadAsignada: Number(cantidad),
-      tiempoEstimado: tiempoEstimadoValido
-    });
-    
     // Crear tarea en progreso en el backend
     try {
       const tareaEnProgreso = await api.crearTareaEnProgreso(token, {
@@ -847,7 +773,6 @@ const Empleado = () => {
       
       setTareaIdEnProgreso(tareaEnProgreso.id);
       setTareaEnProgreso(tareaEnProgreso);
-      console.log('Tarea en progreso creada exitosamente:', tareaEnProgreso);
       
       // Redirigir automáticamente a la pestaña "Tarea"
       setActiveTab("tarea");
@@ -878,15 +803,11 @@ const Empleado = () => {
 
   // Función mejorada para manejar el cambio de selección de tareas
   const handleTareaCheckbox = (nombreTarea) => {
-    console.log('🔘 Checkbox clickeado:', nombreTarea);
-    console.log('📋 Tareas seleccionadas antes:', tareasSeleccionadas);
-    
     setTareasSeleccionadas(prev => {
       const nuevasTareas = prev.includes(nombreTarea)
         ? prev.filter(t => t !== nombreTarea)
         : [...prev, nombreTarea];
       
-      console.log('📋 Tareas seleccionadas después:', nuevasTareas);
       return nuevasTareas;
     });
   };
@@ -929,16 +850,6 @@ const Empleado = () => {
     const efectividadFinal = Math.round(
       (efectividadCantidad * 0.7 + efectividadTiempo * 0.3) * 10
     ) / 10;
-    
-    console.log('📊 Cálculo de efectividad:', {
-      cantidadAsignada: cantidadNum,
-      cantidadHecha: cantidadHechaNum,
-      efectividadCantidad: efectividadCantidad.toFixed(1) + '%',
-      tiempoEstimado: tiempoEstimadoValido + ' min',
-      tiempoTranscurrido: tiempoTranscurridoTarea.toFixed(1) + ' min',
-      efectividadTiempo: efectividadTiempo.toFixed(1) + '%',
-      efectividadFinal: efectividadFinal.toFixed(1) + '%'
-    });
     
     setEfectividad(efectividadFinal);
     setHoraFin(new Date());
@@ -1072,14 +983,6 @@ const Empleado = () => {
           tiempoTranscurridoReal = (new Date() - horaInicio) / 60000; // en minutos
         }
         
-        console.log('📤 Enviando tarea finalizada al backend:', {
-          tareaId: tareaIdEnProgreso,
-          cantidadHecha: Number(cantidadHecha),
-          efectividad: Number(efectividad),
-          tiempoTranscurrido: tiempoTranscurridoReal.toFixed(1) + ' min',
-          observaciones: obs.trim()
-        });
-        
         await api.actualizarTareaFinalizada(token, tareaIdEnProgreso, {
           cantidadHecha: Number(cantidadHecha),
           efectividad: Number(efectividad),
@@ -1110,7 +1013,6 @@ const Empleado = () => {
       if (usuario) {
         try {
           const historialData = await api.getHistorial(token);
-          console.log('Historial actualizado tras guardar:', historialData);
           setHistorial(historialData);
         } catch (historialError) {
           console.error('Error al recargar historial:', historialError);

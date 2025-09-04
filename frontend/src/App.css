@@ -805,6 +805,29 @@
   }
 }
 
+/* =====================================================
+   OPTIMIZACIONES PARA EL RELOJ
+   ===================================================== */
+
+/* Prevenir parpadeo del reloj */
+.clock-display {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+/* Optimización para texto que cambia frecuentemente */
+.time-text {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: contents;
+  transition: none;
+}
+
 @media (max-width: 480px) {
   .responsive-container {
     padding: 0 5px;

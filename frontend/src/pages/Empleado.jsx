@@ -37,8 +37,25 @@ const Empleado = () => {
 
   // Reloj en tiempo real
   const [horaActual, setHoraActual] = useState(new Date());
+  const [horaFormateada, setHoraFormateada] = useState('');
+  
   useEffect(() => {
-    const timer = setInterval(() => setHoraActual(new Date()), 1000);
+    const updateClock = () => {
+      const now = new Date();
+      setHoraActual(now);
+      setHoraFormateada(now.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: true 
+      }));
+    };
+    
+    // Actualizar inmediatamente
+    updateClock();
+    
+    // Luego cada segundo
+    const timer = setInterval(updateClock, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -1238,7 +1255,7 @@ const Empleado = () => {
               <div className="text-center mb-4">
                 <h2 style={{ fontWeight: 900, color: '#0d6efd', fontSize: 32, marginBottom: 6, letterSpacing: 1 }}>¡Bienvenido/a!</h2>
                 <div style={{ fontSize: 20, color: '#2c3e50', fontWeight: 600, marginBottom: 8 }}>Hoy es un gran día para avanzar en tus metas 🚀</div>
-                <div className="mb-2" style={{ fontSize: 18, color: '#6c757d', fontWeight: 500 }}>{formatHora(horaActual)}</div>
+                <div className="mb-2 clock-display time-text" style={{ fontSize: 18, color: '#6c757d', fontWeight: 500 }}>{horaFormateada}</div>
               </div>
               <div className="mb-4 p-4" style={{ background: 'linear-gradient(90deg, #e3f0ff 0%, #f8fafc 100%)', borderRadius: 18, boxShadow: '0 2px 12px rgba(44,62,80,0.07)', textAlign: 'center' }}>
                 <div style={{ fontSize: 22, fontWeight: 700, color: '#2c3e50', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>

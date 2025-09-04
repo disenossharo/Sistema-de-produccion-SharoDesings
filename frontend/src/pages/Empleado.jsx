@@ -42,12 +42,17 @@ const Empleado = () => {
     const updateClock = () => {
       const now = new Date();
       setHoraActual(now);
-      setHoraFormateada(now.toLocaleTimeString('en-US', { 
+      
+      // Formatear hora con configuración optimizada
+      const horaFormateadaNueva = now.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
         minute: '2-digit', 
         second: '2-digit',
         hour12: true 
-      }));
+      });
+      
+      // Solo actualizar si el valor ha cambiado para evitar re-renders innecesarios
+      setHoraFormateada(prev => prev !== horaFormateadaNueva ? horaFormateadaNueva : prev);
     };
     
     // Actualizar inmediatamente

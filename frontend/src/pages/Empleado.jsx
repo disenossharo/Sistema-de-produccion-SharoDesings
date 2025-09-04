@@ -1152,8 +1152,8 @@ const Empleado = () => {
         <Container>
           <Navbar.Brand style={{ fontWeight: 900, letterSpacing: 2, fontSize: 28, color: '#2c3e50', display: 'flex', alignItems: 'center', gap: 8 }}>
             <img src={logo} alt="Logo Diseños Sharo" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: '50%', background: '#fff', border: '2px solid #e9ecef', marginRight: 10 }} />
-            <span className="completo">DISEÑOS SHARO</span>
-            <span className="abreviado">D. SHARO</span>
+            <span className="completo d-none d-md-inline">DISEÑOS SHARO</span>
+            <span className="abreviado d-inline d-md-none">D. SHARO</span>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="empleado-navbar-nav" />
           <Navbar.Collapse id="empleado-navbar-nav">
@@ -1170,6 +1170,61 @@ const Empleado = () => {
           </Navbar.Collapse>
         </Container>
       </Navbar>
+
+      {/* Sidebar móvil */}
+      <div className={`mobile-sidebar ${navbarExpanded ? 'show' : ''}`} onClick={() => setNavbarExpanded(false)}>
+        <div className="mobile-sidebar-content" onClick={(e) => e.stopPropagation()}>
+          <div className="mobile-sidebar-header">
+            <div className="mobile-sidebar-brand">
+              <img src={logo} alt="Logo Diseños Sharo" className="mobile-sidebar-logo" />
+              <span className="mobile-sidebar-title">D. SHARO</span>
+            </div>
+            <button 
+              className="mobile-sidebar-close" 
+              onClick={() => setNavbarExpanded(false)}
+              aria-label="Cerrar menú"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="mobile-sidebar-nav">
+            <Nav activeKey={activeTab} onSelect={handleTabChange} className="flex-column">
+              <Nav.Link eventKey="inicio" className="mobile-nav-link">
+                <span className="mobile-nav-icon">🏠</span>
+                Inicio
+              </Nav.Link>
+              <Nav.Link eventKey="historial" className="mobile-nav-link">
+                <span className="mobile-nav-icon">📊</span>
+                Historial
+              </Nav.Link>
+              <Nav.Link eventKey="tarea" className="mobile-nav-link">
+                <span className="mobile-nav-icon">✅</span>
+                Tarea
+              </Nav.Link>
+              <Nav.Link eventKey="perfil" className="mobile-nav-link">
+                <span className="mobile-nav-icon">👤</span>
+                Perfil
+              </Nav.Link>
+            </Nav>
+          </div>
+          
+          <div className="mobile-sidebar-footer">
+            <div className="mobile-user-info">
+              <FaUserCircle className="mobile-user-icon" />
+              <span className="mobile-user-name">{perfil?.nombre || usuario?.email}</span>
+            </div>
+            <Button 
+              variant="outline-danger" 
+              size="sm" 
+              onClick={handleLogout} 
+              className="mobile-logout-btn"
+            >
+              Cerrar sesión
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <Container className="d-flex justify-content-center align-items-start responsive-container" style={{ minHeight: '80vh', width: '100%', marginTop: 16 }}>
         <div className="w-100" style={{ padding: 0, margin: 0 }}>

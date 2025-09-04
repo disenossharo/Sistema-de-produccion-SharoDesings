@@ -881,7 +881,8 @@ const Admin = () => {
   // Función para manejar el cambio de pestaña y cerrar el menú
   const handleTabChange = (selectedKey) => {
     if (selectedKey === 'produccion') {
-      // Redirigir al sistema de producción
+      // Redirigir al sistema de producción usando React Router
+      console.log('🔍 Admin - Redirigiendo a Gestión de Producción...');
       window.location.href = '/produccion';
       return;
     }

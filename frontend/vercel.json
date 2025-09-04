@@ -5,6 +5,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://sistema-de-produccion-sharodesings-production.up.railway.app/api/$1"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [

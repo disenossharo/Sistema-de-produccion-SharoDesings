@@ -43,6 +43,14 @@ const Produccion = () => {
   const [activeTab, setActiveTab] = useState("operaciones");
   const [navbarExpanded, setNavbarExpanded] = useState(false);
 
+  // Debug logs
+  useEffect(() => {
+    console.log('🔍 Produccion - Componente montado');
+    console.log('🔍 Produccion - Usuario:', user?.email);
+    console.log('🔍 Produccion - Es admin:', isAdmin);
+    console.log('🔍 Produccion - Token presente:', !!token);
+  }, [user, isAdmin, token]);
+
   // Estados para operaciones
   const [operaciones, setOperaciones] = useState([]);
   const [showOperacionModal, setShowOperacionModal] = useState(false);

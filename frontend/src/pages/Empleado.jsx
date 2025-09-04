@@ -43,8 +43,8 @@ const Empleado = () => {
     const updateClock = () => {
       const now = new Date();
       setHoraActual(now);
-      setHoraFormateada(now.toLocaleTimeString([], { 
-        hour: '2-digit', 
+      setHoraFormateada(now.toLocaleTimeString('es-ES', { 
+        hour: 'numeric', 
         minute: '2-digit', 
         second: '2-digit',
         hour12: true 
@@ -716,12 +716,21 @@ const Empleado = () => {
   // Formato de hora
   const formatHora = (date) => {
     if (!date || isNaN(date.getTime())) return "No disponible";
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return date.toLocaleTimeString('es-ES', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: true 
+    });
   };
   
   const formatHoraSimple = (date) => {
     if (!date || isNaN(date.getTime())) return "No disponible";
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString('es-ES', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
   };
 
   // Calcular tiempo estimado total con validaciones robustas

@@ -709,11 +709,6 @@ const Produccion = () => {
                                 <FaTag className="me-1" />
                                 {referencia.codigo}
                               </Badge>
-                              {!referencia.activa && (
-                                <Badge bg="secondary" className="ms-2" style={{ fontSize: 10 }}>
-                                  OCULTA
-                                </Badge>
-                              )}
                             </td>
                             <td style={{ fontWeight: 600 }}>{referencia.nombre}</td>
                             <td>{referencia.descripcion || '-'}</td>

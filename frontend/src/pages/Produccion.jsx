@@ -66,7 +66,6 @@ const Produccion = () => {
   const [operaciones, setOperaciones] = useState([]);
   const [operacionesFiltradas, setOperacionesFiltradas] = useState([]);
   const [filtroOperaciones, setFiltroOperaciones] = useState('');
-  const [categoriaOperacionFiltro, setCategoriaOperacionFiltro] = useState('');
   const [showOperacionModal, setShowOperacionModal] = useState(false);
   const [operacionEditando, setOperacionEditando] = useState(null);
   const [formOperacion, setFormOperacion] = useState({
@@ -150,15 +149,8 @@ const Produccion = () => {
       );
     }
 
-    // Filtrar por categoría
-    if (categoriaOperacionFiltro) {
-      filtradas = filtradas.filter(operacion => 
-        operacion.categoria === categoriaOperacionFiltro
-      );
-    }
-
     setOperacionesFiltradas(filtradas);
-  }, [operaciones, filtroOperaciones, categoriaOperacionFiltro]);
+  }, [operaciones, filtroOperaciones]);
 
   // Filtrar referencias cuando cambie el filtro o las referencias
   useEffect(() => {
@@ -230,11 +222,6 @@ const Produccion = () => {
     return todasLasCategorias.sort();
   };
 
-  // Obtener categorías únicas para el filtro de operaciones
-  const getCategoriasOperacionesUnicas = () => {
-    const categorias = [...new Set(operaciones.map(op => op.categoria).filter(Boolean))];
-    return categorias.sort();
-  };
 
   // Limpiar filtros de referencias
   const limpiarFiltros = () => {
@@ -245,7 +232,6 @@ const Produccion = () => {
   // Limpiar filtros de operaciones
   const limpiarFiltrosOperaciones = () => {
     setFiltroOperaciones('');
-    setCategoriaOperacionFiltro('');
   };
 
   // ===== FUNCIONES PARA OPERACIONES =====
@@ -675,11 +661,11 @@ const Produccion = () => {
                   </Button>
                 </div>
 
-                {/* Sistema de Búsqueda y Filtros para Operaciones */}
+                {/* Sistema de Búsqueda para Operaciones */}
                 <Card className="mb-4" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: 'none' }}>
                   <Card.Body>
                     <Row className="align-items-end">
-                      <Col md={6} className="mb-3 mb-md-0">
+                      <Col md={8} className="mb-3 mb-md-0">
                         <Form.Group>
                           <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
                             <FaCogs className="me-2" />
@@ -694,26 +680,7 @@ const Produccion = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={4} className="mb-3 mb-md-0">
-                        <Form.Group>
-                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
-                            Filtrar por categoría
-                          </Form.Label>
-                          <Form.Select
-                            value={categoriaOperacionFiltro}
-                            onChange={(e) => setCategoriaOperacionFiltro(e.target.value)}
-                            style={{ borderRadius: 8 }}
-                          >
-                            <option value="">Todas las categorías</option>
-                            {getCategoriasOperacionesUnicas().map(categoria => (
-                              <option key={categoria} value={categoria}>
-                                {categoria}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={2}>
+                      <Col md={4}>
                         <Button
                           variant="outline-secondary"
                           onClick={limpiarFiltrosOperaciones}
@@ -723,12 +690,11 @@ const Produccion = () => {
                         </Button>
                       </Col>
                     </Row>
-                    {(filtroOperaciones || categoriaOperacionFiltro) && (
+                    {filtroOperaciones && (
                       <div className="mt-3">
                         <small className="text-muted">
                           Mostrando {operacionesFiltradas.length} de {operaciones.length} operaciones
                           {filtroOperaciones && ` • Buscando: "${filtroOperaciones}"`}
-                          {categoriaOperacionFiltro && ` • Categoría: "${categoriaOperacionFiltro}"`}
                         </small>
                       </div>
                     )}
@@ -757,11 +723,11 @@ const Produccion = () => {
                                 <FaCogs size={48} className="mb-3" style={{ opacity: 0.3 }} />
                                 <h5 className="mb-2">No se encontraron operaciones</h5>
                                 <p className="mb-0">
-                                  {filtroOperaciones || categoriaOperacionFiltro 
-                                    ? "Intenta ajustar los filtros de búsqueda" 
+                                  {filtroOperaciones 
+                                    ? "Intenta ajustar el filtro de búsqueda" 
                                     : "No hay operaciones registradas aún"}
                                 </p>
-                                {(filtroOperaciones || categoriaOperacionFiltro) && (
+                                {filtroOperaciones && (
                                   <Button 
                                     variant="outline-primary" 
                                     size="sm" 

@@ -900,12 +900,19 @@ const Produccion = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Operación activa"
-                checked={formOperacion.activa}
-                onChange={(e) => setFormOperacion({...formOperacion, activa: e.target.checked})}
-              />
+              <div className="toggle-label">
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={formOperacion.activa}
+                    onChange={(e) => setFormOperacion({...formOperacion, activa: e.target.checked})}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+                <span className="toggle-text">
+                  {formOperacion.activa ? "Operación activa" : "Operación inactiva"}
+                </span>
+              </div>
             </Form.Group>
           </Form>
         </Modal.Body>
@@ -975,12 +982,19 @@ const Produccion = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Referencia activa"
-                checked={formReferencia.activa}
-                onChange={(e) => setFormReferencia({...formReferencia, activa: e.target.checked})}
-              />
+              <div className="toggle-label">
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={formReferencia.activa}
+                    onChange={(e) => setFormReferencia({...formReferencia, activa: e.target.checked})}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+                <span className="toggle-text">
+                  {formReferencia.activa ? "Referencia activa" : "Referencia inactiva"}
+                </span>
+              </div>
             </Form.Group>
           </Form>
         </Modal.Body>
@@ -1084,12 +1098,19 @@ const Produccion = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Usuario activo"
-                checked={formUsuario.activo !== false}
-                onChange={(e) => setFormUsuario({...formUsuario, activo: e.target.checked})}
-              />
+              <div className="toggle-label">
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={formUsuario.activo !== false}
+                    onChange={(e) => setFormUsuario({...formUsuario, activo: e.target.checked})}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+                <span className="toggle-text">
+                  {formUsuario.activo !== false ? "Usuario activo" : "Usuario inactivo"}
+                </span>
+              </div>
             </Form.Group>
           </Form>
         </Modal.Body>

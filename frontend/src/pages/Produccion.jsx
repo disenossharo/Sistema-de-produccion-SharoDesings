@@ -904,6 +904,7 @@ const Produccion = () => {
                     <Table responsive hover>
                       <thead style={{ background: '#f8f9fa' }}>
                         <tr>
+                          <th style={{ fontWeight: 700 }}>Nombre</th>
                           <th style={{ fontWeight: 700 }}>Email</th>
                           <th style={{ fontWeight: 700 }}>Rol</th>
                           <th style={{ fontWeight: 700 }}>Estado</th>
@@ -918,12 +919,22 @@ const Produccion = () => {
                             background: usuario.activo === false ? '#f8f9fa' : 'transparent'
                           }}>
                             <td style={{ fontWeight: 600 }}>
+                              <div>
+                                <div style={{ fontSize: 16, fontWeight: 700, color: '#2c3e50' }}>
+                                  {usuario.nombre && usuario.apellidos 
+                                    ? `${usuario.nombre} ${usuario.apellidos}`.trim()
+                                    : usuario.nombre || 'Sin nombre'
+                                  }
+                                </div>
+                                {usuario.activo === false && (
+                                  <Badge bg="secondary" style={{ fontSize: 10 }}>
+                                    INACTIVO
+                                  </Badge>
+                                )}
+                              </div>
+                            </td>
+                            <td style={{ fontSize: 14, color: '#6c757d' }}>
                               {usuario.email}
-                              {usuario.activo === false && (
-                                <Badge bg="secondary" className="ms-2" style={{ fontSize: 10 }}>
-                                  INACTIVO
-                                </Badge>
-                              )}
                             </td>
                             <td>
                               <Badge bg={usuario.is_admin ? "danger" : "success"}>

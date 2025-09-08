@@ -67,7 +67,7 @@ exports.getOperacion = async (req, res) => {
 // Crear una nueva operación
 exports.createOperacion = async (req, res) => {
   try {
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -81,10 +81,10 @@ exports.createOperacion = async (req, res) => {
     const client = await pool.connect();
     try {
       const result = await client.query(
-        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', categoria ? categoria.trim() : '']
+        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', categoria ? categoria.trim() : '', activa === undefined ? true : activa]
       );
       
       res.status(201).json(result.rows[0]);

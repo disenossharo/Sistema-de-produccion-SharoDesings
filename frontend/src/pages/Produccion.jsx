@@ -1138,12 +1138,17 @@ const Produccion = () => {
 
             <Form.Group className="mb-3">
               <Form.Label style={{ fontWeight: 600 }}>Categoría</Form.Label>
-              <Form.Control
-                type="text"
+              <Form.Select
                 value={formOperacion.categoria}
                 onChange={(e) => setFormOperacion({...formOperacion, categoria: e.target.value})}
-                placeholder="Ej: Corte, Confección, Acabados..."
-              />
+              >
+                <option value="">Seleccionar categoría</option>
+                <option value="Fusionado">Fusionado</option>
+                <option value="Manualidades">Manualidades</option>
+                <option value="Plancha">Plancha</option>
+                <option value="Op basicas">Op basicas</option>
+                <option value="Tiempos basicos">Tiempos basicos</option>
+              </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-3">

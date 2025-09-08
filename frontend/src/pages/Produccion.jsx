@@ -244,6 +244,7 @@ const Produccion = () => {
         descripcion: operacion.descripcion || '',
         tiempo_por_unidad: operacion.tiempo_por_unidad,
         video_tutorial: operacion.video_tutorial || '',
+        categoria: operacion.categoria || '',
         activa: operacion.activa
       });
     } else {

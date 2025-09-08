@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { testConnection, createTables } = require('./config/database');
+const addCategoriaColumn = require('../scripts/add-categoria-operaciones');
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -173,6 +174,15 @@ async function initializeServer() {
 
     // Crear tablas si no existen
     await createTables();
+    console.log('✅ Tablas de base de datos verificadas/creadas');
+    
+    // Ejecutar migraciones
+    try {
+      await addCategoriaColumn();
+      console.log('✅ Migraciones ejecutadas exitosamente');
+    } catch (error) {
+      console.error('⚠️ Error en migraciones (continuando):', error.message);
+    }
     
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {

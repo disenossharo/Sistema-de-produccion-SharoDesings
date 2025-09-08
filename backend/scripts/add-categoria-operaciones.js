@@ -22,10 +22,20 @@ async function addCategoriaColumn() {
     }
   } catch (error) {
     console.error('❌ Error al agregar columna categoria:', error);
+    throw error; // Re-lanzar el error para que se maneje en el servidor
   } finally {
     client.release();
-    process.exit(0);
   }
 }
 
-addCategoriaColumn();
+// Solo ejecutar si se llama directamente
+if (require.main === module) {
+  addCategoriaColumn()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error('Error:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = addCategoriaColumn;

@@ -106,9 +106,18 @@ const Produccion = () => {
 
   // Protección de ruta para admin
   useEffect(() => {
+    // Esperar a que esté disponible el token
+    if (token === undefined || token === null) {
+      // Si explícitamente no hay token, redirigir al login
+      if (token === null) window.location.href = '/login';
+      return;
+    }
+    // No decidir hasta que isAdmin sea true/false explícito
+    if (typeof isAdmin === 'undefined') return;
+
     if (!token) {
       window.location.href = '/login';
-    } else if (!isAdmin) {
+    } else if (isAdmin === false) {
       window.location.href = '/empleado';
     }
   }, [isAdmin, token]);

@@ -1104,14 +1104,14 @@ const Admin = () => {
               Análisis Empleados
             </Nav.Link>
             <Nav.Link 
-              eventKey="produccion" 
+              onClick={() => navigate('/produccion')}
               style={{ 
                 fontWeight: 600, 
                 fontSize: 16, 
                 padding: '15px 25px',
-                borderLeft: activeTab === 'produccion' ? '4px solid #0d6efd' : '4px solid transparent',
-                background: activeTab === 'produccion' ? '#f8f9fa' : 'transparent',
-                color: activeTab === 'produccion' ? '#0d6efd' : '#495057'
+                borderLeft: '4px solid transparent',
+                background: 'transparent',
+                color: '#495057'
               }}
             >
               <FaCogs style={{ marginRight: 10, fontSize: 18 }} />
@@ -1169,7 +1169,7 @@ const Admin = () => {
                   <Nav.Link eventKey="dashboard">Dashboard</Nav.Link>
                   <Nav.Link eventKey="empleados">Empleados</Nav.Link>
                   <Nav.Link eventKey="empleados-detallado">Análisis Empleados</Nav.Link>
-                  <Nav.Link eventKey="produccion">Gestión de Producción</Nav.Link>
+                  <Nav.Link onClick={() => navigate('/produccion')}>Gestión de Producción</Nav.Link>
                 </Nav>
                 <div className="d-flex align-items-center" style={{ fontWeight: 600, fontSize: 16 }}>
                   <FaUserCircle style={{ fontSize: 22, marginRight: 6 }} />Admin

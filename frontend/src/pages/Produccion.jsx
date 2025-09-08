@@ -37,11 +37,22 @@ import logo from "../assets/sharo-logo.png";
 import '../App.css';
 import * as api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Produccion = () => {
   const { user, token, logout, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("operaciones");
   const [navbarExpanded, setNavbarExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  // --- NUEVO: breakpoint para layout responsivo (admin producción) ---
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 992 : true);
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 992);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  // --- FIN NUEVO ---
 
   // Debug logs
   useEffect(() => {
@@ -458,7 +469,7 @@ const Produccion = () => {
               Usuarios
             </Nav.Link>
             <Nav.Link 
-              onClick={() => window.location.href = '/admin'}
+              onClick={() => navigate('/admin')}
               style={{ 
                 fontWeight: 600, 
                 fontSize: 16, 
@@ -498,9 +509,9 @@ const Produccion = () => {
         {/* Contenido principal */}
         <div className="main-content" style={{ 
           flex: 1, 
-          marginLeft: '280px',
+          marginLeft: isDesktop ? '280px' : '0',
           minHeight: '100vh',
-          width: 'calc(100vw - 280px)',
+          width: isDesktop ? 'calc(100vw - 280px)' : '100vw',
           maxWidth: '100%',
           overflowX: 'hidden'
         }}>
@@ -524,7 +535,7 @@ const Produccion = () => {
                   <Nav.Link eventKey="operaciones">Operaciones</Nav.Link>
                   <Nav.Link eventKey="referencias">Referencias</Nav.Link>
                   <Nav.Link eventKey="usuarios">Usuarios</Nav.Link>
-                  <Nav.Link onClick={() => window.location.href = '/admin'}>← Dashboard</Nav.Link>
+                  <Nav.Link onClick={() => navigate('/admin')}>← Dashboard</Nav.Link>
                 </Nav>
                 <Nav>
                   <Button variant="outline-danger" size="sm" onClick={handleLogout} style={{ fontWeight: 600 }}>
@@ -553,15 +564,15 @@ const Produccion = () => {
             {/* Contenido de Operaciones */}
             {activeTab === "operaciones" && (
               <div>
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h2 style={{ fontWeight: 700, color: '#2c3e50', margin: 0 }}>
+                <div className={"d-flex justify-content-between align-items-center mb-4"} style={{ flexDirection: isDesktop ? 'row' : 'column', gap: isDesktop ? 0 : 12, alignItems: isDesktop ? 'center' : 'stretch' }}>
+                  <h2 style={{ fontWeight: 700, color: '#2c3e50', margin: 0, fontSize: isDesktop ? 28 : 22, textAlign: isDesktop ? 'left' : 'center' }}>
                     <FaCogs className="me-3" />
                     Gestión de Operaciones
                   </h2>
                   <Button 
                     variant="primary" 
                     onClick={() => handleOpenOperacionModal()}
-                    style={{ borderRadius: 12, fontWeight: 600 }}
+                    style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
                   >
                     <FaPlus className="me-2" />
                     Nueva Operación
@@ -650,15 +661,15 @@ const Produccion = () => {
             {/* Contenido de Referencias */}
             {activeTab === "referencias" && (
               <div>
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h2 style={{ fontWeight: 700, color: '#2c3e50', margin: 0 }}>
+                <div className={"d-flex justify-content-between align-items-center mb-4"} style={{ flexDirection: isDesktop ? 'row' : 'column', gap: isDesktop ? 0 : 12, alignItems: isDesktop ? 'center' : 'stretch' }}>
+                  <h2 style={{ fontWeight: 700, color: '#2c3e50', margin: 0, fontSize: isDesktop ? 28 : 22, textAlign: isDesktop ? 'left' : 'center' }}>
                     <FaTshirt className="me-3" />
                     Gestión de Referencias
                   </h2>
                   <Button 
                     variant="primary" 
                     onClick={() => handleOpenReferenciaModal()}
-                    style={{ borderRadius: 12, fontWeight: 600 }}
+                    style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
                   >
                     <FaPlus className="me-2" />
                     Nueva Referencia
@@ -736,15 +747,15 @@ const Produccion = () => {
             {/* Contenido de Usuarios */}
             {activeTab === "usuarios" && (
               <div>
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h2 style={{ fontWeight: 700, color: '#2c3e50', margin: 0 }}>
+                <div className={"d-flex justify-content-between align-items-center mb-4"} style={{ flexDirection: isDesktop ? 'row' : 'column', gap: isDesktop ? 0 : 12, alignItems: isDesktop ? 'center' : 'stretch' }}>
+                  <h2 style={{ fontWeight: 700, color: '#2c3e50', margin: 0, fontSize: isDesktop ? 28 : 22, textAlign: isDesktop ? 'left' : 'center' }}>
                     <FaUsers className="me-3" />
                     Gestión de Usuarios
                   </h2>
                   <Button 
                     variant="primary" 
                     onClick={() => handleOpenUsuarioModal()}
-                    style={{ borderRadius: 12, fontWeight: 600 }}
+                    style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
                   >
                     <FaUserPlus className="me-2" />
                     Nuevo Usuario

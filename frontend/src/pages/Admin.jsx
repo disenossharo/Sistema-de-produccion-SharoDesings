@@ -21,6 +21,7 @@ import * as api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 import { saveAs } from 'file-saver';
+import { useNavigate } from 'react-router-dom';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -34,6 +35,7 @@ const operacionesDisponibles = [
 ];
 
 const Admin = () => {
+  const navigate = useNavigate();
   const { user, token, logout, isAdmin, isLoading } = useAuth();
 
   // Protección de ruta para admin con mejor manejo de estado
@@ -48,10 +50,10 @@ const Admin = () => {
     
     if (!token) {
       console.log('❌ No hay token, redirigiendo a login...');
-      window.location.href = '/login';
+      navigate('/login');
     } else if (!isAdmin) {
       console.log('❌ Usuario no es admin, redirigiendo...');
-      window.location.href = '/empleado';
+      navigate('/empleado');
     } else {
       console.log('✅ Usuario admin autenticado correctamente');
     }
@@ -70,6 +72,41 @@ const Admin = () => {
   const [anioActual] = useState(new Date().getFullYear());
   const mesesDelAnio = Array.from({ length: 12 }, (_, i) => new Date(anioActual, i, 1));
   const [horaActual, setHoraActual] = useState(new Date());
+  const [horaFormateada, setHoraFormateada] = useState('');
+  
+  // --- NUEVO: breakpoint para layout responsivo (admin) ---
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 992 : true);
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 992);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  // --- FIN NUEVO ---
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setHoraActual(now);
+      
+      // Formatear hora con configuración optimizada
+      const horaFormateadaNueva = now.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: true 
+      });
+      
+      // Solo actualizar si el valor ha cambiado para evitar re-renders innecesarios
+      setHoraFormateada(prev => prev !== horaFormateadaNueva ? horaFormateadaNueva : prev);
+    };
+    
+    // Actualizar inmediatamente
+    updateClock();
+    
+    // Luego cada segundo
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Función para formatear el cargo/máquina de manera consistente
   const formatearCargo = (cargo) => {
@@ -129,11 +166,6 @@ const Admin = () => {
   const [estadisticasActualizando, setEstadisticasActualizando] = useState(false);
   const [navbarExpanded, setNavbarExpanded] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => setHoraActual(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Presencia en línea: marcar online al entrar y offline al salir
   useEffect(() => {
     // Solo ejecutar si no está cargando la autenticación y hay usuario y token
@@ -152,7 +184,7 @@ const Admin = () => {
         if (error.message && error.message.includes('401')) {
           console.log('🔐 Sesión admin expirada, redirigiendo al login...');
           logout();
-          window.location.href = '/login';
+          navigate('/login');
         }
       }
     };
@@ -243,10 +275,10 @@ const Admin = () => {
         if (e.message && e.message.includes('401')) {
           setError("Error de autenticación. Por favor, vuelve a iniciar sesión.");
           logout();
-          window.location.href = '/login';
+          navigate('/login');
         } else if (e.message && e.message.includes('403')) {
           setError("No tienes permisos de administrador.");
-          window.location.href = '/empleado';
+          navigate('/empleado');
         } else {
           setError("Error al cargar los datos. Intenta de nuevo.");
         }
@@ -303,10 +335,10 @@ const Admin = () => {
       if (error.message && error.message.includes('401')) {
         alert('Sesión expirada. Redirigiendo al login...');
         logout();
-        window.location.href = '/login';
+        navigate('/login');
       } else if (error.message && error.message.includes('403')) {
         alert('Acceso denegado. Redirigiendo...');
-        window.location.href = '/empleado';
+        navigate('/empleado');
       } else {
         console.log('⚠️ Estableciendo producción como array vacío debido al error');
         setProduccion([]);
@@ -549,7 +581,7 @@ const Admin = () => {
       if (error.message && error.message.includes('401')) {
         setError("Error de autenticación. Por favor, vuelve a iniciar sesión.");
         logout();
-        window.location.href = '/login';
+        navigate('/login');
       } else if (error.message && error.message.includes('403')) {
         setError("No tienes permisos para ver este historial.");
       } else {
@@ -776,7 +808,7 @@ const Admin = () => {
     if (!token) {
       alert('Error de autenticación. Por favor, vuelve a iniciar sesión.');
       logout();
-      window.location.href = '/login';
+      navigate('/login');
       return;
     }
 
@@ -834,7 +866,7 @@ const Admin = () => {
       if (error.message && error.message.includes('401')) {
         alert('Error de autenticación. Por favor, vuelve a iniciar sesión.');
         logout();
-        window.location.href = '/login';
+        navigate('/login');
       } else if (error.message && error.message.includes('403')) {
         alert('No tienes permisos para exportar datos.');
       } else {
@@ -869,12 +901,12 @@ const Admin = () => {
       logout();
       // Limpiar localStorage completamente
       localStorage.clear();
-      window.location.href = '/login';
+      navigate('/login');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       // Forzar limpieza y redirección
       localStorage.clear();
-      window.location.href = '/login';
+      navigate('/login');
     }
   };
 
@@ -883,7 +915,7 @@ const Admin = () => {
     if (selectedKey === 'produccion') {
       // Redirigir al sistema de producción usando React Router
       console.log('🔍 Admin - Redirigiendo a Gestión de Producción...');
-      window.location.href = '/produccion';
+      navigate('/produccion');
       return;
     }
     setActiveTab(selectedKey);
@@ -1111,9 +1143,9 @@ const Admin = () => {
         {/* Contenido principal */}
         <div className="main-content" style={{ 
           flex: 1, 
-          marginLeft: '280px',
+          marginLeft: isDesktop ? '280px' : '0',
           minHeight: '100vh',
-          width: 'calc(100vw - 280px)',
+          width: isDesktop ? 'calc(100vw - 280px)' : '100vw',
           maxWidth: '100%',
           overflowX: 'hidden'
         }}>
@@ -1169,7 +1201,7 @@ const Admin = () => {
                                           {activeTab === "dashboard" && (
                 <>
                   <div className="text-center mb-2" style={{ fontSize: 18, color: '#6c757d', fontWeight: 500 }}>
-                    {horaActual.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    {horaFormateada}
                   </div>
                   <div className="mb-4 p-4" style={{ background: 'linear-gradient(90deg, #e3f0ff 0%, #f8fafc 100%)', borderRadius: 18, boxShadow: '0 2px 12px rgba(44,62,80,0.07)', textAlign: 'center', width: '100%', margin: '0 0 32px 0' }}>
                     <div style={{ fontSize: 22, fontWeight: 700, color: '#2c3e50', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -1470,7 +1502,7 @@ const Admin = () => {
                           );
                         }
                         return (
-                          <Col key={emp.id} style={{ width: '320px', flex: '0 0 320px' }}>
+                          <Col key={emp.id} style={{ width: isDesktop ? '320px' : '100%', flex: isDesktop ? '0 0 320px' : '1 1 280px', maxWidth: isDesktop ? undefined : '100%' }}>
                             <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', marginBottom: 16, boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '280px' }}>
                               <Card.Body style={{ padding: 14, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

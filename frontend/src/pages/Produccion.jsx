@@ -76,6 +76,9 @@ const Produccion = () => {
 
   // Estados para referencias
   const [referencias, setReferencias] = useState([]);
+  const [referenciasFiltradas, setReferenciasFiltradas] = useState([]);
+  const [filtroReferencias, setFiltroReferencias] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [showReferenciaModal, setShowReferenciaModal] = useState(false);
   const [referenciaEditando, setReferenciaEditando] = useState(null);
   const [formReferencia, setFormReferencia] = useState({
@@ -129,6 +132,30 @@ const Produccion = () => {
     }
   }, [token, isAdmin]);
 
+  // Filtrar referencias cuando cambie el filtro o las referencias
+  useEffect(() => {
+    let filtradas = referencias;
+
+    // Filtrar por texto (código, nombre, descripción)
+    if (filtroReferencias.trim()) {
+      const textoFiltro = filtroReferencias.toLowerCase().trim();
+      filtradas = filtradas.filter(referencia => 
+        referencia.codigo.toLowerCase().includes(textoFiltro) ||
+        referencia.nombre.toLowerCase().includes(textoFiltro) ||
+        (referencia.descripcion && referencia.descripcion.toLowerCase().includes(textoFiltro))
+      );
+    }
+
+    // Filtrar por categoría
+    if (categoriaFiltro) {
+      filtradas = filtradas.filter(referencia => 
+        referencia.categoria === categoriaFiltro
+      );
+    }
+
+    setReferenciasFiltradas(filtradas);
+  }, [referencias, filtroReferencias, categoriaFiltro]);
+
   const cargarDatos = async () => {
     setCargando(true);
     setError("");
@@ -159,6 +186,26 @@ const Produccion = () => {
     } finally {
       setCargando(false);
     }
+  };
+
+  // Obtener categorías únicas para el filtro
+  const getCategoriasUnicas = () => {
+    // Categorías predefinidas
+    const categoriasPredefinidas = ['Línea', 'Conjunto'];
+    
+    // Categorías existentes en la base de datos
+    const categoriasExistentes = [...new Set(referencias.map(ref => ref.categoria).filter(Boolean))];
+    
+    // Combinar y eliminar duplicados
+    const todasLasCategorias = [...new Set([...categoriasPredefinidas, ...categoriasExistentes])];
+    
+    return todasLasCategorias.sort();
+  };
+
+  // Limpiar filtros
+  const limpiarFiltros = () => {
+    setFiltroReferencias('');
+    setCategoriaFiltro('');
   };
 
   // ===== FUNCIONES PARA OPERACIONES =====
@@ -685,6 +732,66 @@ const Produccion = () => {
                   </Button>
                 </div>
 
+                {/* Sistema de Búsqueda y Filtros */}
+                <Card className="mb-4" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: 'none' }}>
+                  <Card.Body>
+                    <Row className="align-items-end">
+                      <Col md={6} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            <FaTag className="me-2" />
+                            Buscar por código, nombre o descripción
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Ej: REF-10806, Blusa, Satin..."
+                            value={filtroReferencias}
+                            onChange={(e) => setFiltroReferencias(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            Filtrar por categoría
+                          </Form.Label>
+                          <Form.Select
+                            value={categoriaFiltro}
+                            onChange={(e) => setCategoriaFiltro(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          >
+                            <option value="">Todas las categorías</option>
+                            {getCategoriasUnicas().map(categoria => (
+                              <option key={categoria} value={categoria}>
+                                {categoria}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={2}>
+                        <Button
+                          variant="outline-secondary"
+                          onClick={limpiarFiltros}
+                          style={{ borderRadius: 8, fontWeight: 600, width: '100%' }}
+                        >
+                          Limpiar
+                        </Button>
+                      </Col>
+                    </Row>
+                    {(filtroReferencias || categoriaFiltro) && (
+                      <div className="mt-3">
+                        <small className="text-muted">
+                          Mostrando {referenciasFiltradas.length} de {referencias.length} referencias
+                          {filtroReferencias && ` • Buscando: "${filtroReferencias}"`}
+                          {categoriaFiltro && ` • Categoría: "${categoriaFiltro}"`}
+                        </small>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+
                 <Card style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: 'none' }}>
                   <Card.Body>
                     <Table responsive hover>
@@ -699,48 +806,74 @@ const Produccion = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {referencias.map(referencia => (
-                          <tr key={referencia.id} style={{ 
-                            opacity: referencia.activa ? 1 : 0.6,
-                            background: referencia.activa ? 'transparent' : '#f8f9fa'
-                          }}>
-                            <td style={{ fontWeight: 600 }}>
-                              <Badge bg="primary" style={{ fontSize: 12 }}>
-                                <FaTag className="me-1" />
-                                {referencia.codigo}
-                              </Badge>
-                            </td>
-                            <td style={{ fontWeight: 600 }}>{referencia.nombre}</td>
-                            <td>{referencia.descripcion || '-'}</td>
-                            <td>
-                              <Badge bg="info" variant="outline">
-                                {referencia.categoria || 'Sin categoría'}
-                              </Badge>
-                            </td>
-                            <td>
-                              <Badge bg={referencia.activa ? "success" : "secondary"}>
-                                {referencia.activa ? "Activa" : "Oculta"}
-                              </Badge>
-                            </td>
-                            <td>
-                              <Button 
-                                variant="outline-primary" 
-                                size="sm" 
-                                className="me-2"
-                                onClick={() => handleOpenReferenciaModal(referencia)}
-                              >
-                                <FaEdit />
-                              </Button>
-                              <Button 
-                                variant="outline-danger" 
-                                size="sm"
-                                onClick={() => handleDeleteReferencia(referencia.id)}
-                              >
-                                <FaTrash />
-                              </Button>
+                        {referenciasFiltradas.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" className="text-center py-4">
+                              <div className="text-muted">
+                                <FaTshirt size={48} className="mb-3" style={{ opacity: 0.3 }} />
+                                <h5 className="mb-2">No se encontraron referencias</h5>
+                                <p className="mb-0">
+                                  {filtroReferencias || categoriaFiltro 
+                                    ? "Intenta ajustar los filtros de búsqueda" 
+                                    : "No hay referencias registradas aún"}
+                                </p>
+                                {(filtroReferencias || categoriaFiltro) && (
+                                  <Button 
+                                    variant="outline-primary" 
+                                    size="sm" 
+                                    className="mt-2"
+                                    onClick={limpiarFiltros}
+                                  >
+                                    Limpiar filtros
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          referenciasFiltradas.map(referencia => (
+                            <tr key={referencia.id} style={{ 
+                              opacity: referencia.activa ? 1 : 0.6,
+                              background: referencia.activa ? 'transparent' : '#f8f9fa'
+                            }}>
+                              <td style={{ fontWeight: 600 }}>
+                                <Badge bg="primary" style={{ fontSize: 12 }}>
+                                  <FaTag className="me-1" />
+                                  {referencia.codigo}
+                                </Badge>
+                              </td>
+                              <td style={{ fontWeight: 600 }}>{referencia.nombre}</td>
+                              <td>{referencia.descripcion || '-'}</td>
+                              <td>
+                                <Badge bg="info" variant="outline">
+                                  {referencia.categoria || 'Sin categoría'}
+                                </Badge>
+                              </td>
+                              <td>
+                                <Badge bg={referencia.activa ? "success" : "secondary"}>
+                                  {referencia.activa ? "Activa" : "Oculta"}
+                                </Badge>
+                              </td>
+                              <td>
+                                <Button 
+                                  variant="outline-primary" 
+                                  size="sm" 
+                                  className="me-2"
+                                  onClick={() => handleOpenReferenciaModal(referencia)}
+                                >
+                                  <FaEdit />
+                                </Button>
+                                <Button 
+                                  variant="outline-danger" 
+                                  size="sm"
+                                  onClick={() => handleDeleteReferencia(referencia.id)}
+                                >
+                                  <FaTrash />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </Table>
                   </Card.Body>
@@ -950,12 +1083,21 @@ const Produccion = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontWeight: 600 }}>Categoría</Form.Label>
-                  <Form.Control
-                    type="text"
+                  <Form.Select
                     value={formReferencia.categoria}
                     onChange={(e) => setFormReferencia({...formReferencia, categoria: e.target.value})}
-                    placeholder="Ej: Blusas"
-                  />
+                  >
+                    <option value="">Seleccionar categoría</option>
+                    <option value="Línea">Línea</option>
+                    <option value="Conjunto">Conjunto</option>
+                    {getCategoriasUnicas()
+                      .filter(cat => !['Línea', 'Conjunto'].includes(cat))
+                      .map(categoria => (
+                        <option key={categoria} value={categoria}>
+                          {categoria}
+                        </option>
+                      ))}
+                  </Form.Select>
                 </Form.Group>
               </Col>
             </Row>

@@ -67,7 +67,7 @@ exports.getReferencia = async (req, res) => {
 // Crear una nueva referencia
 exports.createReferencia = async (req, res) => {
   try {
-    const { codigo, nombre, descripcion, categoria } = req.body;
+    const { codigo, nombre, descripcion, categoria, activa } = req.body;
     
     // Validaciones
     if (!codigo || codigo.trim().length === 0) {
@@ -80,11 +80,12 @@ exports.createReferencia = async (req, res) => {
     
     const client = await pool.connect();
     try {
+      const activaValue = (typeof activa === 'boolean') ? activa : true;
       const result = await client.query(
-        `INSERT INTO referencias (codigo, nombre, descripcion, categoria)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO referencias (codigo, nombre, descripcion, categoria, activa)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [codigo.trim(), nombre.trim(), descripcion ? descripcion.trim() : '', categoria ? categoria.trim() : '']
+        [codigo.trim(), nombre.trim(), descripcion ? descripcion.trim() : '', categoria ? categoria.trim() : '', activaValue]
       );
       
       res.status(201).json(result.rows[0]);

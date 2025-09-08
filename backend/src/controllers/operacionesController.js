@@ -67,7 +67,7 @@ exports.getOperacion = async (req, res) => {
 // Crear una nueva operación
 exports.createOperacion = async (req, res) => {
   try {
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -81,10 +81,10 @@ exports.createOperacion = async (req, res) => {
     const client = await pool.connect();
     try {
       const result = await client.query(
-        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '']
+        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', categoria ? categoria.trim() : '']
       );
       
       res.status(201).json(result.rows[0]);
@@ -106,7 +106,7 @@ exports.createOperacion = async (req, res) => {
 exports.updateOperacion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, activa } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -121,10 +121,10 @@ exports.updateOperacion = async (req, res) => {
     try {
       const result = await client.query(
         `UPDATE operaciones 
-         SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, video_tutorial = $4, activa = $5, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $6
+         SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, video_tutorial = $4, categoria = $5, activa = $6, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $7
          RETURNING *`,
-        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', activa, id]
+        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', categoria ? categoria.trim() : '', activa, id]
       );
       
       if (result.rows.length === 0) {

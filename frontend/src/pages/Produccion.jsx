@@ -64,6 +64,9 @@ const Produccion = () => {
 
   // Estados para operaciones
   const [operaciones, setOperaciones] = useState([]);
+  const [operacionesFiltradas, setOperacionesFiltradas] = useState([]);
+  const [filtroOperaciones, setFiltroOperaciones] = useState('');
+  const [categoriaOperacionFiltro, setCategoriaOperacionFiltro] = useState('');
   const [showOperacionModal, setShowOperacionModal] = useState(false);
   const [operacionEditando, setOperacionEditando] = useState(null);
   const [formOperacion, setFormOperacion] = useState({
@@ -71,6 +74,7 @@ const Produccion = () => {
     descripcion: '',
     tiempo_por_unidad: 1.0,
     video_tutorial: '',
+    categoria: '',
     activa: true
   });
 
@@ -132,6 +136,30 @@ const Produccion = () => {
     }
   }, [token, isAdmin]);
 
+  // Filtrar operaciones cuando cambie el filtro o las operaciones
+  useEffect(() => {
+    let filtradas = operaciones;
+
+    // Filtrar por texto (nombre, descripción, categoría)
+    if (filtroOperaciones.trim()) {
+      const textoFiltro = filtroOperaciones.toLowerCase().trim();
+      filtradas = filtradas.filter(operacion => 
+        operacion.nombre.toLowerCase().includes(textoFiltro) ||
+        (operacion.descripcion && operacion.descripcion.toLowerCase().includes(textoFiltro)) ||
+        (operacion.categoria && operacion.categoria.toLowerCase().includes(textoFiltro))
+      );
+    }
+
+    // Filtrar por categoría
+    if (categoriaOperacionFiltro) {
+      filtradas = filtradas.filter(operacion => 
+        operacion.categoria === categoriaOperacionFiltro
+      );
+    }
+
+    setOperacionesFiltradas(filtradas);
+  }, [operaciones, filtroOperaciones, categoriaOperacionFiltro]);
+
   // Filtrar referencias cuando cambie el filtro o las referencias
   useEffect(() => {
     let filtradas = referencias;
@@ -188,7 +216,7 @@ const Produccion = () => {
     }
   };
 
-  // Obtener categorías únicas para el filtro
+  // Obtener categorías únicas para el filtro de referencias
   const getCategoriasUnicas = () => {
     // Categorías predefinidas
     const categoriasPredefinidas = ['Línea', 'Conjunto'];
@@ -202,10 +230,22 @@ const Produccion = () => {
     return todasLasCategorias.sort();
   };
 
-  // Limpiar filtros
+  // Obtener categorías únicas para el filtro de operaciones
+  const getCategoriasOperacionesUnicas = () => {
+    const categorias = [...new Set(operaciones.map(op => op.categoria).filter(Boolean))];
+    return categorias.sort();
+  };
+
+  // Limpiar filtros de referencias
   const limpiarFiltros = () => {
     setFiltroReferencias('');
     setCategoriaFiltro('');
+  };
+
+  // Limpiar filtros de operaciones
+  const limpiarFiltrosOperaciones = () => {
+    setFiltroOperaciones('');
+    setCategoriaOperacionFiltro('');
   };
 
   // ===== FUNCIONES PARA OPERACIONES =====
@@ -635,6 +675,66 @@ const Produccion = () => {
                   </Button>
                 </div>
 
+                {/* Sistema de Búsqueda y Filtros para Operaciones */}
+                <Card className="mb-4" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: 'none' }}>
+                  <Card.Body>
+                    <Row className="align-items-end">
+                      <Col md={6} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            <FaCogs className="me-2" />
+                            Buscar por nombre, descripción o categoría
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Ej: Coser cuello, Corte, Confección..."
+                            value={filtroOperaciones}
+                            onChange={(e) => setFiltroOperaciones(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            Filtrar por categoría
+                          </Form.Label>
+                          <Form.Select
+                            value={categoriaOperacionFiltro}
+                            onChange={(e) => setCategoriaOperacionFiltro(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          >
+                            <option value="">Todas las categorías</option>
+                            {getCategoriasOperacionesUnicas().map(categoria => (
+                              <option key={categoria} value={categoria}>
+                                {categoria}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={2}>
+                        <Button
+                          variant="outline-secondary"
+                          onClick={limpiarFiltrosOperaciones}
+                          style={{ borderRadius: 8, fontWeight: 600, width: '100%' }}
+                        >
+                          Limpiar
+                        </Button>
+                      </Col>
+                    </Row>
+                    {(filtroOperaciones || categoriaOperacionFiltro) && (
+                      <div className="mt-3">
+                        <small className="text-muted">
+                          Mostrando {operacionesFiltradas.length} de {operaciones.length} operaciones
+                          {filtroOperaciones && ` • Buscando: "${filtroOperaciones}"`}
+                          {categoriaOperacionFiltro && ` • Categoría: "${categoriaOperacionFiltro}"`}
+                        </small>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+
                 <Card style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: 'none' }}>
                   <Card.Body>
                     <Table responsive hover>
@@ -642,6 +742,7 @@ const Produccion = () => {
                         <tr>
                           <th style={{ fontWeight: 700 }}>Nombre</th>
                           <th style={{ fontWeight: 700 }}>Descripción</th>
+                          <th style={{ fontWeight: 700 }}>Categoría</th>
                           <th style={{ fontWeight: 700 }}>Tiempo (min)</th>
                           <th style={{ fontWeight: 700 }}>Tutorial</th>
                           <th style={{ fontWeight: 700 }}>Estado</th>
@@ -649,7 +750,32 @@ const Produccion = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {operaciones.map(operacion => (
+                        {operacionesFiltradas.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" className="text-center py-4">
+                              <div className="text-muted">
+                                <FaCogs size={48} className="mb-3" style={{ opacity: 0.3 }} />
+                                <h5 className="mb-2">No se encontraron operaciones</h5>
+                                <p className="mb-0">
+                                  {filtroOperaciones || categoriaOperacionFiltro 
+                                    ? "Intenta ajustar los filtros de búsqueda" 
+                                    : "No hay operaciones registradas aún"}
+                                </p>
+                                {(filtroOperaciones || categoriaOperacionFiltro) && (
+                                  <Button 
+                                    variant="outline-primary" 
+                                    size="sm" 
+                                    className="mt-2"
+                                    onClick={limpiarFiltrosOperaciones}
+                                  >
+                                    Limpiar filtros
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          operacionesFiltradas.map(operacion => (
                           <tr key={operacion.id} style={{ 
                             opacity: operacion.activa ? 1 : 0.6,
                             background: operacion.activa ? 'transparent' : '#f8f9fa'
@@ -663,6 +789,11 @@ const Produccion = () => {
                               )}
                             </td>
                             <td>{operacion.descripcion || '-'}</td>
+                            <td>
+                              <Badge bg="primary" variant="outline" style={{ fontSize: 12 }}>
+                                {operacion.categoria || 'Sin categoría'}
+                              </Badge>
+                            </td>
                             <td>
                               <Badge bg="info" style={{ fontSize: 12 }}>
                                 <FaClock className="me-1" />
@@ -706,7 +837,8 @@ const Produccion = () => {
                               </Button>
                             </td>
                           </tr>
-                        ))}
+                          ))
+                        )}
                       </tbody>
                     </Table>
                   </Card.Body>
@@ -1040,6 +1172,16 @@ const Produccion = () => {
                 value={formOperacion.video_tutorial}
                 onChange={(e) => setFormOperacion({...formOperacion, video_tutorial: e.target.value})}
                 placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label style={{ fontWeight: 600 }}>Categoría</Form.Label>
+              <Form.Control
+                type="text"
+                value={formOperacion.categoria}
+                onChange={(e) => setFormOperacion({...formOperacion, categoria: e.target.value})}
+                placeholder="Ej: Corte, Confección, Acabados..."
               />
             </Form.Group>
 

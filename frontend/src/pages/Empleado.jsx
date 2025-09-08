@@ -1268,6 +1268,11 @@ const Empleado = () => {
                               <Accordion.Header>{operacion.nombre}</Accordion.Header>
                               <Accordion.Body style={{ textAlign: 'left' }}>
                                 <div><strong>Descripción:</strong> {operacion.descripcion || 'Sin descripción'}</div>
+                                <div><strong>Categoría:</strong> 
+                                  <Badge bg="primary" variant="outline" className="ms-2" style={{ fontSize: 12 }}>
+                                    {operacion.categoria || 'Sin categoría'}
+                                  </Badge>
+                                </div>
                                 <div><strong>Tiempo por unidad:</strong> {operacion.tiempo_por_unidad || 0} minutos</div>
                                 {operacion.video_tutorial && (
                                   <div className="mt-2">

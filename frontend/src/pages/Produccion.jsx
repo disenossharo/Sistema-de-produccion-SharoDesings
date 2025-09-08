@@ -748,11 +748,6 @@ const Produccion = () => {
                           }}>
                             <td style={{ fontWeight: 600 }}>
                               {operacion.nombre}
-                              {!operacion.activa && (
-                                <Badge bg="secondary" className="ms-2" style={{ fontSize: 10 }}>
-                                  OCULTA
-                                </Badge>
-                              )}
                             </td>
                             <td>{operacion.descripcion || '-'}</td>
                             <td>

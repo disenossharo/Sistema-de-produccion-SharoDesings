@@ -166,7 +166,7 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 ## 👨‍💻 Desarrollador
 
-**Jermix8** - Prácticas Profesionales
+**Jeronimo Morales Ceballos** - Prácticas Profesionales
 - GitHub: [@jermix8](https://github.com/jermix8)
 - Email: 8jermix@gmail.com
 

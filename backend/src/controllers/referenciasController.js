@@ -1,14 +1,45 @@
 const { pool } = require('../config/database');
 
-// Obtener todas las referencias (activas e inactivas) - para admin
+// Obtener todas las referencias (activas e inactivas) - para admin - OPTIMIZADO
 exports.getReferencias = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
-      const result = await client.query(
-        'SELECT * FROM referencias ORDER BY codigo'
-      );
-      
+      // Query optimizada con filtros opcionales
+      const { activa, categoria, search } = req.query;
+      let query = 'SELECT id, codigo, nombre, descripcion, categoria, activa FROM referencias';
+      const params = [];
+      let paramCount = 0;
+      const conditions = [];
+
+      // Filtro por estado activa/inactiva
+      if (activa !== undefined) {
+        paramCount++;
+        conditions.push(`activa = $${paramCount}`);
+        params.push(activa === 'true');
+      }
+
+      // Filtro por categoría
+      if (categoria && categoria.trim()) {
+        paramCount++;
+        conditions.push(`categoria = $${paramCount}`);
+        params.push(categoria.trim());
+      }
+
+      // Filtro por búsqueda de texto
+      if (search && search.trim()) {
+        paramCount++;
+        conditions.push(`(codigo ILIKE $${paramCount} OR nombre ILIKE $${paramCount} OR descripcion ILIKE $${paramCount} OR categoria ILIKE $${paramCount})`);
+        params.push(`%${search.trim()}%`);
+      }
+
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+      }
+
+      query += ' ORDER BY codigo';
+
+      const result = await client.query(query, params);
       res.json(result.rows);
     } finally {
       client.release();
@@ -19,13 +50,14 @@ exports.getReferencias = async (req, res) => {
   }
 };
 
-// Obtener solo referencias activas - para empleados
+// Obtener solo referencias activas - para empleados - OPTIMIZADO
 exports.getReferenciasActivas = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
+      // Query optimizada con solo campos necesarios para empleados
       const result = await client.query(
-        'SELECT * FROM referencias WHERE activa = true ORDER BY codigo'
+        'SELECT id, codigo, nombre, descripcion, categoria FROM referencias WHERE activa = true ORDER BY codigo'
       );
       
       res.json(result.rows);

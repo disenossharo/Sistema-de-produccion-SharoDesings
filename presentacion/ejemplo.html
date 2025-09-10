@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplo de Presentación - Sistema de Gestión Diseños Sharo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#inicio">
+                <i class="fas fa-industry me-2"></i>
+                Diseños Sharo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contextualizacion">Contextualización</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#objetivos">Objetivos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#desarrollo">Desarrollo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#resultados">Resultados</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#recomendaciones">Recomendaciones</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#conclusiones">Conclusiones</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sección de Inicio -->
+    <section id="inicio" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        Sistema Integral de Gestión
+                    </h1>
+                    <h2 class="h3 text-white-50 mb-4">
+                        Para Diseños Sharo
+                    </h2>
+                    <p class="lead text-white mb-4">
+                        Transformando procesos manuales en operaciones digitales automatizadas
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#contextualizacion" class="btn btn-light btn-lg">
+                            <i class="fas fa-play me-2"></i>
+                            Iniciar Presentación
+                        </a>
+                        <a href="#desarrollo" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-code me-2"></i>
+                            Ver Desarrollo
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image">
+                        <!-- Imagen placeholder - reemplazar con hero-dashboard.png -->
+                        <div class="placeholder-image bg-white rounded shadow-lg d-flex align-items-center justify-content-center" style="height: 400px;">
+                            <div class="text-center">
+                                <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">hero-dashboard.png</p>
+                                <small class="text-muted">Dashboard Principal del Sistema</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Contextualización -->
+    <section id="contextualizacion" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="text-center mb-5">
+                        <i class="fas fa-search text-primary me-3"></i>
+                        Contextualización
+                    </h2>
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-5">
+                            <h3 class="h4 text-primary mb-4">Problemática Identificada</h3>
+                            <p class="lead mb-4">
+                                Diseños Sharo enfrentaba una problemática crítica en la gestión de sus procesos internos, donde la empresa realizaba de manera manual la gestión de empleados, referencias, operaciones y reportes utilizando herramientas poco especializadas.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="problem-item mb-3">
+                                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                        <span>Ineficiencias significativas</span>
+                                    </div>
+                                    <div class="problem-item mb-3">
+                                        <i class="fas fa-clock text-danger me-2"></i>
+                                        <span>Acceso lento a la información</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="problem-item mb-3">
+                                        <i class="fas fa-ban text-danger me-2"></i>
+                                        <span>Limitaciones en toma de decisiones</span>
+                                    </div>
+                                    <div class="problem-item mb-3">
+                                        <i class="fas fa-tools text-warning me-2"></i>
+                                        <span>Herramientas poco especializadas</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Objetivos -->
+    <section id="objetivos" class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">
+                        <i class="fas fa-bullseye text-primary me-3"></i>
+                        Objetivos del Proyecto
+                    </h2>
+                    
+                    <!-- Objetivo General -->
+                    <div class="card shadow-lg border-0 mb-5">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="h4 mb-0">
+                                <i class="fas fa-flag me-2"></i>
+                                Objetivo General
+                            </h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="lead mb-0">
+                                Desarrollar e implementar un sistema integral de gestión para Diseños Sharo, orientado a mejorar significativamente la eficiencia operativa y administrativa de la empresa, facilitando la manipulación de datos empresariales de manera eficiente y segura, la generación de reportes consolidados y detallados, y la toma de decisiones informadas basadas en información real y actualizada.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Objetivos Específicos -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-lg border-0">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="objective-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            1
+                                        </div>
+                                        <h4 class="h5 mb-0">Principios de Ingeniería</h4>
+                                    </div>
+                                    <p class="mb-0">
+                                        Aplicar los principios fundamentales de la ingeniería de software, el trabajo colaborativo y la experimentación sistemática en el contexto específico del desarrollo de software empresarial.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-lg border-0">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="objective-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            2
+                                        </div>
+                                        <h4 class="h5 mb-0">Resolución de Problemas</h4>
+                                    </div>
+                                    <p class="mb-0">
+                                        Buscar la resolución efectiva de problemas técnicos y funcionales desde la conceptualización inicial hasta la implementación final del sistema.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-lg border-0">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="objective-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            3
+                                        </div>
+                                        <h4 class="h5 mb-0">Enfoque Holístico</h4>
+                                    </div>
+                                    <p class="mb-0">
+                                        Aplicar un enfoque holístico y sistémico que respete y se adapte a los entornos organizacionales específicos en los que se implementa el sistema.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Desarrollo -->
+    <section id="desarrollo" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">
+                        <i class="fas fa-code text-primary me-3"></i>
+                        Desarrollo del Proyecto
+                    </h2>
+                    
+                    <!-- Metodología -->
+                    <div class="card shadow-lg border-0 mb-5">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="h4 mb-0">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                Metodología Ágil - Scrum
+                            </h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="lead mb-4">
+                                El proyecto se desarrolló utilizando una metodología ágil basada en Scrum, adaptada a las necesidades específicas de Diseños Sharo y los requerimientos de la práctica profesional.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-3">
+                                    <i class="fas fa-sync-alt fa-3x text-success mb-3"></i>
+                                    <h5>Iterativo</h5>
+                                    <p class="small">Adaptación continua a cambios</p>
+                                </div>
+                                <div class="col-md-4 text-center mb-3">
+                                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                    <h5>Colaborativo</h5>
+                                    <p class="small">Retroalimentación constante</p>
+                                </div>
+                                <div class="col-md-4 text-center mb-3">
+                                    <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                                    <h5>Incremental</h5>
+                                    <p class="small">Entrega de funcionalidades</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arquitectura Técnica -->
+                    <div class="card shadow-lg border-0 mb-5">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="h4 mb-0">
+                                <i class="fas fa-sitemap me-2"></i>
+                                Arquitectura Técnica
+                            </h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="lead mb-4">
+                                La arquitectura técnica implementada sigue un modelo de tres capas (3-tier) que separa claramente la presentación, la lógica de negocio y el acceso a datos.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4 mb-4">
+                                    <div class="tech-layer text-center">
+                                        <i class="fab fa-react fa-3x text-primary mb-3"></i>
+                                        <h5>Frontend</h5>
+                                        <p class="small">React.js 18 + Vite + Bootstrap 5</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="tech-layer text-center">
+                                        <i class="fab fa-node-js fa-3x text-success mb-3"></i>
+                                        <h5>Backend</h5>
+                                        <p class="small">Node.js + Express + JWT</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="tech-layer text-center">
+                                        <i class="fas fa-database fa-3x text-warning mb-3"></i>
+                                        <h5>Base de Datos</h5>
+                                        <p class="small">PostgreSQL + Optimizaciones</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Funcionalidades Desarrolladas -->
+                    <div class="card shadow-lg border-0">
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="h4 mb-0">
+                                <i class="fas fa-cogs me-2"></i>
+                                Funcionalidades Desarrolladas
+                            </h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="feature-item">
+                                        <i class="fas fa-shield-alt text-primary me-3"></i>
+                                        <div>
+                                            <h5>Sistema de Autenticación</h5>
+                                            <p class="small mb-0">JWT, control de roles, middleware de seguridad</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="feature-item">
+                                        <i class="fas fa-users text-success me-3"></i>
+                                        <div>
+                                            <h5>Gestión de Empleados</h5>
+                                            <p class="small mb-0">Presencia en tiempo real, perfiles, productividad</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="feature-item">
+                                        <i class="fas fa-industry text-info me-3"></i>
+                                        <div>
+                                            <h5>Operaciones de Producción</h5>
+                                            <p class="small mb-0">Tareas, tiempos, efectividad, observaciones</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="feature-item">
+                                        <i class="fas fa-chart-bar text-warning me-3"></i>
+                                        <div>
+                                            <h5>Sistema de Reportes</h5>
+                                            <p class="small mb-0">Excel, dashboards, análisis de rendimiento</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Resultados -->
+    <section id="resultados" class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">
+                        <i class="fas fa-trophy text-primary me-3"></i>
+                        Resultados e Impacto
+                    </h2>
+                    
+                    <!-- Resultados Técnicos -->
+                    <div class="card shadow-lg border-0 mb-5">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="h4 mb-0">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Resultados Técnicos Alcanzados
+                            </h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="result-item text-center">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                        <h5>Sistema Integral Completo</h5>
+                                        <p class="small">Todos los módulos implementados exitosamente</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="result-item text-center">
+                                        <i class="fas fa-mobile-alt fa-3x text-info mb-3"></i>
+                                        <h5>Interfaz Responsive</h5>
+                                        <p class="small">Adaptable a todos los dispositivos</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="result-item text-center">
+                                        <i class="fas fa-database fa-3x text-warning mb-3"></i>
+                                        <h5>Base de Datos Optimizada</h5>
+                                        <p class="small">PostgreSQL con índices optimizados</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="result-item text-center">
+                                        <i class="fas fa-lock fa-3x text-danger mb-3"></i>
+                                        <h5>Sistema de Seguridad</h5>
+                                        <p class="small">Múltiples capas de protección</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impacto en la Empresa -->
+                    <div class="card shadow-lg border-0">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="h4 mb-0">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Impacto en la Empresa
+                            </h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row">
+                                <div class="col-md-4 mb-4">
+                                    <div class="impact-stat text-center">
+                                        <div class="stat-number text-success">70%</div>
+                                        <div class="stat-label">Reducción en tiempo administrativo</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="impact-stat text-center">
+                                        <div class="stat-number text-info">100%</div>
+                                        <div class="stat-label">Eliminación de registros en papel</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="impact-stat text-center">
+                                        <div class="stat-number text-warning">24/7</div>
+                                        <div class="stat-label">Acceso remoto disponible</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Recomendaciones -->
+    <section id="recomendaciones" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">
+                        <i class="fas fa-lightbulb text-primary me-3"></i>
+                        Recomendaciones
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-lg border-0">
+                                <div class="card-header bg-warning text-dark">
+                                    <h4 class="h5 mb-0">
+                                        <i class="fas fa-tools me-2"></i>
+                                        Técnicas
+                                    </h4>
+                                </div>
+                                <div class="card-body p-4">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Respaldos automáticos diarios
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Monitoreo avanzado en tiempo real
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Actualizaciones regulares
+                                        </li>
+                                        <li class="mb-0">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Análisis de datos avanzado
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-lg border-0">
+                                <div class="card-header bg-info text-white">
+                                    <h4 class="h5 mb-0">
+                                        <i class="fas fa-users me-2"></i>
+                                        Operativas
+                                    </h4>
+                                </div>
+                                <div class="card-body p-4">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Capacitación del personal
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Documentación de procesos
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Funcionalidades adicionales
+                                        </li>
+                                        <li class="mb-0">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Integración con otros sistemas
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-lg border-0">
+                                <div class="card-header bg-success text-white">
+                                    <h4 class="h5 mb-0">
+                                        <i class="fas fa-rocket me-2"></i>
+                                        Estratégicas
+                                    </h4>
+                                </div>
+                                <div class="card-body p-4">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Evaluación periódica de necesidades
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Ecosistema tecnológico integrado
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Escalabilidad del sistema
+                                        </li>
+                                        <li class="mb-0">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Insights profundos de datos
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Conclusiones -->
+    <section id="conclusiones" class="py-5 bg-primary text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="mb-5">
+                        <i class="fas fa-flag-checkered me-3"></i>
+                        Conclusiones
+                    </h2>
+                    <p class="lead mb-4">
+                        El proyecto de práctica profesional ha logrado exitosamente el desarrollo e implementación de un sistema integral de gestión para Diseños Sharo, cumpliendo con todos los objetivos planteados y generando un impacto positivo significativo en la operación de la empresa.
+                    </p>
+                    <p class="mb-4">
+                        El sistema no solo ha modernizado los procesos internos, sino que ha posicionado a la empresa como una organización tecnológicamente avanzada en el sector textil colombiano, proporcionando las herramientas necesarias para competir efectivamente en un mercado cada vez más tecnológico.
+                    </p>
+                    <div class="d-flex justify-content-center gap-4">
+                        <div class="conclusion-stat">
+                            <div class="stat-number">100%</div>
+                            <div class="stat-label">Objetivos Cumplidos</div>
+                        </div>
+                        <div class="conclusion-stat">
+                            <div class="stat-number">70%</div>
+                            <div class="stat-label">Mejora en Eficiencia</div>
+                        </div>
+                        <div class="conclusion-stat">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Disponibilidad</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2024 Universidad Alexander von Humboldt - Práctica Profesional</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-0">Sistema Integral de Gestión para Diseños Sharo</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

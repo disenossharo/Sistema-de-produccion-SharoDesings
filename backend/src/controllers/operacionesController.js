@@ -1,14 +1,45 @@
 const { pool } = require('../config/database');
 
-// Obtener todas las operaciones (activas e inactivas) - para admin
+// Obtener todas las operaciones (activas e inactivas) - para admin - OPTIMIZADO
 exports.getOperaciones = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
-      const result = await client.query(
-        'SELECT * FROM operaciones ORDER BY nombre'
-      );
-      
+      // Query optimizada con filtros opcionales
+      const { activa, categoria, search } = req.query;
+      let query = 'SELECT id, nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa FROM operaciones';
+      const params = [];
+      let paramCount = 0;
+      const conditions = [];
+
+      // Filtro por estado activa/inactiva
+      if (activa !== undefined) {
+        paramCount++;
+        conditions.push(`activa = $${paramCount}`);
+        params.push(activa === 'true');
+      }
+
+      // Filtro por categoría
+      if (categoria && categoria.trim()) {
+        paramCount++;
+        conditions.push(`categoria = $${paramCount}`);
+        params.push(categoria.trim());
+      }
+
+      // Filtro por búsqueda de texto
+      if (search && search.trim()) {
+        paramCount++;
+        conditions.push(`(nombre ILIKE $${paramCount} OR descripcion ILIKE $${paramCount} OR categoria ILIKE $${paramCount})`);
+        params.push(`%${search.trim()}%`);
+      }
+
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+      }
+
+      query += ' ORDER BY nombre';
+
+      const result = await client.query(query, params);
       res.json(result.rows);
     } finally {
       client.release();
@@ -19,13 +50,14 @@ exports.getOperaciones = async (req, res) => {
   }
 };
 
-// Obtener solo operaciones activas - para empleados
+// Obtener solo operaciones activas - para empleados - OPTIMIZADO
 exports.getOperacionesActivas = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
+      // Query optimizada con solo campos necesarios para empleados
       const result = await client.query(
-        'SELECT * FROM operaciones WHERE activa = true ORDER BY nombre'
+        'SELECT id, nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria FROM operaciones WHERE activa = true ORDER BY nombre'
       );
       
       res.json(result.rows);

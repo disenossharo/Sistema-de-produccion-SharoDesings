@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { 
   Button, 
   Card, 
@@ -64,8 +64,8 @@ const Produccion = () => {
 
   // Estados para operaciones
   const [operaciones, setOperaciones] = useState([]);
-  const [operacionesFiltradas, setOperacionesFiltradas] = useState([]);
   const [filtroOperaciones, setFiltroOperaciones] = useState('');
+  const [filtroActivaOperaciones, setFiltroActivaOperaciones] = useState('todas'); // 'todas', 'activas', 'ocultas'
   const [showOperacionModal, setShowOperacionModal] = useState(false);
   const [operacionEditando, setOperacionEditando] = useState(null);
   const [formOperacion, setFormOperacion] = useState({
@@ -79,9 +79,9 @@ const Produccion = () => {
 
   // Estados para referencias
   const [referencias, setReferencias] = useState([]);
-  const [referenciasFiltradas, setReferenciasFiltradas] = useState([]);
   const [filtroReferencias, setFiltroReferencias] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [filtroActivaReferencias, setFiltroActivaReferencias] = useState('todas'); // 'todas', 'activas', 'ocultas'
   const [showReferenciaModal, setShowReferenciaModal] = useState(false);
   const [referenciaEditando, setReferenciaEditando] = useState(null);
   const [formReferencia, setFormReferencia] = useState({
@@ -128,15 +128,47 @@ const Produccion = () => {
     }
   }, [isAdmin, token]);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales - OPTIMIZADO
   useEffect(() => {
     if (token && isAdmin) {
       cargarDatos();
     }
   }, [token, isAdmin]);
 
-  // Filtrar operaciones cuando cambie el filtro o las operaciones
-  useEffect(() => {
+  // Memoizar función de carga de datos para evitar re-renders innecesarios
+  const cargarDatos = useCallback(async () => {
+    if (!token || !isAdmin) return;
+    
+    setCargando(true);
+    setError("");
+    
+    try {
+      // Cargar datos en paralelo para mayor velocidad
+      const [operacionesData, referenciasData, usuariosData] = await Promise.all([
+        api.getOperaciones(token),
+        api.getReferencias(token),
+        api.getUsuarios(token)
+      ]);
+      
+      setOperaciones(operacionesData);
+      setReferencias(referenciasData);
+      setUsuarios(usuariosData);
+    } catch (e) {
+      console.error('Error al cargar datos:', e);
+      if (e.message && e.message.includes('401')) {
+        setError("Error de autenticación. Por favor, vuelve a iniciar sesión.");
+        logout();
+        navigate('/login');
+      } else {
+        setError("Error al cargar los datos. Intenta de nuevo.");
+      }
+    } finally {
+      setCargando(false);
+    }
+  }, [token, isAdmin, logout, navigate]);
+
+  // Filtrar operaciones - OPTIMIZADO con useMemo
+  const operacionesFiltradas = useMemo(() => {
     let filtradas = operaciones;
 
     // Filtrar por texto (nombre, descripción, categoría)
@@ -149,11 +181,23 @@ const Produccion = () => {
       );
     }
 
-    setOperacionesFiltradas(filtradas);
-  }, [operaciones, filtroOperaciones]);
+    // Filtrar por estado activa/oculta
+    if (filtroActivaOperaciones !== 'todas') {
+      filtradas = filtradas.filter(operacion => {
+        if (filtroActivaOperaciones === 'activas') {
+          return operacion.activa === true;
+        } else if (filtroActivaOperaciones === 'ocultas') {
+          return operacion.activa === false;
+        }
+        return true;
+      });
+    }
 
-  // Filtrar referencias cuando cambie el filtro o las referencias
-  useEffect(() => {
+    return filtradas;
+  }, [operaciones, filtroOperaciones, filtroActivaOperaciones]);
+
+  // Filtrar referencias - OPTIMIZADO con useMemo
+  const referenciasFiltradas = useMemo(() => {
     let filtradas = referencias;
 
     // Filtrar por texto (código, nombre, descripción)
@@ -173,40 +217,21 @@ const Produccion = () => {
       );
     }
 
-    setReferenciasFiltradas(filtradas);
-  }, [referencias, filtroReferencias, categoriaFiltro]);
-
-  const cargarDatos = async () => {
-    setCargando(true);
-    setError("");
-    
-    try {
-      console.log('🔄 Cargando datos en Produccion...');
-      
-      // Cargar operaciones
-      const operacionesData = await api.getOperaciones(token);
-      setOperaciones(operacionesData);
-      console.log('✅ Operaciones cargadas:', operacionesData.length);
-      
-      // Cargar referencias
-      const referenciasData = await api.getReferencias(token);
-      setReferencias(referenciasData);
-      console.log('✅ Referencias cargadas:', referenciasData.length);
-      
-      // Cargar usuarios
-      console.log('👥 Cargando usuarios...');
-      const usuariosData = await api.getUsuarios(token);
-      console.log('📊 Usuarios recibidos del backend:', usuariosData);
-      setUsuarios(usuariosData);
-      console.log('✅ Usuarios cargados:', usuariosData.length);
-      
-    } catch (error) {
-      console.error('❌ Error al cargar datos:', error);
-      setError("Error al cargar los datos. Intenta de nuevo.");
-    } finally {
-      setCargando(false);
+    // Filtrar por estado activa/oculta
+    if (filtroActivaReferencias !== 'todas') {
+      filtradas = filtradas.filter(referencia => {
+        if (filtroActivaReferencias === 'activas') {
+          return referencia.activa === true;
+        } else if (filtroActivaReferencias === 'ocultas') {
+          return referencia.activa === false;
+        }
+        return true;
+      });
     }
-  };
+
+    return filtradas;
+  }, [referencias, filtroReferencias, categoriaFiltro, filtroActivaReferencias]);
+
 
   // Obtener categorías únicas para el filtro de referencias
   const getCategoriasUnicas = () => {
@@ -227,11 +252,13 @@ const Produccion = () => {
   const limpiarFiltros = () => {
     setFiltroReferencias('');
     setCategoriaFiltro('');
+    setFiltroActivaReferencias('todas');
   };
 
   // Limpiar filtros de operaciones
   const limpiarFiltrosOperaciones = () => {
     setFiltroOperaciones('');
+    setFiltroActivaOperaciones('todas');
   };
 
   // ===== FUNCIONES PARA OPERACIONES =====
@@ -666,7 +693,7 @@ const Produccion = () => {
                 <Card className="mb-4" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: 'none' }}>
                   <Card.Body>
                     <Row className="align-items-end">
-                      <Col md={8} className="mb-3 mb-md-0">
+                      <Col md={6} className="mb-3 mb-md-0">
                         <Form.Group>
                           <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
                             <FaCogs className="me-2" />
@@ -681,7 +708,23 @@ const Produccion = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            Estado
+                          </Form.Label>
+                          <Form.Select
+                            value={filtroActivaOperaciones}
+                            onChange={(e) => setFiltroActivaOperaciones(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          >
+                            <option value="todas">Todas</option>
+                            <option value="activas">Activas</option>
+                            <option value="ocultas">Ocultas</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
                         <Button
                           variant="outline-secondary"
                           onClick={limpiarFiltrosOperaciones}
@@ -830,7 +873,7 @@ const Produccion = () => {
                 <Card className="mb-4" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: 'none' }}>
                   <Card.Body>
                     <Row className="align-items-end">
-                      <Col md={6} className="mb-3 mb-md-0">
+                      <Col md={4} className="mb-3 mb-md-0">
                         <Form.Group>
                           <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
                             <FaTag className="me-2" />
@@ -845,7 +888,7 @@ const Produccion = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={4} className="mb-3 mb-md-0">
+                      <Col md={3} className="mb-3 mb-md-0">
                         <Form.Group>
                           <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
                             Filtrar por categoría
@@ -861,6 +904,22 @@ const Produccion = () => {
                                 {categoria}
                               </option>
                             ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={3} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            Estado
+                          </Form.Label>
+                          <Form.Select
+                            value={filtroActivaReferencias}
+                            onChange={(e) => setFiltroActivaReferencias(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          >
+                            <option value="todas">Todas</option>
+                            <option value="activas">Activas</option>
+                            <option value="ocultas">Ocultas</option>
                           </Form.Select>
                         </Form.Group>
                       </Col>

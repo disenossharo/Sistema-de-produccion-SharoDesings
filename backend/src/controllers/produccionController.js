@@ -39,7 +39,7 @@ exports.getHistorial = async (req, res) => {
   }
 };
 
-// Obtener solo tareas activas (en progreso) para el dashboard
+// Obtener solo tareas activas (en progreso) para el dashboard - OPTIMIZADO
 exports.getTareasActivas = async (req, res) => {
   try {
     if (!req.user || !req.user.email) {
@@ -48,58 +48,47 @@ exports.getTareasActivas = async (req, res) => {
     
     const client = await pool.connect();
     try {
-      console.log('🔍 Buscando tareas activas...');
-      
+      // Query optimizada con índices y solo campos necesarios
       const result = await client.query(
-        `SELECT p.*, e.nombre as empleado_nombre 
+        `SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
+                p.cantidad_hecha, p.hora_inicio, p.efectividad, p.observaciones, 
+                p.fecha, p.tiempo_estimado, p.estado, e.nombre as empleado_nombre
          FROM produccion p 
-         JOIN empleados e ON p.empleado_email = e.email 
+         INNER JOIN empleados e ON p.empleado_email = e.email 
          WHERE p.estado = 'en_progreso' AND p.hora_fin IS NULL 
          ORDER BY p.created_at DESC 
          LIMIT 10`
       );
       
-      console.log('📊 Tareas activas encontradas:', result.rows.length);
+      // Mapeo optimizado sin logs innecesarios
+      const tareasActivas = result.rows.map(row => ({
+        id: row.id,
+        usuario: row.empleado_email,
+        empleadoNombre: row.empleado_nombre,
+        tareas: row.tareas || [],
+        referencia: row.referencia,
+        cantidadAsignada: row.cantidad_asignada,
+        cantidadHecha: row.cantidad_hecha,
+        horaInicio: row.hora_inicio,
+        horaFin: null, // Siempre null para tareas activas
+        efectividad: row.efectividad,
+        observaciones: row.observaciones,
+        fecha: row.fecha,
+        tiempoEstimado: row.tiempo_estimado,
+        estado: row.estado
+      }));
       
-      const tareasActivas = result.rows.map(row => {
-        console.log('📋 Tarea activa:', {
-          id: row.id,
-          empleado: row.empleado_email,
-          estado: row.estado,
-          hora_fin: row.hora_fin,
-          efectividad: row.efectividad
-        });
-        
-        return {
-          id: row.id,
-          usuario: row.empleado_email,
-          empleadoNombre: row.empleado_nombre,
-          tareas: row.tareas || [],
-          referencia: row.referencia,
-          cantidadAsignada: row.cantidad_asignada,
-          cantidadHecha: row.cantidad_hecha,
-          horaInicio: row.hora_inicio,
-          horaFin: row.hora_fin,
-          efectividad: row.efectividad,
-          observaciones: row.observaciones,
-          fecha: row.fecha,
-          tiempoEstimado: row.tiempo_estimado,
-          estado: row.estado
-        };
-      });
-      
-      console.log('✅ Tareas activas procesadas:', tareasActivas.length);
       res.json(tareasActivas);
     } finally {
       client.release();
     }
   } catch (e) {
     console.error('❌ Error al obtener tareas activas:', e);
-    res.status(500).json({ error: 'Error al obtener tareas activas', details: e.message });
+    res.status(500).json({ error: 'Error al obtener tareas activas' });
   }
 };
 
-// Obtener todas las tareas de todos los empleados
+// Obtener todas las tareas de todos los empleados - OPTIMIZADO
 exports.getAllTareas = async (req, res) => {
   try {
     if (!req.user || !req.user.email) {
@@ -108,12 +97,21 @@ exports.getAllTareas = async (req, res) => {
     
     const client = await pool.connect();
     try {
+      // Query optimizada con paginación
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const offset = (page - 1) * limit;
+      
       const result = await client.query(
-        `SELECT p.*, e.nombre as empleado_nombre 
+        `SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
+                p.cantidad_hecha, p.hora_inicio, p.hora_fin, p.efectividad, 
+                p.observaciones, p.fecha, p.tiempo_estimado, p.estado, 
+                e.nombre as empleado_nombre
          FROM produccion p 
-         JOIN empleados e ON p.empleado_email = e.email 
+         INNER JOIN empleados e ON p.empleado_email = e.email 
          ORDER BY p.created_at DESC 
-         LIMIT 50`
+         LIMIT $1 OFFSET $2`,
+        [limit, offset]
       );
       
       const allTareas = result.rows.map(row => ({

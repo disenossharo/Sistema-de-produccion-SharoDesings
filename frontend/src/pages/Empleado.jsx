@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Form, Card, Row, Col, Alert, ProgressBar, Accordion, Modal, Table, Nav, Navbar, Container, Spinner } from "react-bootstrap";
+import { Button, Form, Card, Row, Col, Alert, ProgressBar, Accordion, Modal, Table, Nav, Navbar, Container, Spinner, Badge } from "react-bootstrap";
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,

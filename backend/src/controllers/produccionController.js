@@ -155,6 +155,15 @@ exports.crearTareaEnProgreso = async (req, res) => {
       observaciones = ''
     } = req.body;
     
+    console.log('🔍 Datos recibidos para crear tarea:', {
+      email,
+      tareas,
+      referencia,
+      cantidadAsignada,
+      tiempoEstimado,
+      observaciones
+    });
+    
     // Validaciones
     if (!email) {
       return res.status(400).json({ error: 'Email de usuario requerido' });
@@ -189,6 +198,15 @@ exports.crearTareaEnProgreso = async (req, res) => {
       const now = new Date();
       const pad = n => n.toString().padStart(2, '0');
       const fecha = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      
+      console.log('📝 Insertando tarea en base de datos con datos:', {
+        email,
+        tareas,
+        referencia: referencia.trim(),
+        cantidadAsignada: Number(cantidadAsignada),
+        tiempoEstimado: Number(tiempoEstimado),
+        observaciones: observaciones ? observaciones.trim() : ''
+      });
       
       const result = await client.query(
         `INSERT INTO produccion (

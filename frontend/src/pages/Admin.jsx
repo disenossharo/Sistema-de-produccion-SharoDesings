@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button, Nav, Navbar, Container, Card, Row, Col, ProgressBar, Table, Alert, Spinner, Modal, Form } from "react-bootstrap";
 import { FaUserCircle, FaChartLine, FaCheckCircle, FaUsers, FaChartBar, FaFileExcel, FaMedal, FaUserTie, FaStopCircle, FaCogs } from "react-icons/fa";
 import { Line } from 'react-chartjs-2';
@@ -257,11 +257,12 @@ const Admin = () => {
           setEstadisticas(null);
         }
         
-        // Cargar tareas activas y tareas del día en paralelo para mayor velocidad
+        // Cargar tareas activas, tareas del día y presencia en paralelo para mayor velocidad
         if (empleadosData.length > 0) {
           await Promise.all([
             fetchTareasDelDia(),
-            fetchTareasActivas()
+            fetchTareasActivas(),
+            fetchPresencia()
           ]);
         }
         
@@ -289,6 +290,24 @@ const Admin = () => {
     fetchData();
     console.log('✅ useEffect de fetchData completado');
   }, [token, logout, isLoading]);
+
+  // Función para obtener presencia de empleados
+  const fetchPresencia = async () => {
+    try {
+      if (!token) {
+        console.error('❌ No hay token para obtener presencia');
+        return;
+      }
+      
+      console.log('🔄 Obteniendo presencia de empleados...');
+      const presenciasData = await api.getPresencia(token);
+      setPresencias(presenciasData);
+      console.log('✅ Presencia cargada:', presenciasData.length, 'empleados');
+    } catch (error) {
+      console.error('❌ Error al cargar presencia:', error);
+      setPresencias([]);
+    }
+  };
 
   // Función para obtener tareas activas para el dashboard
   const fetchTareasActivas = async () => {
@@ -434,40 +453,39 @@ const Admin = () => {
     }
   };
 
-  // Polling optimizado cada 3 segundos para obtener tareas actualizadas (más rápido)
+  // Polling optimizado cada 4 segundos para obtener tareas actualizadas
   useEffect(() => {
-    if (isLoading || !token) return; // No ejecutar si está cargando o no hay token
+    if (isLoading || !token) return;
     
     // Ejecutar inmediatamente
     fetchTareasActivas();
     
-    // Configurar intervalo más frecuente para mejor responsividad
+    // Configurar intervalo para mejor responsividad
     const interval = setInterval(() => {
       fetchTareasActivas();
-    }, 3000); // Cada 3 segundos para mejor experiencia en tiempo real
+    }, 4000); // Cada 4 segundos para balance entre rendimiento y responsividad
     
     return () => clearInterval(interval);
-  }, [token, isLoading]); // Depender del token y estado de carga
+  }, [token, isLoading]);
 
-  // Actualizar tareas del día cuando cambien las tareas activas (para reflejar tareas completadas)
+  // Actualizar tareas del día cuando cambien las tareas activas
   useEffect(() => {
     if (empleados.length > 0 && produccion.length > 0) {
-      // Actualizar tareas del día cada vez que cambien las tareas activas
       fetchTareasDelDia();
     }
   }, [produccion, empleados.length]);
 
-  // Polling adicional para tareas del día cada 6 segundos para mantener datos actualizados (más rápido)
+  // Polling para tareas del día cada 8 segundos
   useEffect(() => {
     if (isLoading || !token || empleados.length === 0) return;
     
     // Ejecutar inmediatamente
     fetchTareasDelDia();
     
-    // Configurar intervalo más frecuente
+    // Configurar intervalo
     const interval = setInterval(() => {
       fetchTareasDelDia();
-    }, 6000); // Cada 6 segundos para mejor sincronización
+    }, 8000); // Cada 8 segundos para balance entre rendimiento y actualización
     
     return () => clearInterval(interval);
   }, [token, empleados.length, isLoading]);
@@ -502,6 +520,14 @@ const Admin = () => {
     return () => clearInterval(interval);
   }, [token, isLoading]);
 
+  // Recargar datos cuando se regrese al dashboard
+  useEffect(() => {
+    if (activeTab === 'dashboard' && !isLoading && token) {
+      console.log('🔄 Regresando al dashboard, recargando datos...');
+      recargarDatosDashboard();
+    }
+  }, [activeTab, isLoading, token]);
+
   // Optimización: precargar tareas del día cuando se cargan los empleados
   useEffect(() => {
     if (empleados.length > 0 && !datosCompletos) {
@@ -517,23 +543,15 @@ const Admin = () => {
     }
   }, [filtroEmpleadoHistorial, fechaEmpleadoSeleccionada, mesEmpleadoSeleccionado, semanaEnMesSeleccionada, historialEmpleadoDetallado]);
 
-  // Leer presencia en tiempo real (más frecuente para mejor responsividad)
+  // Leer presencia en tiempo real - OPTIMIZADO
   useEffect(() => {
     if (isLoading || !token) return;
     
-    const fetchPresencia = async () => {
-      try {
-        const presenciasData = await api.getPresencia(token);
-        setPresencias(presenciasData);
-      } catch (error) {
-        console.error('Error al cargar presencia:', error);
-        setPresencias([]);
-      }
-    };
-    
+    // Ejecutar inmediatamente
     fetchPresencia();
-    // Actualizar cada 8 segundos para mejor detección de cambios
-    const interval = setInterval(fetchPresencia, 8000);
+    
+    // Actualizar cada 5 segundos para mejor responsividad
+    const interval = setInterval(fetchPresencia, 5000);
     return () => clearInterval(interval);
   }, [token, isLoading]);
 
@@ -910,6 +928,21 @@ const Admin = () => {
     }
   };
 
+  // Función para recargar todos los datos del dashboard
+  const recargarDatosDashboard = async () => {
+    try {
+      console.log('🔄 Recargando datos del dashboard...');
+      await Promise.all([
+        fetchTareasActivas(),
+        fetchTareasDelDia(),
+        fetchPresencia()
+      ]);
+      console.log('✅ Datos del dashboard recargados');
+    } catch (error) {
+      console.error('❌ Error recargando datos del dashboard:', error);
+    }
+  };
+
   // Función para manejar el cambio de pestaña y cerrar el menú
   const handleTabChange = (selectedKey) => {
     if (selectedKey === 'produccion') {
@@ -944,27 +977,17 @@ const Admin = () => {
     }
   };
 
-  // Empleados en línea (basado en presencia/sesión iniciada) con mejor lógica
-  const empleadosOnline = empleados.filter(emp => {
-    // Un empleado está en línea si tiene presencia activa (sesión iniciada)
-    const presencia = presencias.find(p => p.id === emp.id);
-    const isOnline = presencia && presencia.online === true;
-    
-    // Si no hay datos de presencia, considerar como offline
-    if (!presencia) {
-      console.log('👤 Empleado sin datos de presencia:', emp.id, emp.nombre);
-      return false;
+  // Empleados en línea - OPTIMIZADO
+  const empleadosOnline = useMemo(() => {
+    if (!empleados.length || !presencias.length) {
+      return [];
     }
     
-    console.log('👤 Verificando empleado:', emp.id, {
-      nombre: emp.nombre,
-      isOnline,
-      lastSeen: presencia.lastSeen,
-      presencias: presencias.map(p => ({ id: p.id, online: p.online, lastSeen: p.lastSeen }))
+    return empleados.filter(emp => {
+      const presencia = presencias.find(p => p.id === emp.id);
+      return presencia && presencia.online === true;
     });
-    
-    return isOnline;
-  });
+  }, [empleados, presencias]);
   
   // Debug: Mostrar información detallada de empleados y presencia
   console.log('🔍 DEBUG - Estado de empleados y presencia:', {

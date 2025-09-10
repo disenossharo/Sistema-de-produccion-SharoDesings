@@ -26,6 +26,7 @@ exports.getHistorial = async (req, res) => {
         observaciones: row.observaciones,
         fecha: row.fecha,
         tiempoEstimado: row.tiempo_estimado,
+        tiempoTranscurrido: row.tiempo_transcurrido,
         estado: row.estado
       }));
       

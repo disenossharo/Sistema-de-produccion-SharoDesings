@@ -692,6 +692,20 @@ const Empleado = () => {
     });
   };
 
+  // Función para formatear tiempo transcurrido
+  const formatTiempoTranscurrido = (tiempoEnMinutos) => {
+    if (!tiempoEnMinutos || tiempoEnMinutos <= 0) return 'N/A';
+    
+    const horas = Math.floor(tiempoEnMinutos / 60);
+    const minutos = Math.round(tiempoEnMinutos % 60);
+    
+    if (horas > 0) {
+      return `${horas}h ${minutos}min`;
+    } else {
+      return `${minutos} min`;
+    }
+  };
+
   // Calcular tiempo estimado total con validaciones robustas
   const tiempoEstimado = (() => {
     // Validar que tengamos todos los datos necesarios
@@ -1438,6 +1452,7 @@ const Empleado = () => {
                           <th style={{ minWidth: 80 }}>Asignada</th>
                           <th style={{ minWidth: 80 }}>Hecha</th>
                           <th style={{ minWidth: 110 }}>Efectividad (%)</th>
+                          <th style={{ minWidth: 120 }}>Tiempo Total</th>
                           <th style={{ minWidth: 140 }}>Observaciones</th>
                         </tr>
                       </thead>
@@ -1450,6 +1465,9 @@ const Empleado = () => {
                             <td style={{ maxWidth: 80, textAlign: 'center' }}>{h.cantidadAsignada}</td>
                             <td style={{ maxWidth: 80, textAlign: 'center' }}>{h.cantidadHecha}</td>
                             <td style={{ maxWidth: 110, fontWeight: 700, color: h.efectividad >= 80 ? '#28a745' : h.efectividad >= 50 ? '#ffc107' : '#dc3545', textAlign: 'center' }}>{h.efectividad}</td>
+                            <td style={{ maxWidth: 120, textAlign: 'center', fontWeight: 600, color: '#0d6efd' }}>
+                              {formatTiempoTranscurrido(h.tiempoTranscurrido)}
+                            </td>
                             <td style={{ maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{h.observaciones}</td>
                           </tr>
                         ))}

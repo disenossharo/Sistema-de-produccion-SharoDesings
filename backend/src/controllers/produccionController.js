@@ -180,8 +180,16 @@ exports.crearTareaEnProgreso = async (req, res) => {
       return res.status(400).json({ error: 'Cantidad asignada debe ser mayor a 0' });
     }
     
-    if (isNaN(tiempoEstimado) || Number(tiempoEstimado) < 0) {
-      return res.status(400).json({ error: 'Tiempo estimado debe ser un número válido mayor o igual a 0' });
+    // Validar tiempo estimado - permitir 0 pero asegurar que sea un número válido
+    if (isNaN(tiempoEstimado)) {
+      console.log('⚠️ Tiempo estimado no es un número válido:', tiempoEstimado);
+      return res.status(400).json({ error: 'Tiempo estimado debe ser un número válido' });
+    }
+    
+    const tiempoEstimadoNum = Number(tiempoEstimado);
+    if (tiempoEstimadoNum < 0) {
+      console.log('⚠️ Tiempo estimado negativo:', tiempoEstimadoNum);
+      return res.status(400).json({ error: 'Tiempo estimado no puede ser negativo' });
     }
     
     console.log('✅ Tarea creada - Usuario:', email, 'Ref:', referencia);
@@ -207,7 +215,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
         tareas,
         referencia: referencia.trim(),
         cantidadAsignada: Number(cantidadAsignada),
-        tiempoEstimado: Number(tiempoEstimado),
+        tiempoEstimado: tiempoEstimadoNum,
         observaciones: observaciones ? observaciones.trim() : ''
       });
       
@@ -216,7 +224,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
           empleado_email, tareas, referencia, cantidad_asignada, cantidad_hecha, 
           hora_inicio, hora_fin, efectividad, observaciones, fecha, tiempo_estimado, estado
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-        [email, tareas, referencia.trim(), Number(cantidadAsignada), 0, now, null, null, observaciones ? observaciones.trim() : '', fecha, Number(tiempoEstimado), 'en_progreso']
+        [email, tareas, referencia.trim(), Number(cantidadAsignada), 0, now, null, null, observaciones ? observaciones.trim() : '', fecha, tiempoEstimadoNum, 'en_progreso']
       );
       
       const tareaGuardada = result.rows[0];

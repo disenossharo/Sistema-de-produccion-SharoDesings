@@ -788,7 +788,14 @@ const Empleado = () => {
   })();
 
   // Validar que el tiempo estimado sea un número válido
-  const tiempoEstimadoValido = isNaN(tiempoEstimado) || tiempoEstimado <= 0 ? 0 : tiempoEstimado;
+  const tiempoEstimadoValido = (() => {
+    const tiempo = Number(tiempoEstimado);
+    if (isNaN(tiempo) || tiempo < 0) {
+      console.warn('⚠️ Tiempo estimado inválido:', tiempoEstimado, 'usando 0');
+      return 0;
+    }
+    return tiempo;
+  })();
 
 
   // Iniciar tarea
@@ -826,6 +833,14 @@ const Empleado = () => {
     
     // Crear tarea en progreso en el backend
     try {
+      console.log('🚀 Enviando datos al backend:', {
+        tareas: tareasSeleccionadas,
+        referencia: referencia.trim(),
+        cantidadAsignada: Number(cantidad),
+        tiempoEstimado: tiempoEstimadoValido,
+        tiempoEstimadoOriginal: tiempoEstimado
+      });
+      
       const tareaEnProgreso = await api.crearTareaEnProgreso(token, {
         tareas: tareasSeleccionadas,
         referencia: referencia.trim(),

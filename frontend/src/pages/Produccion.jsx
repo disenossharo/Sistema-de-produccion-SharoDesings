@@ -94,6 +94,8 @@ const Produccion = () => {
 
   // Estados para usuarios
   const [usuarios, setUsuarios] = useState([]);
+  const [filtroUsuarios, setFiltroUsuarios] = useState('');
+  const [filtroActivoUsuarios, setFiltroActivoUsuarios] = useState('todos'); // 'todos', 'activos', 'inactivos'
   const [showUsuarioModal, setShowUsuarioModal] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -260,6 +262,36 @@ const Produccion = () => {
     setFiltroOperaciones('');
     setFiltroActivaOperaciones('todas');
   };
+
+  // Limpiar filtros de usuarios
+  const limpiarFiltrosUsuarios = () => {
+    setFiltroUsuarios('');
+    setFiltroActivoUsuarios('todos');
+  };
+
+  // Filtrar usuarios - OPTIMIZADO con useMemo
+  const usuariosFiltrados = useMemo(() => {
+    let filtrados = usuarios;
+
+    if (filtroUsuarios.trim()) {
+      const texto = filtroUsuarios.toLowerCase().trim();
+      filtrados = filtrados.filter(u =>
+        (u.nombre && u.nombre.toLowerCase().includes(texto)) ||
+        (u.apellidos && u.apellidos.toLowerCase().includes(texto)) ||
+        (u.email && u.email.toLowerCase().includes(texto))
+      );
+    }
+
+    if (filtroActivoUsuarios !== 'todos') {
+      filtrados = filtrados.filter(u => {
+        if (filtroActivoUsuarios === 'activos') return u.activo !== false;
+        if (filtroActivoUsuarios === 'inactivos') return u.activo === false;
+        return true;
+      });
+    }
+
+    return filtrados;
+  }, [usuarios, filtroUsuarios, filtroActivoUsuarios]);
 
   // ===== FUNCIONES PARA OPERACIONES =====
 
@@ -1051,6 +1083,61 @@ const Produccion = () => {
                     Nuevo Usuario
                   </Button>
                 </div>
+                {/* Sistema de Búsqueda y Filtros de Usuarios */}
+                <Card className="mb-4" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: 'none' }}>
+                  <Card.Body>
+                    <Row className="align-items-end">
+                      <Col md={6} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            Buscar por nombre, apellidos o email
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Ej: María, Pérez, usuario@empresa.com"
+                            value={filtroUsuarios}
+                            onChange={(e) => setFiltroUsuarios(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3} className="mb-3 mb-md-0">
+                        <Form.Group>
+                          <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
+                            Estado
+                          </Form.Label>
+                          <Form.Select
+                            value={filtroActivoUsuarios}
+                            onChange={(e) => setFiltroActivoUsuarios(e.target.value)}
+                            style={{ borderRadius: 8 }}
+                          >
+                            <option value="todos">Todos</option>
+                            <option value="activos">Activos</option>
+                            <option value="inactivos">Inactivos</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Button
+                          variant="outline-secondary"
+                          onClick={limpiarFiltrosUsuarios}
+                          style={{ borderRadius: 8, fontWeight: 600, width: '100%' }}
+                        >
+                          Limpiar
+                        </Button>
+                      </Col>
+                    </Row>
+                    {(filtroUsuarios || filtroActivoUsuarios !== 'todos') && (
+                      <div className="mt-3">
+                        <small className="text-muted">
+                          Mostrando {usuariosFiltrados.length} de {usuarios.length} usuarios
+                          {filtroUsuarios && ` • Buscando: "${filtroUsuarios}"`}
+                          {filtroActivoUsuarios !== 'todos' && ` • Estado: ${filtroActivoUsuarios}`}
+                        </small>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
 
                 <Card style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: 'none' }}>
                   <Card.Body>
@@ -1066,7 +1153,7 @@ const Produccion = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {usuarios.map(usuario => (
+                        {usuariosFiltrados.map(usuario => (
                           <tr key={usuario.id} style={{ 
                             opacity: usuario.activo === false ? 0.6 : 1,
                             background: usuario.activo === false ? '#f8f9fa' : 'transparent'

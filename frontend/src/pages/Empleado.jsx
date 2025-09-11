@@ -585,6 +585,7 @@ const Empleado = () => {
 
  
   const [tiempoEfectivo, setTiempoEfectivo] = useState(0); // en minutos
+  const [tiempoTranscurridoTarea, setTiempoTranscurridoTarea] = useState(0); // en minutos
 
   // Configuración de jornada y descansos automáticos
   const JORNADA_INICIO = { hour: 7, minute: 30 };
@@ -626,6 +627,27 @@ const Empleado = () => {
   } else if (horaActual > horaFinTurno) {
     tiempoTranscurrido = Math.floor((horaFinTurno - horaInicioTurno) / 60000);
   }
+
+  // Actualizar tiempo transcurrido de la tarea en tiempo real
+  useEffect(() => {
+    if (!enProgreso || !horaInicio) {
+      setTiempoTranscurridoTarea(0);
+      return;
+    }
+
+    const updateTiempoTarea = () => {
+      const ahora = new Date();
+      const tiempoTranscurrido = Math.floor((ahora - horaInicio) / 60000); // en minutos
+      setTiempoTranscurridoTarea(tiempoTranscurrido);
+    };
+
+    // Actualizar inmediatamente
+    updateTiempoTarea();
+
+    // Luego cada segundo
+    const interval = setInterval(updateTiempoTarea, 1000);
+    return () => clearInterval(interval);
+  }, [enProgreso, horaInicio]);
 
   // Calcular tiempo efectivo trabajado automáticamente (ajustado para turno automático)
   useEffect(() => {
@@ -753,33 +775,43 @@ const Empleado = () => {
   const tiempoEstimado = (() => {
     // Validar que tengamos todos los datos necesarios
     if (!cantidad || !tareasSeleccionadas || tareasSeleccionadas.length === 0 || !operaciones || operaciones.length === 0) {
+      console.log('⚠️ Datos insuficientes para calcular tiempo estimado:', { cantidad, tareasSeleccionadas, operaciones: operaciones.length });
       return 0;
     }
 
     try {
       const cantidadNum = Number(cantidad);
       if (isNaN(cantidadNum) || cantidadNum <= 0) {
+        console.log('⚠️ Cantidad inválida:', cantidadNum);
         return 0;
       }
+
+      console.log('🔍 Calculando tiempo estimado:', { cantidadNum, tareasSeleccionadas, operaciones: operaciones.length });
 
       // Calcular tiempo total de todas las operaciones seleccionadas
       const tiempoTotalOperaciones = tareasSeleccionadas.reduce((acc, nombreTarea) => {
         const operacionObj = operaciones.find(op => op.nombre === nombreTarea);
         if (!operacionObj) {
+          console.log('⚠️ Operación no encontrada:', nombreTarea);
           return acc;
         }
         
         const tiempoOperacion = Number(operacionObj.tiempo_por_unidad);
         if (isNaN(tiempoOperacion) || tiempoOperacion <= 0) {
+          console.log('⚠️ Tiempo de operación inválido:', tiempoOperacion, 'para', nombreTarea);
           return acc;
         }
         
+        console.log('✅ Operación válida:', nombreTarea, 'tiempo:', tiempoOperacion);
         return acc + tiempoOperacion;
       }, 0);
+
+      console.log('📊 Tiempo total operaciones:', tiempoTotalOperaciones);
 
       // Multiplicar por la cantidad
       const tiempoTotal = tiempoTotalOperaciones * cantidadNum;
       
+      console.log('🎯 Tiempo estimado final:', tiempoTotal);
       return tiempoTotal;
     } catch (error) {
       console.error('❌ Error calculando tiempo estimado:', error);
@@ -1604,7 +1636,7 @@ const Empleado = () => {
                     <strong>Hora estimada de fin:</strong> {formatHoraSimple(horaEstimadaFin)}
                   </div>
                   <div className="mb-2">
-                    <strong>Tiempo transcurrido:</strong> {horaInicio && !isNaN(horaInicio.getTime()) ? `${Math.floor((horaActual - horaInicio) / 60000)} min ${Math.floor(((horaActual - horaInicio) % 60000) / 1000)} seg` : "No disponible"}
+                    <strong>Tiempo transcurrido:</strong> {enProgreso && horaInicio ? `${tiempoTranscurridoTarea} min ${Math.floor(((horaActual - horaInicio) % 60000) / 1000)} seg` : "No disponible"}
                   </div>
                   <div className="mb-3">
                     <strong>Efectividad en tiempo real:</strong> {efectividadEnTiempo}%

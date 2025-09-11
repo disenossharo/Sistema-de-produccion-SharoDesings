@@ -6,6 +6,7 @@ const { testConnection, createTables } = require('./config/database');
 const addCategoriaColumn = require('../scripts/add-categoria-operaciones');
 const fixProduccionTable = require('../scripts/maintenance/fixProduccionTable');
 const { addReferenciaOperacionesRelation } = require('../scripts/maintenance/addReferenciaOperacionesRelation');
+const { fixTiempoEstimadoColumn } = require('../scripts/maintenance/fixTiempoEstimadoColumn');
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -193,12 +194,19 @@ async function initializeServer() {
             console.error('⚠️ Error verificando tabla produccion (continuando):', error.message);
           }
           
-          try {
-            await addReferenciaOperacionesRelation();
-            console.log('✅ Relación referencias-operaciones configurada');
-          } catch (error) {
-            console.error('⚠️ Error configurando relación referencias-operaciones (continuando):', error.message);
-          }
+             try {
+               await addReferenciaOperacionesRelation();
+               console.log('✅ Relación referencias-operaciones configurada');
+             } catch (error) {
+               console.error('⚠️ Error configurando relación referencias-operaciones (continuando):', error.message);
+             }
+
+             try {
+               await fixTiempoEstimadoColumn();
+               console.log('✅ Columna tiempo_estimado corregida');
+             } catch (error) {
+               console.error('⚠️ Error corrigiendo columna tiempo_estimado (continuando):', error.message);
+             }
     
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {

@@ -58,7 +58,7 @@ async function createTables() {
         efectividad DECIMAL(5,2),
         observaciones TEXT,
         fecha VARCHAR(50),
-        tiempo_estimado INTEGER DEFAULT 0,
+        tiempo_estimado DECIMAL(10,2) DEFAULT 0,
         tiempo_transcurrido DECIMAL(10,2) DEFAULT 0,
         estado VARCHAR(50) DEFAULT 'en_progreso',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

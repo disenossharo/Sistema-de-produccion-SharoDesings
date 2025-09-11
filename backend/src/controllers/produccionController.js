@@ -219,12 +219,30 @@ exports.crearTareaEnProgreso = async (req, res) => {
         observaciones: observaciones ? observaciones.trim() : ''
       });
       
+      // Preparar parámetros para la inserción
+      const insertParams = [
+        email, 
+        tareas, 
+        referencia.trim(), 
+        Number(cantidadAsignada), 
+        0, 
+        now, 
+        null, 
+        null, 
+        observaciones ? observaciones.trim() : '', 
+        fecha, 
+        tiempoEstimadoNum, 
+        'en_progreso'
+      ];
+      
+      console.log('📝 Parámetros de inserción:', insertParams);
+      
       const result = await client.query(
         `INSERT INTO produccion (
           empleado_email, tareas, referencia, cantidad_asignada, cantidad_hecha, 
           hora_inicio, hora_fin, efectividad, observaciones, fecha, tiempo_estimado, estado
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-        [email, tareas, referencia.trim(), Number(cantidadAsignada), 0, now, null, null, observaciones ? observaciones.trim() : '', fecha, tiempoEstimadoNum, 'en_progreso']
+        insertParams
       );
       
       const tareaGuardada = result.rows[0];

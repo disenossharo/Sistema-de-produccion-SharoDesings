@@ -893,7 +893,7 @@ const Empleado = () => {
   const handleFinalizar = () => {
     // Validaciones antes de finalizar
     if (!cantidadHecha || isNaN(cantidadHecha) || Number(cantidadHecha) < 0) {
-      setError("Por favor ingresa una cantidad hecha válida.");
+      setError("⚠️ Por favor ingresa una cantidad válida de prendas terminadas.");
       return;
     }
     
@@ -901,7 +901,7 @@ const Empleado = () => {
     const cantidadHechaNum = Number(cantidadHecha);
     
     if (cantidadHechaNum > cantidadNum) {
-      setError("La cantidad hecha no puede ser mayor a la cantidad asignada.");
+      setError(`🚨 ¡Atención! Has registrado ${cantidadHechaNum} prendas, pero solo tenías asignadas ${cantidadNum} prendas. Por favor verifica tu conteo y corrige la cantidad.`);
       return;
     }
     
@@ -1612,11 +1612,58 @@ const Empleado = () => {
                   </div>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Cantidad hecha</Form.Label>
-                    <Form.Control type="number" value={cantidadHecha} onChange={e => setCantidadHecha(e.target.value)} style={{ fontSize: 16, borderRadius: 8 }} min={0} max={cantidad} />
+                    <Form.Control 
+                      type="number" 
+                      value={cantidadHecha} 
+                      onChange={e => setCantidadHecha(e.target.value)} 
+                      style={{ 
+                        fontSize: 16, 
+                        borderRadius: 8,
+                        borderColor: cantidadHecha && Number(cantidadHecha) > Number(cantidad) ? '#dc3545' : undefined,
+                        backgroundColor: cantidadHecha && Number(cantidadHecha) > Number(cantidad) ? '#fff5f5' : undefined
+                      }} 
+                      min={0} 
+                      max={cantidad} 
+                    />
+                    {cantidadHecha && Number(cantidadHecha) > Number(cantidad) && (
+                      <div className="mt-2 p-2" style={{ 
+                        backgroundColor: '#f8d7da', 
+                        border: '1px solid #f5c6cb', 
+                        borderRadius: '6px',
+                        color: '#721c24',
+                        fontSize: '14px',
+                        fontWeight: '600'
+                      }}>
+                        🚨 <strong>¡Atención!</strong> Has registrado {cantidadHecha} prendas, pero solo tenías asignadas {cantidad} prendas. Por favor verifica tu conteo y corrige la cantidad.
+                      </div>
+                    )}
                   </Form.Group>
-                  <Button className="w-100 fw-bold" variant="success" onClick={handleFinalizar} style={{ fontSize: 20, borderRadius: 10, padding: '12px 0', marginTop: 8 }}>
-                    Finalizar tarea
+                  <Button 
+                    className="w-100 fw-bold" 
+                    variant={cantidadHecha && Number(cantidadHecha) > Number(cantidad) ? "danger" : "success"} 
+                    onClick={handleFinalizar} 
+                    style={{ fontSize: 20, borderRadius: 10, padding: '12px 0', marginTop: 8 }}
+                    disabled={cantidadHecha && Number(cantidadHecha) > Number(cantidad)}
+                  >
+                    {cantidadHecha && Number(cantidadHecha) > Number(cantidad) ? "❌ Corrige la cantidad primero" : "Finalizar tarea"}
                   </Button>
+                  
+                  {cantidadHecha && Number(cantidadHecha) > Number(cantidad) && (
+                    <div className="mt-3 p-3 text-center" style={{ 
+                      backgroundColor: '#fff3cd', 
+                      border: '2px solid #ffc107', 
+                      borderRadius: '8px',
+                      color: '#856404',
+                      fontSize: '16px',
+                      fontWeight: '700'
+                    }}>
+                      ⚠️ <strong>IMPORTANTE:</strong> No puedes finalizar la tarea con más prendas de las asignadas. 
+                      <br />
+                      <small style={{ fontSize: '14px', fontWeight: '500' }}>
+                        Cantidad asignada: {cantidad} | Cantidad registrada: {cantidadHecha}
+                      </small>
+                    </div>
+                  )}
                 </div>
               )}
               

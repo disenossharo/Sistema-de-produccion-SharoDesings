@@ -241,6 +241,49 @@ const Empleado = () => {
     return () => clearInterval(interval);
   }, [token, logout, navigate]);
 
+  // Cargar operaciones filtradas por referencia seleccionada
+  useEffect(() => {
+    async function fetchOperacionesPorReferencia() {
+      if (!token) return;
+      
+      try {
+        if (!referencia) {
+          // Si no hay referencia seleccionada, cargar todas las operaciones
+          const operacionesData = await api.getOperacionesActivas(token);
+          setOperaciones(operacionesData);
+          setOperacionesCargando(false);
+          return;
+        }
+        
+        // Encontrar el ID de la referencia seleccionada
+        const referenciaSeleccionada = referencias.find(ref => ref.codigo === referencia);
+        if (!referenciaSeleccionada) {
+          // Si no se encuentra la referencia, cargar todas las operaciones
+          const operacionesData = await api.getOperacionesActivas(token);
+          setOperaciones(operacionesData);
+          setOperacionesCargando(false);
+          return;
+        }
+        
+        // Cargar operaciones específicas de esta referencia
+        const operacionesData = await api.getOperacionesActivasPorReferencia(token, referenciaSeleccionada.id);
+        setOperaciones(operacionesData.operaciones || []);
+        setOperacionesCargando(false);
+        
+      } catch (e) {
+        console.error('Error al cargar operaciones por referencia:', e);
+        setOperacionesCargando(false);
+        // Si hay error de autenticación, redirigir al login
+        if (e.message && e.message.includes('401')) {
+          logout();
+          navigate("/login");
+        }
+      }
+    }
+    
+    fetchOperacionesPorReferencia();
+  }, [referencia, referencias, token, logout, navigate]);
+
 
   // Obtener historial al cargar
   useEffect(() => {
@@ -1285,6 +1328,11 @@ const Empleado = () => {
                                 <div><strong>Categoría:</strong> 
                                   <Badge bg="primary" variant="outline" className="ms-2" style={{ fontSize: 12 }}>
                                     {operacion.categoria || 'Sin categoría'}
+                                  </Badge>
+                                </div>
+                                <div><strong>Referencia:</strong> 
+                                  <Badge bg="warning" className="ms-2" style={{ fontSize: 12 }}>
+                                    {operacion.referencia_codigo || 'General'}
                                   </Badge>
                                 </div>
                                 <div><strong>Tiempo por unidad:</strong> {operacion.tiempo_por_unidad || 0} minutos</div>

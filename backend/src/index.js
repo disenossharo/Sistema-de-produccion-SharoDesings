@@ -5,6 +5,7 @@ const path = require('path');
 const { testConnection, createTables } = require('./config/database');
 const addCategoriaColumn = require('../scripts/add-categoria-operaciones');
 const fixProduccionTable = require('../scripts/maintenance/fixProduccionTable');
+const { addReferenciaOperacionesRelation } = require('../scripts/maintenance/addReferenciaOperacionesRelation');
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -190,6 +191,13 @@ async function initializeServer() {
             console.log('✅ Verificación de tabla produccion completada');
           } catch (error) {
             console.error('⚠️ Error verificando tabla produccion (continuando):', error.message);
+          }
+          
+          try {
+            await addReferenciaOperacionesRelation();
+            console.log('✅ Relación referencias-operaciones configurada');
+          } catch (error) {
+            console.error('⚠️ Error configurando relación referencias-operaciones (continuando):', error.message);
           }
     
     // Iniciar servidor

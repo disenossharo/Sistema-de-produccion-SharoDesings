@@ -180,6 +180,10 @@ exports.crearTareaEnProgreso = async (req, res) => {
       return res.status(400).json({ error: 'Cantidad asignada debe ser mayor a 0' });
     }
     
+    if (isNaN(tiempoEstimado) || Number(tiempoEstimado) < 0) {
+      return res.status(400).json({ error: 'Tiempo estimado debe ser un número válido mayor o igual a 0' });
+    }
+    
     console.log('✅ Tarea creada - Usuario:', email, 'Ref:', referencia);
     
     const client = await pool.connect();

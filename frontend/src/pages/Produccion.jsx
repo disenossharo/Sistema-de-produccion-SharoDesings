@@ -74,7 +74,8 @@ const Produccion = () => {
     tiempo_por_unidad: 1.0,
     video_tutorial: '',
     categoria: '',
-    activa: true
+    activa: true,
+    referencia_id: ''
   });
 
   // Estados para referencias
@@ -304,7 +305,8 @@ const Produccion = () => {
         tiempo_por_unidad: operacion.tiempo_por_unidad,
         video_tutorial: operacion.video_tutorial || '',
         categoria: operacion.categoria || '',
-        activa: operacion.activa
+        activa: operacion.activa,
+        referencia_id: operacion.referencia_id || ''
       });
     } else {
       setOperacionEditando(null);
@@ -313,7 +315,9 @@ const Produccion = () => {
         descripcion: '',
         tiempo_por_unidad: 1.0,
         video_tutorial: '',
-        activa: true
+        categoria: '',
+        activa: true,
+        referencia_id: ''
       });
     }
     setShowOperacionModal(true);
@@ -785,6 +789,7 @@ const Produccion = () => {
                           <th style={{ fontWeight: 700 }}>Nombre</th>
                           <th style={{ fontWeight: 700 }}>Descripción</th>
                           <th style={{ fontWeight: 700 }}>Categoría</th>
+                          <th style={{ fontWeight: 700 }}>Referencia</th>
                           <th style={{ fontWeight: 700 }}>Tiempo (min)</th>
                           <th style={{ fontWeight: 700 }}>Tutorial</th>
                           <th style={{ fontWeight: 700 }}>Estado</th>
@@ -794,7 +799,7 @@ const Produccion = () => {
                       <tbody>
                         {operacionesFiltradas.length === 0 ? (
                           <tr>
-                            <td colSpan="7" className="text-center py-4">
+                            <td colSpan="8" className="text-center py-4">
                               <div className="text-muted">
                                 <FaCogs size={48} className="mb-3" style={{ opacity: 0.3 }} />
                                 <h5 className="mb-2">No se encontraron operaciones</h5>
@@ -830,6 +835,16 @@ const Produccion = () => {
                               <Badge bg="primary" variant="outline" style={{ fontSize: 12 }}>
                                 {operacion.categoria || 'Sin categoría'}
                               </Badge>
+                            </td>
+                            <td>
+                              {operacion.referencia_codigo ? (
+                                <Badge bg="warning" style={{ fontSize: 11 }}>
+                                  <FaTag className="me-1" />
+                                  {operacion.referencia_codigo}
+                                </Badge>
+                              ) : (
+                                <span style={{ color: '#6c757d', fontSize: 12 }}>General</span>
+                              )}
                             </td>
                             <td>
                               <Badge bg="info" style={{ fontSize: 12 }}>
@@ -1283,20 +1298,40 @@ const Produccion = () => {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label style={{ fontWeight: 600 }}>Categoría</Form.Label>
-              <Form.Select
-                value={formOperacion.categoria}
-                onChange={(e) => setFormOperacion({...formOperacion, categoria: e.target.value})}
-              >
-                <option value="">Seleccionar categoría</option>
-                <option value="Fusionado">Fusionado</option>
-                <option value="Manualidades">Manualidades</option>
-                <option value="Plancha">Plancha</option>
-                <option value="Op basicas">Op basicas</option>
-                <option value="Tiempos basicos">Tiempos basicos</option>
-              </Form.Select>
-            </Form.Group>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600 }}>Categoría</Form.Label>
+                  <Form.Select
+                    value={formOperacion.categoria}
+                    onChange={(e) => setFormOperacion({...formOperacion, categoria: e.target.value})}
+                  >
+                    <option value="">Seleccionar categoría</option>
+                    <option value="Fusionado">Fusionado</option>
+                    <option value="Manualidades">Manualidades</option>
+                    <option value="Plancha">Plancha</option>
+                    <option value="Op basicas">Op basicas</option>
+                    <option value="Tiempos basicos">Tiempos basicos</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600 }}>Referencia (Opcional)</Form.Label>
+                  <Form.Select
+                    value={formOperacion.referencia_id}
+                    onChange={(e) => setFormOperacion({...formOperacion, referencia_id: e.target.value})}
+                  >
+                    <option value="">Sin referencia específica</option>
+                    {referencias.filter(ref => ref.activa).map(referencia => (
+                      <option key={referencia.id} value={referencia.id}>
+                        {referencia.codigo} - {referencia.nombre}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
 
             <Form.Group className="mb-3">
               <div className="toggle-label">

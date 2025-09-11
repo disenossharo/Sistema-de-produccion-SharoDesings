@@ -6,6 +6,7 @@ const { authenticateToken, requireAdmin } = require('../middleware/authMiddlewar
 // Rutas para referencias
 router.get('/', authenticateToken, referenciasController.getReferencias); // Admin ve todas
 router.get('/activas', authenticateToken, referenciasController.getReferenciasActivas); // Empleados ven solo activas
+router.get('/con-operaciones', authenticateToken, referenciasController.getReferenciasConOperaciones); // Referencias con conteo de operaciones
 router.get('/:id', authenticateToken, referenciasController.getReferencia);
 router.get('/categoria/:categoria', authenticateToken, referenciasController.getReferenciasPorCategoria);
 router.post('/', authenticateToken, requireAdmin, referenciasController.createReferencia);

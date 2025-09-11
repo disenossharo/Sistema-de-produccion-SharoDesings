@@ -5,9 +5,15 @@ exports.getOperaciones = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
-      // Query optimizada con filtros opcionales
-      const { activa, categoria, search } = req.query;
-      let query = 'SELECT id, nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa FROM operaciones';
+      // Query optimizada con filtros opcionales y información de referencia
+      const { activa, categoria, search, referencia_id } = req.query;
+      let query = `
+        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.video_tutorial, 
+               o.categoria, o.activa, o.referencia_id,
+               r.codigo as referencia_codigo, r.nombre as referencia_nombre
+        FROM operaciones o
+        LEFT JOIN referencias r ON o.referencia_id = r.id
+      `;
       const params = [];
       let paramCount = 0;
       const conditions = [];
@@ -15,21 +21,28 @@ exports.getOperaciones = async (req, res) => {
       // Filtro por estado activa/inactiva
       if (activa !== undefined) {
         paramCount++;
-        conditions.push(`activa = $${paramCount}`);
+        conditions.push(`o.activa = $${paramCount}`);
         params.push(activa === 'true');
       }
 
       // Filtro por categoría
       if (categoria && categoria.trim()) {
         paramCount++;
-        conditions.push(`categoria = $${paramCount}`);
+        conditions.push(`o.categoria = $${paramCount}`);
         params.push(categoria.trim());
+      }
+
+      // Filtro por referencia
+      if (referencia_id && referencia_id.trim()) {
+        paramCount++;
+        conditions.push(`o.referencia_id = $${paramCount}`);
+        params.push(parseInt(referencia_id));
       }
 
       // Filtro por búsqueda de texto
       if (search && search.trim()) {
         paramCount++;
-        conditions.push(`(nombre ILIKE $${paramCount} OR descripcion ILIKE $${paramCount} OR categoria ILIKE $${paramCount})`);
+        conditions.push(`(o.nombre ILIKE $${paramCount} OR o.descripcion ILIKE $${paramCount} OR o.categoria ILIKE $${paramCount} OR r.nombre ILIKE $${paramCount})`);
         params.push(`%${search.trim()}%`);
       }
 
@@ -37,7 +50,7 @@ exports.getOperaciones = async (req, res) => {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' ORDER BY nombre';
+      query += ' ORDER BY o.nombre';
 
       const result = await client.query(query, params);
       res.json(result.rows);
@@ -55,10 +68,15 @@ exports.getOperacionesActivas = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
-      // Query optimizada con solo campos necesarios para empleados
-      const result = await client.query(
-        'SELECT id, nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria FROM operaciones WHERE activa = true ORDER BY nombre'
-      );
+      // Query optimizada con información de referencia
+      const result = await client.query(`
+        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.video_tutorial, o.categoria,
+               o.referencia_id, r.codigo as referencia_codigo, r.nombre as referencia_nombre
+        FROM operaciones o
+        LEFT JOIN referencias r ON o.referencia_id = r.id
+        WHERE o.activa = true 
+        ORDER BY o.nombre
+      `);
       
       res.json(result.rows);
     } finally {
@@ -67,6 +85,52 @@ exports.getOperacionesActivas = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener operaciones activas:', error);
     res.status(500).json({ error: 'Error interno del servidor al obtener operaciones activas' });
+  }
+};
+
+// Obtener operaciones activas por referencia - para empleados
+exports.getOperacionesActivasPorReferencia = async (req, res) => {
+  try {
+    const { referencia_id } = req.params;
+    const client = await pool.connect();
+    
+    try {
+      if (!referencia_id) {
+        return res.status(400).json({ error: 'ID de referencia requerido' });
+      }
+      
+      // Verificar que la referencia existe y está activa
+      const referenciaCheck = await client.query(
+        'SELECT id, codigo, nombre FROM referencias WHERE id = $1 AND activa = true',
+        [referencia_id]
+      );
+      
+      if (referenciaCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Referencia no encontrada o inactiva' });
+      }
+      
+      // Obtener operaciones vinculadas a esta referencia Y operaciones sin referencia (generales)
+      const result = await client.query(
+        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.video_tutorial, o.categoria,
+                o.referencia_id, r.codigo as referencia_codigo, r.nombre as referencia_nombre
+         FROM operaciones o
+         LEFT JOIN referencias r ON o.referencia_id = r.id
+         WHERE o.activa = true 
+         AND (o.referencia_id = $1 OR o.referencia_id IS NULL)
+         ORDER BY o.referencia_id NULLS LAST, o.nombre`,
+        [referencia_id]
+      );
+      
+      res.json({
+        referencia: referenciaCheck.rows[0],
+        operaciones: result.rows
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al obtener operaciones por referencia:', error);
+    res.status(500).json({ error: 'Error interno del servidor al obtener operaciones por referencia' });
   }
 };
 
@@ -99,7 +163,7 @@ exports.getOperacion = async (req, res) => {
 // Crear una nueva operación
 exports.createOperacion = async (req, res) => {
   try {
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa, referencia_id } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -112,11 +176,31 @@ exports.createOperacion = async (req, res) => {
     
     const client = await pool.connect();
     try {
+      // Verificar que la referencia existe si se proporciona
+      if (referencia_id) {
+        const referenciaCheck = await client.query(
+          'SELECT id FROM referencias WHERE id = $1 AND activa = true',
+          [referencia_id]
+        );
+        
+        if (referenciaCheck.rows.length === 0) {
+          return res.status(400).json({ error: 'La referencia seleccionada no existe o está inactiva' });
+        }
+      }
+      
       const result = await client.query(
-        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa, referencia_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', categoria ? categoria.trim() : '', activa === undefined ? true : activa]
+        [
+          nombre.trim(), 
+          descripcion ? descripcion.trim() : '', 
+          tiempo_por_unidad, 
+          video_tutorial ? video_tutorial.trim() : '', 
+          categoria ? categoria.trim() : '', 
+          activa === undefined ? true : activa,
+          referencia_id || null
+        ]
       );
       
       res.status(201).json(result.rows[0]);
@@ -138,7 +222,7 @@ exports.createOperacion = async (req, res) => {
 exports.updateOperacion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa, referencia_id } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -151,12 +235,34 @@ exports.updateOperacion = async (req, res) => {
     
     const client = await pool.connect();
     try {
+      // Verificar que la referencia existe si se proporciona
+      if (referencia_id) {
+        const referenciaCheck = await client.query(
+          'SELECT id FROM referencias WHERE id = $1 AND activa = true',
+          [referencia_id]
+        );
+        
+        if (referenciaCheck.rows.length === 0) {
+          return res.status(400).json({ error: 'La referencia seleccionada no existe o está inactiva' });
+        }
+      }
+      
       const result = await client.query(
         `UPDATE operaciones 
-         SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, video_tutorial = $4, categoria = $5, activa = $6, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $7
+         SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, video_tutorial = $4, 
+             categoria = $5, activa = $6, referencia_id = $7, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $8
          RETURNING *`,
-        [nombre.trim(), descripcion ? descripcion.trim() : '', tiempo_por_unidad, video_tutorial ? video_tutorial.trim() : '', categoria ? categoria.trim() : '', activa, id]
+        [
+          nombre.trim(), 
+          descripcion ? descripcion.trim() : '', 
+          tiempo_por_unidad, 
+          video_tutorial ? video_tutorial.trim() : '', 
+          categoria ? categoria.trim() : '', 
+          activa, 
+          referencia_id || null,
+          id
+        ]
       );
       
       if (result.rows.length === 0) {

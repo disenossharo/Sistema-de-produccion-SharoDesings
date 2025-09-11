@@ -407,6 +407,25 @@ export async function getOperacionesActivas(token) {
   }
 }
 
+// Obtener operaciones activas por referencia (empleados)
+export async function getOperacionesActivasPorReferencia(token, referenciaId) {
+  try {
+    const res = await fetch(`${API_BASE}/operaciones/por-referencia/${referenciaId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Error ${res.status}: No se pudieron obtener las operaciones por referencia`);
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error al obtener operaciones por referencia:', error);
+    throw error;
+  }
+}
+
 // Crear nueva operación
 export async function createOperacion(token, operacion) {
   try {

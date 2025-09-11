@@ -70,6 +70,32 @@ exports.getReferenciasActivas = async (req, res) => {
   }
 };
 
+// Obtener referencias activas con sus operaciones vinculadas - para empleados
+exports.getReferenciasConOperaciones = async (req, res) => {
+  try {
+    const client = await pool.connect();
+    try {
+      // Query para obtener referencias activas con conteo de operaciones
+      const result = await client.query(`
+        SELECT r.id, r.codigo, r.nombre, r.descripcion, r.categoria,
+               COUNT(o.id) as operaciones_count
+        FROM referencias r
+        LEFT JOIN operaciones o ON r.id = o.referencia_id AND o.activa = true
+        WHERE r.activa = true
+        GROUP BY r.id, r.codigo, r.nombre, r.descripcion, r.categoria
+        ORDER BY r.codigo
+      `);
+      
+      res.json(result.rows);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al obtener referencias con operaciones:', error);
+    res.status(500).json({ error: 'Error interno del servidor al obtener referencias con operaciones' });
+  }
+};
+
 // Obtener una referencia por ID
 exports.getReferencia = async (req, res) => {
   try {

@@ -249,27 +249,32 @@ body {
 .conclusion-stat {
     text-align: center;
     padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 15px;
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .conclusion-stat:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .conclusion-stat .stat-number {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .conclusion-stat .stat-label {
     font-size: 0.8rem;
-    font-weight: 500;
-    opacity: 0.9;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Secciones */

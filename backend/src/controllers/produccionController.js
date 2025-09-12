@@ -43,12 +43,17 @@ exports.getHistorial = async (req, res) => {
 // Obtener solo tareas activas (en progreso) para el dashboard - OPTIMIZADO
 exports.getTareasActivas = async (req, res) => {
   try {
+    console.log('🔍 getTareasActivas llamado por:', req.user?.email);
+    
     if (!req.user || !req.user.email) {
+      console.log('❌ Usuario no autenticado en getTareasActivas');
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
     
     const client = await pool.connect();
     try {
+      console.log('🔄 Ejecutando query para obtener tareas activas...');
+      
       // Query optimizada con índices y solo campos necesarios
       const result = await client.query(
         `SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
@@ -58,10 +63,20 @@ exports.getTareasActivas = async (req, res) => {
          INNER JOIN empleados e ON p.empleado_email = e.email 
          WHERE p.estado = 'en_progreso' AND p.hora_fin IS NULL 
          ORDER BY p.created_at DESC 
-         LIMIT 10`
+         LIMIT 50`
       );
       
-      // Mapeo optimizado sin logs innecesarios
+      console.log('📊 Tareas activas encontradas en BD:', result.rows.length);
+      console.log('📋 Detalle de tareas activas:', result.rows.map(row => ({
+        id: row.id,
+        empleado_email: row.empleado_email,
+        empleado_nombre: row.empleado_nombre,
+        estado: row.estado,
+        hora_inicio: row.hora_inicio,
+        hora_fin: row.hora_fin
+      })));
+      
+      // Mapeo optimizado con logging
       const tareasActivas = result.rows.map(row => ({
         id: row.id,
         usuario: row.empleado_email,
@@ -79,12 +94,21 @@ exports.getTareasActivas = async (req, res) => {
         estado: row.estado
       }));
       
+      console.log('✅ Tareas activas mapeadas:', tareasActivas.length);
+      console.log('📤 Enviando respuesta con tareas activas:', tareasActivas.map(t => ({
+        id: t.id,
+        usuario: t.usuario,
+        empleadoNombre: t.empleadoNombre,
+        estado: t.estado
+      })));
+      
       res.json(tareasActivas);
     } finally {
       client.release();
     }
   } catch (e) {
     console.error('❌ Error al obtener tareas activas:', e);
+    console.error('🔍 Stack trace:', e.stack);
     res.status(500).json({ error: 'Error al obtener tareas activas' });
   }
 };
@@ -847,7 +871,10 @@ exports.exportarAExcel = async (req, res) => {
 // Obtener presencia de empleados
 exports.getPresencia = async (req, res) => {
   try {
+    console.log('🔍 getPresencia llamado por:', req.user?.email);
+    
     if (!req.user || !req.user.email) {
+      console.log('❌ Usuario no autenticado en getPresencia');
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
     
@@ -862,11 +889,23 @@ exports.getPresencia = async (req, res) => {
           COALESCE(p.online, false) as online,
           COALESCE(p.last_seen, NOW() - INTERVAL '1 hour') as last_seen,
           e.nombre,
-          e.apellidos
+          e.apellidos,
+          e.is_admin
         FROM empleados e
         LEFT JOIN presencia p ON e.email = p.empleado_email
+        WHERE e.is_admin = false
         ORDER BY p.last_seen DESC NULLS LAST
       `);
+      
+      console.log('📊 Empleados encontrados en BD:', result.rows.length);
+      console.log('📋 Detalle de empleados:', result.rows.map(row => ({
+        email: row.empleado_email,
+        nombre: row.nombre,
+        apellidos: row.apellidos,
+        online: row.online,
+        last_seen: row.last_seen,
+        is_admin: row.is_admin
+      })));
       
       const presencias = result.rows.map(row => {
         // Marcar como offline si han pasado más de 3 minutos
@@ -886,12 +925,19 @@ exports.getPresencia = async (req, res) => {
       console.log('✅ Presencia obtenida:', presencias.length, 'empleados');
       console.log('📊 Empleados online:', presencias.filter(p => p.online).length);
       console.log('📊 Empleados offline:', presencias.filter(p => !p.online).length);
+      console.log('📤 Enviando respuesta con presencia:', presencias.map(p => ({
+        id: p.id,
+        nombre: p.nombre,
+        online: p.online
+      })));
+      
       res.json(presencias);
     } finally {
       client.release();
     }
   } catch (error) {
     console.error('❌ Error obteniendo presencia:', error);
+    console.error('🔍 Stack trace:', error.stack);
     res.status(500).json({ error: 'Error obteniendo presencia', details: error.message });
   }
 };

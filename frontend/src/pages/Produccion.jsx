@@ -38,6 +38,7 @@ import '../App.css';
 import * as api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import ReferenceSearch from '../components/ReferenceSearch';
 
 const Produccion = () => {
   const { user, token, logout, isAdmin } = useAuth();
@@ -1318,17 +1319,15 @@ const Produccion = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontWeight: 600 }}>Referencia (Opcional)</Form.Label>
-                  <Form.Select
+                  <ReferenceSearch
                     value={formOperacion.referencia_id}
-                    onChange={(e) => setFormOperacion({...formOperacion, referencia_id: e.target.value})}
-                  >
-                    <option value="">Sin referencia específica</option>
-                    {referencias.filter(ref => ref.activa).map(referencia => (
-                      <option key={referencia.id} value={referencia.id}>
-                        {referencia.codigo} - {referencia.nombre}
-                      </option>
-                    ))}
-                  </Form.Select>
+                    onChange={(referenciaId) => setFormOperacion({...formOperacion, referencia_id: referenciaId})}
+                    referencias={referencias}
+                    placeholder="Buscar referencia por código o nombre..."
+                  />
+                  <Form.Text className="text-muted" style={{ fontSize: '12px' }}>
+                    Escribe el código o nombre de la referencia para buscarla y seleccionarla
+                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>

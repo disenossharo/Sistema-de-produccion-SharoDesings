@@ -175,14 +175,23 @@ const Produccion = () => {
   const operacionesFiltradas = useMemo(() => {
     let filtradas = operaciones;
 
-    // Filtrar por texto (nombre, descripción, categoría)
+    // Filtrar por texto (nombre, descripción, categoría, referencia)
     if (filtroOperaciones.trim()) {
       const textoFiltro = filtroOperaciones.toLowerCase().trim();
-      filtradas = filtradas.filter(operacion => 
-        operacion.nombre.toLowerCase().includes(textoFiltro) ||
-        (operacion.descripcion && operacion.descripcion.toLowerCase().includes(textoFiltro)) ||
-        (operacion.categoria && operacion.categoria.toLowerCase().includes(textoFiltro))
-      );
+      filtradas = filtradas.filter(operacion => {
+        // Buscar en nombre, descripción y categoría
+        const matchesBasicFields = 
+          operacion.nombre.toLowerCase().includes(textoFiltro) ||
+          (operacion.descripcion && operacion.descripcion.toLowerCase().includes(textoFiltro)) ||
+          (operacion.categoria && operacion.categoria.toLowerCase().includes(textoFiltro));
+        
+        // Buscar en referencia vinculada
+        const matchesReference = 
+          (operacion.referencia_codigo && operacion.referencia_codigo.toLowerCase().includes(textoFiltro)) ||
+          (operacion.referencia_nombre && operacion.referencia_nombre.toLowerCase().includes(textoFiltro));
+        
+        return matchesBasicFields || matchesReference;
+      });
     }
 
     // Filtrar por estado activa/oculta
@@ -734,11 +743,11 @@ const Produccion = () => {
                         <Form.Group>
                           <Form.Label style={{ fontWeight: 600, color: '#2c3e50' }}>
                             <FaCogs className="me-2" />
-                            Buscar por nombre, descripción o categoría
+                            Buscar por nombre, descripción, categoría o referencia
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            placeholder="Ej: Coser cuello, Corte, Confección..."
+                            placeholder="Ej: Coser cuello, Corte, Confección, REF-101..."
                             value={filtroOperaciones}
                             onChange={(e) => setFiltroOperaciones(e.target.value)}
                             style={{ borderRadius: 8 }}

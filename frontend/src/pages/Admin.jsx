@@ -1210,7 +1210,7 @@ const Admin = () => {
           </Navbar>
 
           {/* Contenido de la página */}
-          <div style={{ padding: '20px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+          <div style={{ padding: '20px 30px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
             <div className="w-100" style={{ padding: 0, margin: 0, width: '100%', maxWidth: '100%' }}>
           {isLoading ? (
             <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#0d6efd', flexDirection: 'column', gap: 20 }}>
@@ -1245,8 +1245,8 @@ const Admin = () => {
                     
                     {/* Estadísticas adicionales */}
                     {estadisticas && (
-                      <Row className="mt-4">
-                        <Col md={3}>
+                      <Row className="mt-4 g-2">
+                        <Col xs={6} sm={3}>
                           <div style={{ textAlign: 'center', padding: 12, background: '#e8f5e8', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1259,7 +1259,7 @@ const Admin = () => {
                             <div style={{ fontSize: 12, color: '#6c757d' }}>Tareas Completadas Hoy</div>
                           </div>
                         </Col>
-                        <Col md={3}>
+                        <Col xs={6} sm={3}>
                           <div style={{ textAlign: 'center', padding: 12, background: '#fff3cd', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1272,7 +1272,7 @@ const Admin = () => {
                             <div style={{ fontSize: 12, color: '#6c757d' }}>Tareas Activas</div>
                           </div>
                         </Col>
-                        <Col md={3}>
+                        <Col xs={6} sm={3}>
                           <div style={{ textAlign: 'center', padding: 12, background: '#e3f0ff', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1285,7 +1285,7 @@ const Admin = () => {
                             <div style={{ fontSize: 12, color: '#6c757d' }}>Empleados Activos</div>
                           </div>
                         </Col>
-                        <Col md={3}>
+                        <Col xs={6} sm={3}>
                           <div style={{ textAlign: 'center', padding: 12, background: '#f8d7da', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1308,7 +1308,7 @@ const Admin = () => {
                   {produccion.length === 0 ? (
                     <Alert variant="info" style={{ fontSize: 18, borderRadius: 10 }}>No hay tareas activas en este momento.</Alert>
                   ) : (
-                    <Row className="g-3">
+                    <Row className="g-4" style={{ justifyContent: 'flex-start' }}>
                       {(() => {
                         console.log('🎯 Renderizando tareas activas:', produccion.map(t => ({ id: t.id, usuario: t.usuario, empleadoNombre: t.empleadoNombre })));
                         return produccion.map(tarea => {
@@ -1508,12 +1508,12 @@ const Admin = () => {
                           );
                         }
                         return (
-                          <Col key={tarea.id} xs={12} sm={6} lg={4} xl={3}>
-                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '320px' }}>
-                              <Card.Body style={{ padding: 14, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                          <Col key={tarea.id} xs={12} sm={6} md={4} lg={3} xl={2}>
+                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '280px', height: '100%' }}>
+                              <Card.Body style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                  <div style={{ fontSize: 18, fontWeight: 800, color: '#0d6efd', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}>
-                                    <FaUserCircle style={{ fontSize: 24, marginRight: 6 }} />
+                                  <div style={{ fontSize: 16, fontWeight: 800, color: '#0d6efd', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-start' }}>
+                                    <FaUserCircle style={{ fontSize: 20, marginRight: 4 }} />
                                     <span>{empleadoNombre}</span>
                                     {tarea ? (
                                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

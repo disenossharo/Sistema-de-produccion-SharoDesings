@@ -37,6 +37,46 @@ const operacionesDisponibles = [
 const Admin = () => {
   const navigate = useNavigate();
   const { user, token, logout, isAdmin, isLoading } = useAuth();
+  
+  // Función para truncar texto de operaciones
+  const truncateOperationText = (text, maxLines = 3, maxCharsPerLine = 25) => {
+    if (!text) return '';
+    
+    const words = text.split(' ');
+    let lines = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      if ((currentLine + word).length <= maxCharsPerLine) {
+        currentLine += (currentLine ? ' ' : '') + word;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          lines.push(word.substring(0, maxCharsPerLine - 3) + '...');
+        }
+      }
+      
+      if (lines.length >= maxLines) {
+        if (currentLine) {
+          lines.push(currentLine + '...');
+        }
+        break;
+      }
+    }
+    
+    if (currentLine && lines.length < maxLines) {
+      lines.push(currentLine);
+    }
+    
+    return lines.join('\n');
+  };
+  
+  // Función para manejar clic en operación
+  const handleOperationClick = (operationText) => {
+    alert(`Operación completa:\n\n${operationText}`);
+  };
 
   // Protección de ruta para admin con mejor manejo de estado
   useEffect(() => {
@@ -1514,7 +1554,7 @@ const Admin = () => {
                         }
                         return (
                           <Col key={tarea.id} xs={12} sm={6} lg={4}>
-                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '350px' }}>
+                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', height: '400px' }}>
                               <Card.Body style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                                   <div style={{ fontSize: 18, fontWeight: 800, color: '#0d6efd', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}>
@@ -1605,7 +1645,25 @@ const Admin = () => {
                                     <Col xs={6} style={{ paddingLeft: 0 }}>
                                       <div style={{ marginBottom: 6 }}>
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Operación</div>
-                                        <div style={{ fontWeight: 600 }}>{Array.isArray(tarea.tareas) ? tarea.tareas.join(", ") : tarea.tareas}</div>
+                                        <div 
+                                          style={{ 
+                                            fontWeight: 600, 
+                                            cursor: 'pointer',
+                                            whiteSpace: 'pre-line',
+                                            lineHeight: '1.3',
+                                            minHeight: '39px',
+                                            maxHeight: '39px',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 3,
+                                            WebkitBoxOrient: 'vertical'
+                                          }}
+                                          onClick={() => handleOperationClick(Array.isArray(tarea.tareas) ? tarea.tareas.join(", ") : tarea.tareas)}
+                                          title={Array.isArray(tarea.tareas) ? tarea.tareas.join(", ") : tarea.tareas}
+                                        >
+                                          {truncateOperationText(Array.isArray(tarea.tareas) ? tarea.tareas.join(", ") : tarea.tareas)}
+                                        </div>
                                       </div>
                                       <div style={{ marginBottom: 6 }}>
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Ref</div>

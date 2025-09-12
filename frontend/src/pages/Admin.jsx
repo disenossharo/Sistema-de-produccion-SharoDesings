@@ -1067,12 +1067,9 @@ const Admin = () => {
           width: '280px', 
           background: 'white', 
           boxShadow: '2px 0 10px rgba(0,0,0,0.1)', 
-          position: 'fixed',
-          top: 0,
-          left: 0,
           height: '100vh',
-          zIndex: 1000,
-          overflowY: 'auto'
+          overflowY: 'auto',
+          flexShrink: 0
         }}>
           {/* Logo y título */}
           <div style={{ 
@@ -1173,11 +1170,9 @@ const Admin = () => {
         {/* Contenido principal */}
         <div className="main-content" style={{ 
           flex: 1, 
-          marginLeft: isDesktop ? '280px' : '0',
           minHeight: '100vh',
-          width: isDesktop ? 'calc(100vw - 280px)' : '100vw',
-          maxWidth: '100%',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          boxSizing: 'border-box'
         }}>
           {/* Barra superior para móvil */}
           <Navbar 
@@ -1210,8 +1205,8 @@ const Admin = () => {
           </Navbar>
 
           {/* Contenido de la página */}
-          <div style={{ padding: '20px 30px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-            <div className="w-100" style={{ padding: 0, margin: 0, width: '100%', maxWidth: '100%' }}>
+          <div style={{ padding: '20px', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <div className="w-100" style={{ padding: 0, margin: 0, width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
           {isLoading ? (
             <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#0d6efd', flexDirection: 'column', gap: 20 }}>
               <Spinner animation="border" variant="primary" size="lg" />

@@ -1302,52 +1302,24 @@ const Admin = () => {
                     )}
                   </div>
                   <div className="mb-4 text-center">
-                    <h2 style={{ fontWeight: 900, color: '#0d6efd', fontSize: 32, marginBottom: 6, letterSpacing: 1 }}>Empleados en Línea</h2>
-                    <div style={{ fontSize: 20, color: '#2c3e50', fontWeight: 600, marginBottom: 8 }}>Sesiones activas: <span style={{ color: '#0d6efd', fontWeight: 900 }}>{totalEnLinea}</span> de <span style={{ color: '#28a745', fontWeight: 900 }}>{totalEmpleados}</span></div>
+                    <h2 style={{ fontWeight: 900, color: '#0d6efd', fontSize: 32, marginBottom: 6, letterSpacing: 1 }}>Tareas Activas</h2>
+                    <div style={{ fontSize: 20, color: '#2c3e50', fontWeight: 600, marginBottom: 8 }}>Tareas en progreso: <span style={{ color: '#0d6efd', fontWeight: 900 }}>{produccion.length}</span> | Empleados conectados: <span style={{ color: '#28a745', fontWeight: 900 }}>{totalEnLinea}</span> de <span style={{ color: '#28a745', fontWeight: 900 }}>{totalEmpleados}</span></div>
                   </div>
-                  {empleadosParaMostrar.length === 0 ? (
-                    <Alert variant="info" style={{ fontSize: 18, borderRadius: 10 }}>No hay empleados en línea en este momento.</Alert>
+                  {produccion.length === 0 ? (
+                    <Alert variant="info" style={{ fontSize: 18, borderRadius: 10 }}>No hay tareas activas en este momento.</Alert>
                   ) : (
                     <Row style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'flex-start' }}>
                       {(() => {
-                        console.log('🎯 Renderizando empleados en línea:', empleadosParaMostrar.map(emp => ({ id: emp.id, nombre: emp.nombre })));
-                        return empleadosParaMostrar.map(emp => {
-                        // Buscar tarea en progreso - corregir la lógica de comparación
-                        const tarea = produccion.find(p => {
-                          // Comparar por email del empleado (emp.id es el email)
-                          const isSameUser = p.usuario === emp.id;
-                          const isInProgress = p.estado === 'en_progreso';
-                          const hasStartTime = p.horaInicio;
-                          const notFinished = !p.horaFin;
-                          
-                          console.log('🔍 Buscando tarea para empleado:', emp.id, {
-                            tareaUsuario: p.usuario,
-                            isSameUser,
-                            isInProgress,
-                            hasStartTime,
-                            notFinished,
-                            tareaEstado: p.estado,
-                            tareaHoraFin: p.horaFin
-                          });
-                          
-                          return isSameUser && isInProgress && hasStartTime && notFinished;
-                        });
-                        
-                        // Debug: Mostrar información de la búsqueda de tareas
-                        console.log('🔍 DEBUG - Búsqueda de tareas para empleado:', emp.id, {
-                          totalProduccion: produccion.length,
-                          tareaEncontrada: tarea ? {
-                            id: tarea.id,
-                            estado: tarea.estado,
-                            usuario: tarea.usuario
-                          } : null,
-                          todasLasTareas: produccion.map(p => ({
-                            id: p.id,
-                            usuario: p.usuario,
-                            estado: p.estado,
-                            horaInicio: p.horaInicio,
-                            horaFin: p.horaFin
-                          }))
+                        console.log('🎯 Renderizando tareas activas:', produccion.map(t => ({ id: t.id, usuario: t.usuario, empleadoNombre: t.empleadoNombre })));
+                        return produccion.map(tarea => {
+                        // La tarea ya está disponible directamente
+                        console.log('🔍 Procesando tarea activa:', {
+                          tareaId: tarea.id,
+                          usuario: tarea.usuario,
+                          empleadoNombre: tarea.empleadoNombre,
+                          estado: tarea.estado,
+                          horaInicio: tarea.horaInicio,
+                          horaFin: tarea.horaFin
                         });
                         
                         // Calcular efectividad en tiempo real y hora de fin estimada
@@ -1358,7 +1330,7 @@ const Admin = () => {
                         let tiempoTranscurrido = "-";
                         
                         if (tarea && tarea.horaInicio) {
-                          console.log('📊 Procesando tarea activa para empleado:', emp.id, {
+                          console.log('📊 Procesando tarea activa para empleado:', tarea.usuario, {
                             tareaId: tarea.id,
                             horaInicio: tarea.horaInicio,
                             tiempoEstimado: tarea.tiempoEstimado,
@@ -1441,18 +1413,22 @@ const Admin = () => {
                         let barraProgreso = null;
                         let informacionAdicional = null;
                         
+                        // Buscar información del empleado para esta tarea
+                        const empleado = empleados.find(emp => emp.id === tarea.usuario);
+                        const empleadoNombre = empleado ? empleado.nombre : tarea.empleadoNombre || tarea.usuario;
+                        
                         if (!tarea) {
-                          console.log('📊 No hay tarea activa para empleado:', emp.id, '- Mostrando progreso del día');
+                          console.log('📊 No hay tarea activa para empleado:', tarea.usuario, '- Mostrando progreso del día');
                           
                           // Calcular promedio de efectividad del día usando las tareas del día reales
-                          const tareasHoy = tareasDelDia[emp.id] || [];
+                          const tareasHoy = tareasDelDia[tarea.usuario] || [];
                           const tareasCompletadas = tareasHoy.filter(t => 
                             t.estado === 'finalizada' && 
                             t.efectividad !== null && 
                             t.efectividad !== undefined
                           );
                           
-                          console.log('📋 Tareas del día para empleado:', emp.id, {
+                          console.log('📋 Tareas del día para empleado:', tarea.usuario, {
                             totalTareas: tareasHoy.length,
                             tareasCompletadas: tareasCompletadas.length,
                             tareasHoy: tareasHoy.map(t => ({ id: t.id, estado: t.estado, efectividad: t.efectividad }))
@@ -1515,7 +1491,7 @@ const Admin = () => {
                             </div>
                           );
                         } else {
-                          console.log('📊 Mostrando tarea activa para empleado:', emp.id, {
+                          console.log('📊 Mostrando tarea activa para empleado:', tarea.usuario, {
                             efectividadEnTiempo,
                             tareaId: tarea.id,
                             tareaEstado: tarea.estado
@@ -1532,17 +1508,22 @@ const Admin = () => {
                           );
                         }
                         return (
-                          <Col key={emp.id} style={{ width: isDesktop ? '320px' : '100%', flex: isDesktop ? '0 0 320px' : '1 1 280px', maxWidth: isDesktop ? undefined : '100%' }}>
+                          <Col key={tarea.id} style={{ width: isDesktop ? '320px' : '100%', flex: isDesktop ? '0 0 320px' : '1 1 280px', maxWidth: isDesktop ? undefined : '100%' }}>
                             <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', marginBottom: 16, boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '280px' }}>
                               <Card.Body style={{ padding: 14, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                                   <div style={{ fontSize: 18, fontWeight: 800, color: '#0d6efd', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}>
                                     <FaUserCircle style={{ fontSize: 24, marginRight: 6 }} />
-                                    <span>{emp.nombre || emp.id}</span>
+                                    <span>{empleadoNombre}</span>
                                     {tarea ? (
-                                      <span style={{ fontSize: 12, color: '#28a745', fontWeight: 600, backgroundColor: '#d4edda', padding: '2px 8px', borderRadius: 6 }}>
-                                        🟢 Trabajando
-                                      </span>
+                                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <span style={{ fontSize: 12, color: '#28a745', fontWeight: 600, backgroundColor: '#d4edda', padding: '2px 8px', borderRadius: 6 }}>
+                                          🟢 Trabajando
+                                        </span>
+                                        <span style={{ fontSize: 11, color: tarea.empleadoOnline ? '#28a745' : '#ffc107', fontWeight: 600 }}>
+                                          {tarea.empleadoOnline ? '🟢 Conectada' : '🟡 Desconectada'}
+                                        </span>
+                                      </div>
                                     ) : (
                                       <span style={{ fontSize: 12, color: '#28a745', fontWeight: 600, backgroundColor: '#e8f5e8', padding: '2px 8px', borderRadius: 6 }}>
                                         🟢 Disponible
@@ -1558,7 +1539,7 @@ const Admin = () => {
                                   {!tarea && (
                                     <div style={{ fontSize: 12, color: '#6c757d', marginBottom: 8, textAlign: 'center' }}>
                                       {(() => {
-                                        const tareasHoy = tareasDelDia[emp.id] || [];
+                                        const tareasHoy = tareasDelDia[tarea.usuario] || [];
                                         const tareasCompletadas = tareasHoy.filter(t => t.estado === 'finalizada');
                                         if (tareasCompletadas.length === 0) {
                                           return "Efectividad del día: 100% (sin tareas)";
@@ -1582,7 +1563,7 @@ const Admin = () => {
                                       border: '1px solid #d4edda'
                                     }}>
                                       🕐 Última actividad: {(() => {
-                                        const presencia = presencias.find(p => p.id === emp.id);
+                                        const presencia = presencias.find(p => p.id === tarea.usuario);
                                         if (presencia && presencia.lastSeen) {
                                           const lastSeen = new Date(presencia.lastSeen);
                                           const now = new Date();

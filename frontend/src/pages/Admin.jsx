@@ -1059,9 +1059,9 @@ const Admin = () => {
   })();
 
   return (
-    <div className="bg-light min-vh-100 responsive-app" style={{ fontFamily: 'Montserrat, sans-serif', background: '#e9f1fb' }}>
+    <div className="bg-light min-vh-100 responsive-app" style={{ fontFamily: 'Montserrat, sans-serif', background: '#e9f1fb', margin: 0, padding: 0 }}>
       {/* Layout con sidebar */}
-      <div className="d-flex" style={{ minHeight: '100vh' }}>
+      <div className="d-flex" style={{ minHeight: '100vh', margin: 0, padding: 0 }}>
         {/* Sidebar - Visible en desktop, oculta en móvil */}
         <div className="sidebar-desktop d-none d-lg-block" style={{ 
           width: '280px', 
@@ -1074,7 +1074,9 @@ const Admin = () => {
           left: 0,
           zIndex: 1000,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          margin: 0,
+          padding: 0
         }}>
           {/* Logo y título */}
           <div style={{ 
@@ -1178,7 +1180,9 @@ const Admin = () => {
           marginLeft: '280px',
           minHeight: '100vh',
           overflowX: 'hidden',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          width: 'calc(100vw - 280px)',
+          maxWidth: 'calc(100vw - 280px)'
         }}>
           {/* Barra superior para móvil */}
           <Navbar 
@@ -1211,7 +1215,7 @@ const Admin = () => {
           </Navbar>
 
           {/* Contenido de la página */}
-          <div style={{ padding: '20px', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+          <div style={{ padding: '15px', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
             <div className="w-100" style={{ padding: 0, margin: 0, width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
           {isLoading ? (
             <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#0d6efd', flexDirection: 'column', gap: 20 }}>

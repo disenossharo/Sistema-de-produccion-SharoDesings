@@ -1511,14 +1511,9 @@ const Admin = () => {
                                     <FaUserCircle style={{ fontSize: 24, marginRight: 6 }} />
                                     <span>{empleadoNombre}</span>
                                     {tarea ? (
-                                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                        <span style={{ fontSize: 12, color: '#28a745', fontWeight: 600, backgroundColor: '#d4edda', padding: '2px 8px', borderRadius: 6 }}>
-                                          🟢 Trabajando
-                                        </span>
-                                        <span style={{ fontSize: 11, color: tarea.empleadoOnline ? '#28a745' : '#ffc107', fontWeight: 600 }}>
-                                          {tarea.empleadoOnline ? '🟢 Conectada' : '🟡 Desconectada'}
-                                        </span>
-                                      </div>
+                                      <span style={{ fontSize: 12, color: '#28a745', fontWeight: 600, backgroundColor: '#d4edda', padding: '2px 8px', borderRadius: 6 }}>
+                                        🟢 Trabajando
+                                      </span>
                                     ) : (
                                       <span style={{ fontSize: 12, color: '#28a745', fontWeight: 600, backgroundColor: '#e8f5e8', padding: '2px 8px', borderRadius: 6 }}>
                                         🟢 Disponible
@@ -1593,31 +1588,6 @@ const Admin = () => {
                                   )}
                                 {tarea && (
                                   <>
-                                    {/* Indicador de estado de conexión */}
-                                    <div style={{ 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center', 
-                                      marginBottom: 8,
-                                      gap: 6
-                                    }}>
-                                      <div style={{ 
-                                        width: 8, 
-                                        height: 8, 
-                                        borderRadius: '50%', 
-                                        backgroundColor: tarea.empleadoOnline ? '#28a745' : '#ffc107',
-                                        border: '1px solid white',
-                                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                      }} />
-                                      <div style={{ 
-                                        fontSize: 11, 
-                                        color: tarea.empleadoOnline ? '#28a745' : '#ffc107',
-                                        fontWeight: 600
-                                      }}>
-                                        {tarea.empleadoOnline ? '🟢 Conectada' : '🟡 Desconectada'}
-                                      </div>
-                                    </div>
-                                    
                                     <div style={{ fontSize: 12, color: '#6c757d', marginBottom: 8, textAlign: 'center' }}>
                                       Efectividad en tiempo real
                                     </div>

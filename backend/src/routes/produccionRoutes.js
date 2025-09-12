@@ -5,6 +5,9 @@ const { authenticateToken, requireAdmin } = require('../middleware/authMiddlewar
 
 
 
+// GET /api/produccion/empleados-activos (obtener TODOS los empleados activos)
+router.get('/empleados-activos', authenticateToken, requireAdmin, produccionController.getEmpleadosActivos);
+
 // GET /api/produccion/presencia (obtener presencia de empleados)
 router.get('/presencia', authenticateToken, requireAdmin, produccionController.getPresencia);
 

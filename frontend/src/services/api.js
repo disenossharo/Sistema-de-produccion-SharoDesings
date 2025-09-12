@@ -257,6 +257,18 @@ export async function exportarAExcel(token, datos) {
   return blob;
 }
 
+// Obtener TODOS los empleados activos (solo admin)
+export async function getEmpleadosActivos(token) {
+  const res = await fetch(`${API_BASE}/produccion/empleados-activos`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Error ${res.status}: No se pudo obtener empleados activos`);
+  }
+  return await res.json();
+}
+
 // Obtener presencia de empleados (solo admin)
 export async function getPresencia(token) {
   const res = await fetch(`${API_BASE}/produccion/presencia`, {

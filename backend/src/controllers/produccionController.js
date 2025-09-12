@@ -868,6 +868,72 @@ exports.exportarAExcel = async (req, res) => {
   }
 };
 
+// Obtener TODOS los empleados activos para el dashboard (sin filtro de presencia)
+exports.getEmpleadosActivos = async (req, res) => {
+  try {
+    console.log('🔍 getEmpleadosActivos llamado por:', req.user?.email);
+    
+    if (!req.user || !req.user.email) {
+      console.log('❌ Usuario no autenticado en getEmpleadosActivos');
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+    
+    console.log('👥 Obteniendo TODOS los empleados activos');
+    
+    const client = await pool.connect();
+    try {
+      // Obtener TODOS los empleados activos (no admin)
+      const empleadosResult = await client.query(`
+        SELECT 
+          e.email as empleado_email,
+          e.nombre,
+          e.apellidos,
+          e.is_admin,
+          e.activo,
+          e.cedula,
+          e.cargo_maquina
+        FROM empleados e
+        WHERE e.is_admin = false AND e.activo = true
+        ORDER BY e.nombre ASC
+      `);
+      
+      console.log('📊 Empleados activos encontrados:', empleadosResult.rows.length);
+      console.log('📋 Lista completa de empleados activos:', empleadosResult.rows.map(row => ({
+        email: row.empleado_email,
+        nombre: row.nombre,
+        apellidos: row.apellidos,
+        is_admin: row.is_admin,
+        activo: row.activo
+      })));
+      
+      const empleados = empleadosResult.rows.map(row => ({
+        id: row.empleado_email,
+        email: row.empleado_email,
+        nombre: `${row.nombre} ${row.apellidos || ''}`.trim(),
+        cedula: row.cedula || '',
+        cargoMaquina: row.cargo_maquina || '',
+        isAdmin: row.is_admin,
+        activo: row.activo
+      }));
+      
+      console.log('✅ Empleados activos procesados:', empleados.length);
+      console.log('📤 Enviando respuesta con empleados activos:', empleados.map(e => ({
+        id: e.id,
+        nombre: e.nombre,
+        activo: e.activo
+      })));
+      
+      res.json(empleados);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('❌ Error obteniendo empleados activos:', error);
+    console.error('🔍 Stack trace:', error.stack);
+    res.status(500).json({ error: 'Error obteniendo empleados activos', details: error.message });
+  }
+};
+
 // Obtener presencia de empleados
 exports.getPresencia = async (req, res) => {
   try {
@@ -882,47 +948,61 @@ exports.getPresencia = async (req, res) => {
     
     const client = await pool.connect();
     try {
-      // Obtener TODOS los empleados y su estado de presencia
-      const result = await client.query(`
+      // Primero obtener TODOS los empleados activos (no admin)
+      const empleadosResult = await client.query(`
         SELECT 
           e.email as empleado_email,
-          COALESCE(p.online, false) as online,
-          COALESCE(p.last_seen, NOW() - INTERVAL '1 hour') as last_seen,
           e.nombre,
           e.apellidos,
-          e.is_admin
+          e.is_admin,
+          e.activo
         FROM empleados e
-        LEFT JOIN presencia p ON e.email = p.empleado_email
-        WHERE e.is_admin = false
-        ORDER BY p.last_seen DESC NULLS LAST
+        WHERE e.is_admin = false AND e.activo = true
+        ORDER BY e.nombre ASC
       `);
       
-      console.log('📊 Empleados encontrados en BD:', result.rows.length);
-      console.log('📋 Detalle de empleados:', result.rows.map(row => ({
+      console.log('📊 Empleados activos encontrados:', empleadosResult.rows.length);
+      console.log('📋 Lista de empleados activos:', empleadosResult.rows.map(row => ({
         email: row.empleado_email,
         nombre: row.nombre,
         apellidos: row.apellidos,
-        online: row.online,
-        last_seen: row.last_seen,
-        is_admin: row.is_admin
+        is_admin: row.is_admin,
+        activo: row.activo
       })));
       
-      const presencias = result.rows.map(row => {
-        // Marcar como offline si han pasado más de 3 minutos
-        const lastSeen = new Date(row.last_seen);
+      // Luego obtener su estado de presencia
+      const presencias = await Promise.all(empleadosResult.rows.map(async (empleado) => {
+        const presenciaResult = await client.query(`
+          SELECT online, last_seen
+          FROM presencia 
+          WHERE empleado_email = $1
+        `, [empleado.empleado_email]);
+        
+        const presencia = presenciaResult.rows[0];
+        const online = presencia ? presencia.online : false;
+        const lastSeen = presencia ? presencia.last_seen : new Date(Date.now() - 60 * 60 * 1000); // 1 hora atrás si no hay registro
+        
+        // Marcar como offline si han pasado más de 5 minutos (más tolerante)
         const now = new Date();
         const minutesDiff = (now - lastSeen) / (1000 * 60);
-        const isActuallyOnline = row.online && minutesDiff <= 3;
+        const isActuallyOnline = online && minutesDiff <= 5;
+        
+        console.log(`👤 Empleado ${empleado.empleado_email}:`, {
+          online: online,
+          lastSeen: lastSeen,
+          minutesDiff: Math.round(minutesDiff),
+          isActuallyOnline: isActuallyOnline
+        });
         
         return {
-          id: row.empleado_email,
+          id: empleado.empleado_email,
           online: isActuallyOnline,
-          lastSeen: row.last_seen,
-          nombre: `${row.nombre} ${row.apellidos || ''}`.trim()
+          lastSeen: lastSeen,
+          nombre: `${empleado.nombre} ${empleado.apellidos || ''}`.trim()
         };
-      });
+      }));
       
-      console.log('✅ Presencia obtenida:', presencias.length, 'empleados');
+      console.log('✅ Presencia procesada:', presencias.length, 'empleados');
       console.log('📊 Empleados online:', presencias.filter(p => p.online).length);
       console.log('📊 Empleados offline:', presencias.filter(p => !p.online).length);
       console.log('📤 Enviando respuesta con presencia:', presencias.map(p => ({

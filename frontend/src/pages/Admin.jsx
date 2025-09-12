@@ -243,9 +243,15 @@ const Admin = () => {
       setError(""); // Limpiar errores previos
       
       try {
-        const empleadosData = await api.getEmpleados(token);
+        // Obtener TODOS los empleados activos (no solo los que tienen presencia)
+        const empleadosData = await api.getEmpleadosActivos(token);
         setEmpleados(empleadosData);
-        console.log('✅ Empleados cargados:', empleadosData.length);
+        console.log('✅ Empleados activos cargados:', empleadosData.length);
+        console.log('📋 Lista de empleados activos:', empleadosData.map(e => ({
+          id: e.id,
+          nombre: e.nombre,
+          activo: e.activo
+        })));
         
         // Cargar estadísticas
         try {

@@ -8,7 +8,7 @@ exports.getOperaciones = async (req, res) => {
       // Query optimizada con filtros opcionales y información de referencia
       const { activa, categoria, search, referencia_id } = req.query;
       let query = `
-        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.video_tutorial, 
+        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, 
                o.categoria, o.activa, o.referencia_id,
                r.codigo as referencia_codigo, r.nombre as referencia_nombre
         FROM operaciones o
@@ -70,7 +70,7 @@ exports.getOperacionesActivas = async (req, res) => {
     try {
       // Query optimizada con información de referencia
       const result = await client.query(`
-        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.video_tutorial, o.categoria,
+        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
                o.referencia_id, r.codigo as referencia_codigo, r.nombre as referencia_nombre
         FROM operaciones o
         LEFT JOIN referencias r ON o.referencia_id = r.id
@@ -111,7 +111,7 @@ exports.getOperacionesActivasPorReferencia = async (req, res) => {
       
       // Obtener operaciones vinculadas a esta referencia Y operaciones sin referencia (generales)
       const result = await client.query(
-        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.video_tutorial, o.categoria,
+        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
                 o.referencia_id, r.codigo as referencia_codigo, r.nombre as referencia_nombre
          FROM operaciones o
          LEFT JOIN referencias r ON o.referencia_id = r.id
@@ -163,7 +163,7 @@ exports.getOperacion = async (req, res) => {
 // Crear una nueva operación
 exports.createOperacion = async (req, res) => {
   try {
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa, referencia_id } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, categoria, activa, referencia_id } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -189,14 +189,13 @@ exports.createOperacion = async (req, res) => {
       }
       
       const result = await client.query(
-        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa, referencia_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, categoria, activa, referencia_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
         [
           nombre.trim(), 
           descripcion ? descripcion.trim() : '', 
           tiempo_por_unidad, 
-          video_tutorial ? video_tutorial.trim() : '', 
           categoria ? categoria.trim() : '', 
           activa === undefined ? true : activa,
           referencia_id || null
@@ -224,7 +223,7 @@ exports.createOperacion = async (req, res) => {
 exports.updateOperacion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, tiempo_por_unidad, video_tutorial, categoria, activa, referencia_id } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, categoria, activa, referencia_id } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -251,15 +250,14 @@ exports.updateOperacion = async (req, res) => {
       
       const result = await client.query(
         `UPDATE operaciones 
-         SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, video_tutorial = $4, 
-             categoria = $5, activa = $6, referencia_id = $7, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $8
+         SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, 
+             categoria = $4, activa = $5, referencia_id = $6, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $7
          RETURNING *`,
         [
           nombre.trim(), 
           descripcion ? descripcion.trim() : '', 
           tiempo_por_unidad, 
-          video_tutorial ? video_tutorial.trim() : '', 
           categoria ? categoria.trim() : '', 
           activa, 
           referencia_id || null,

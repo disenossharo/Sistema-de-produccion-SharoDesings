@@ -24,7 +24,6 @@ import {
   FaTrash, 
   FaEye, 
   FaEyeSlash,
-  FaYoutube,
   FaClock,
   FaTag,
   FaUserPlus,
@@ -73,7 +72,6 @@ const Produccion = () => {
     nombre: '',
     descripcion: '',
     tiempo_por_unidad: 1.0,
-    video_tutorial: '',
     categoria: '',
     activa: true,
     referencia_id: ''
@@ -801,7 +799,6 @@ const Produccion = () => {
                           <th style={{ fontWeight: 700 }}>Categoría</th>
                           <th style={{ fontWeight: 700 }}>Referencia</th>
                           <th style={{ fontWeight: 700 }}>Tiempo (min)</th>
-                          <th style={{ fontWeight: 700 }}>Tutorial</th>
                           <th style={{ fontWeight: 700 }}>Estado</th>
                           <th style={{ fontWeight: 700 }}>Acciones</th>
                         </tr>
@@ -809,7 +806,7 @@ const Produccion = () => {
                       <tbody>
                         {operacionesFiltradas.length === 0 ? (
                           <tr>
-                            <td colSpan="8" className="text-center py-4">
+                            <td colSpan="7" className="text-center py-4">
                               <div className="text-muted">
                                 <FaCogs size={48} className="mb-3" style={{ opacity: 0.3 }} />
                                 <h5 className="mb-2">No se encontraron operaciones</h5>
@@ -861,20 +858,6 @@ const Produccion = () => {
                                 <FaClock className="me-1" />
                                 {operacion.tiempo_por_unidad}
                               </Badge>
-                            </td>
-                            <td>
-                              {operacion.video_tutorial ? (
-                                <a 
-                                  href={operacion.video_tutorial} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  style={{ color: '#dc3545', textDecoration: 'none' }}
-                                >
-                                  <FaYoutube /> Ver
-                                </a>
-                              ) : (
-                                <span style={{ color: '#6c757d' }}>-</span>
-                              )}
                             </td>
                             <td>
                               <Badge bg={operacion.activa ? "success" : "secondary"}>
@@ -1298,15 +1281,6 @@ const Produccion = () => {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label style={{ fontWeight: 600 }}>Video Tutorial (URL)</Form.Label>
-              <Form.Control
-                type="url"
-                value={formOperacion.video_tutorial}
-                onChange={(e) => setFormOperacion({...formOperacion, video_tutorial: e.target.value})}
-                placeholder="https://www.youtube.com/watch?v=..."
-              />
-            </Form.Group>
 
             <Row>
               <Col md={6}>

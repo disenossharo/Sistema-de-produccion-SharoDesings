@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import logo from "../assets/sharo-logo.png";
 import '../App.css';
+import './Admin.css';
 // import { tareas as tareasEmpleado } from "./Empleado"; // Ya no se usa
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -1290,8 +1291,8 @@ const Admin = () => {
                     
                     {/* Estadísticas adicionales */}
                     {estadisticas && (
-                      <Row className="mt-4 g-2">
-                        <Col xs={6} sm={3}>
+                      <Row className="mt-4 g-2 admin-stats-row">
+                        <Col xs={6} sm={3} className="admin-stats-col">
                           <div style={{ textAlign: 'center', padding: 12, background: '#e8f5e8', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1304,7 +1305,7 @@ const Admin = () => {
                             <div style={{ fontSize: 12, color: '#6c757d' }}>Tareas Completadas Hoy</div>
                           </div>
                         </Col>
-                        <Col xs={6} sm={3}>
+                        <Col xs={6} sm={3} className="admin-stats-col">
                           <div style={{ textAlign: 'center', padding: 12, background: '#fff3cd', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1317,7 +1318,7 @@ const Admin = () => {
                             <div style={{ fontSize: 12, color: '#6c757d' }}>Tareas Activas</div>
                           </div>
                         </Col>
-                        <Col xs={6} sm={3}>
+                        <Col xs={6} sm={3} className="admin-stats-col">
                           <div style={{ textAlign: 'center', padding: 12, background: '#e3f0ff', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1330,7 +1331,7 @@ const Admin = () => {
                             <div style={{ fontSize: 12, color: '#6c757d' }}>Empleados Activos</div>
                           </div>
                         </Col>
-                        <Col xs={6} sm={3}>
+                        <Col xs={6} sm={3} className="admin-stats-col">
                           <div style={{ textAlign: 'center', padding: 12, background: '#f8d7da', borderRadius: 8, margin: '0 4px', position: 'relative' }}>
                             {estadisticasActualizando && (
                               <div style={{ position: 'absolute', top: 5, right: 5 }}>
@@ -1353,7 +1354,7 @@ const Admin = () => {
                   {produccion.length === 0 ? (
                     <Alert variant="info" style={{ fontSize: 18, borderRadius: 10 }}>No hay tareas activas en este momento.</Alert>
                   ) : (
-                    <Row className="g-4">
+                    <Row className="g-4 admin-cards-container">
                       {(() => {
                         console.log('🎯 Renderizando tareas activas:', produccion.map(t => ({ id: t.id, usuario: t.usuario, empleadoNombre: t.empleadoNombre })));
                         return produccion.map(tarea => {
@@ -1554,7 +1555,7 @@ const Admin = () => {
                         }
                         return (
                           <Col key={tarea.id} xs={12} sm={6} lg={4}>
-                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', height: '400px' }}>
+                            <Card className="shadow-sm border-0 admin-card" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', height: '400px' }}>
                               <Card.Body style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                                   <div style={{ fontSize: 18, fontWeight: 800, color: '#0d6efd', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}>
@@ -1646,6 +1647,7 @@ const Admin = () => {
                                       <div style={{ marginBottom: 6 }}>
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Operación</div>
                                         <div 
+                                          className="operation-text"
                                           style={{ 
                                             fontWeight: 600, 
                                             cursor: 'pointer',

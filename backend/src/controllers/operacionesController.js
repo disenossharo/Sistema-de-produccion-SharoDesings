@@ -211,7 +211,9 @@ exports.createOperacion = async (req, res) => {
     console.error('Error al crear operación:', error);
     
     if (error.code === '23505') { // Unique violation
-      res.status(409).json({ error: 'Ya existe una operación con ese nombre' });
+      res.status(409).json({ 
+        error: 'Ya existe una operación con ese nombre para la misma referencia. Puedes crear operaciones con el mismo nombre pero para diferentes referencias.' 
+      });
     } else {
       res.status(500).json({ error: 'Error interno del servidor al crear operación' });
     }
@@ -277,7 +279,9 @@ exports.updateOperacion = async (req, res) => {
     console.error('Error al actualizar operación:', error);
     
     if (error.code === '23505') { // Unique violation
-      res.status(409).json({ error: 'Ya existe una operación con ese nombre' });
+      res.status(409).json({ 
+        error: 'Ya existe una operación con ese nombre para la misma referencia. Puedes crear operaciones con el mismo nombre pero para diferentes referencias.' 
+      });
     } else {
       res.status(500).json({ error: 'Error interno del servidor al actualizar operación' });
     }

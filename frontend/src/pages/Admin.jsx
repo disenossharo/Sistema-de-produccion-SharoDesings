@@ -1069,7 +1069,12 @@ const Admin = () => {
           boxShadow: '2px 0 10px rgba(0,0,0,0.1)', 
           height: '100vh',
           overflowY: 'auto',
-          flexShrink: 0
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           {/* Logo y título */}
           <div style={{ 
@@ -1087,7 +1092,7 @@ const Admin = () => {
           </div>
 
           {/* Navegación */}
-          <Nav className="flex-column" activeKey={activeTab} onSelect={handleTabChange} style={{ padding: '20px 0' }}>
+          <Nav className="flex-column" activeKey={activeTab} onSelect={handleTabChange} style={{ padding: '20px 0', flex: 1 }}>
             <Nav.Link 
               eventKey="dashboard" 
               style={{ 
@@ -1170,6 +1175,7 @@ const Admin = () => {
         {/* Contenido principal */}
         <div className="main-content" style={{ 
           flex: 1, 
+          marginLeft: '280px',
           minHeight: '100vh',
           overflowX: 'hidden',
           boxSizing: 'border-box'

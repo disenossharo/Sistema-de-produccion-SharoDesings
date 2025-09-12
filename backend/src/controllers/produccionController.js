@@ -54,16 +54,20 @@ exports.getTareasActivas = async (req, res) => {
     try {
       console.log('🔄 Ejecutando query para obtener tareas activas...');
       
-      // Query optimizada con índices y solo campos necesarios
+      // Query optimizada para obtener TODAS las tareas activas, sin importar el estado de presencia
       const result = await client.query(
         `SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
                 p.cantidad_hecha, p.hora_inicio, p.efectividad, p.observaciones, 
-                p.fecha, p.tiempo_estimado, p.estado, e.nombre as empleado_nombre
+                p.fecha, p.tiempo_estimado, p.estado, e.nombre as empleado_nombre,
+                e.apellidos, e.activo as empleado_activo,
+                COALESCE(pr.online, false) as empleado_online,
+                COALESCE(pr.last_seen, NOW() - INTERVAL '1 hour') as empleado_last_seen
          FROM produccion p 
          INNER JOIN empleados e ON p.empleado_email = e.email 
-         WHERE p.estado = 'en_progreso' AND p.hora_fin IS NULL 
+         LEFT JOIN presencia pr ON e.email = pr.empleado_email
+         WHERE p.estado = 'en_progreso' AND p.hora_fin IS NULL AND e.activo = true
          ORDER BY p.created_at DESC 
-         LIMIT 50`
+         LIMIT 100`
       );
       
       console.log('📊 Tareas activas encontradas en BD:', result.rows.length);
@@ -76,29 +80,40 @@ exports.getTareasActivas = async (req, res) => {
         hora_fin: row.hora_fin
       })));
       
-      // Mapeo optimizado con logging
-      const tareasActivas = result.rows.map(row => ({
-        id: row.id,
-        usuario: row.empleado_email,
-        empleadoNombre: row.empleado_nombre,
-        tareas: row.tareas || [],
-        referencia: row.referencia,
-        cantidadAsignada: row.cantidad_asignada,
-        cantidadHecha: row.cantidad_hecha,
-        horaInicio: row.hora_inicio,
-        horaFin: null, // Siempre null para tareas activas
-        efectividad: row.efectividad,
-        observaciones: row.observaciones,
-        fecha: row.fecha,
-        tiempoEstimado: row.tiempo_estimado,
-        estado: row.estado
-      }));
+      // Mapeo optimizado con información de presencia
+      const tareasActivas = result.rows.map(row => {
+        // Calcular si el empleado está realmente online (más tolerante - 10 minutos)
+        const lastSeen = new Date(row.empleado_last_seen);
+        const now = new Date();
+        const minutesDiff = (now - lastSeen) / (1000 * 60);
+        const isActuallyOnline = row.empleado_online && minutesDiff <= 10;
+        
+        return {
+          id: row.id,
+          usuario: row.empleado_email,
+          empleadoNombre: `${row.empleado_nombre} ${row.apellidos || ''}`.trim(),
+          empleadoOnline: isActuallyOnline,
+          empleadoLastSeen: row.empleado_last_seen,
+          tareas: row.tareas || [],
+          referencia: row.referencia,
+          cantidadAsignada: row.cantidad_asignada,
+          cantidadHecha: row.cantidad_hecha,
+          horaInicio: row.hora_inicio,
+          horaFin: null, // Siempre null para tareas activas
+          efectividad: row.efectividad,
+          observaciones: row.observaciones,
+          fecha: row.fecha,
+          tiempoEstimado: row.tiempo_estimado,
+          estado: row.estado
+        };
+      });
       
       console.log('✅ Tareas activas mapeadas:', tareasActivas.length);
       console.log('📤 Enviando respuesta con tareas activas:', tareasActivas.map(t => ({
         id: t.id,
         usuario: t.usuario,
         empleadoNombre: t.empleadoNombre,
+        empleadoOnline: t.empleadoOnline,
         estado: t.estado
       })));
       

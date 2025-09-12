@@ -331,6 +331,7 @@ const Admin = () => {
         id: t.id,
         usuario: t.usuario,
         empleadoNombre: t.empleadoNombre,
+        empleadoOnline: t.empleadoOnline,
         estado: t.estado,
         horaInicio: t.horaInicio,
         horaFin: t.horaFin,
@@ -1616,6 +1617,31 @@ const Admin = () => {
                                   )}
                                 {tarea && (
                                   <>
+                                    {/* Indicador de estado de conexión */}
+                                    <div style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center', 
+                                      marginBottom: 8,
+                                      gap: 6
+                                    }}>
+                                      <div style={{ 
+                                        width: 8, 
+                                        height: 8, 
+                                        borderRadius: '50%', 
+                                        backgroundColor: tarea.empleadoOnline ? '#28a745' : '#ffc107',
+                                        border: '1px solid white',
+                                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                      }} />
+                                      <div style={{ 
+                                        fontSize: 11, 
+                                        color: tarea.empleadoOnline ? '#28a745' : '#ffc107',
+                                        fontWeight: 600
+                                      }}>
+                                        {tarea.empleadoOnline ? '🟢 Conectada' : '🟡 Desconectada'}
+                                      </div>
+                                    </div>
+                                    
                                     <div style={{ fontSize: 12, color: '#6c757d', marginBottom: 8, textAlign: 'center' }}>
                                       Efectividad en tiempo real
                                     </div>

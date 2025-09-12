@@ -1308,7 +1308,7 @@ const Admin = () => {
                   {produccion.length === 0 ? (
                     <Alert variant="info" style={{ fontSize: 18, borderRadius: 10 }}>No hay tareas activas en este momento.</Alert>
                   ) : (
-                    <Row className="g-4" style={{ justifyContent: 'flex-start' }}>
+                    <Row className="g-4">
                       {(() => {
                         console.log('🎯 Renderizando tareas activas:', produccion.map(t => ({ id: t.id, usuario: t.usuario, empleadoNombre: t.empleadoNombre })));
                         return produccion.map(tarea => {
@@ -1508,12 +1508,12 @@ const Admin = () => {
                           );
                         }
                         return (
-                          <Col key={tarea.id} xs={12} sm={6} md={4} lg={3} xl={2}>
-                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '280px', height: '100%' }}>
-                              <Card.Body style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                          <Col key={tarea.id} xs={12} sm={6} lg={4}>
+                            <Card className="shadow-sm border-0" style={{ borderRadius: 16, background: 'linear-gradient(120deg, #f8fafc 60%, #e3f0ff 100%)', boxShadow: '0 2px 12px rgba(44,62,80,0.07)', width: '100%', minHeight: '350px' }}>
+                              <Card.Body style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                  <div style={{ fontSize: 16, fontWeight: 800, color: '#0d6efd', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-start' }}>
-                                    <FaUserCircle style={{ fontSize: 20, marginRight: 4 }} />
+                                  <div style={{ fontSize: 18, fontWeight: 800, color: '#0d6efd', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}>
+                                    <FaUserCircle style={{ fontSize: 24, marginRight: 6 }} />
                                     <span>{empleadoNombre}</span>
                                     {tarea ? (
                                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

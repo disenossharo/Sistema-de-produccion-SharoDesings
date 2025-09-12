@@ -1177,12 +1177,12 @@ const Admin = () => {
         {/* Contenido principal */}
         <div className="main-content" style={{ 
           flex: 1, 
-          marginLeft: '280px',
+          marginLeft: '100px',
           minHeight: '100vh',
           overflowX: 'hidden',
           boxSizing: 'border-box',
-          width: 'calc(100vw - 280px)',
-          maxWidth: 'calc(100vw - 280px)'
+          width: 'calc(100vw - 100px)',
+          maxWidth: 'calc(100vw - 100px)'
         }}>
           {/* Barra superior para móvil */}
           <Navbar 

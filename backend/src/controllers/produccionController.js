@@ -188,6 +188,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
     const {
       tareas = [],
       referencias = [],
+      referencia = '', // Mantener compatibilidad con sistema anterior
       cantidadAsignada = 0,
       tiempoEstimado = 0,
       observaciones = ''
@@ -211,7 +212,13 @@ exports.crearTareaEnProgreso = async (req, res) => {
       return res.status(400).json({ error: 'Debe seleccionar al menos una tarea' });
     }
     
-    if (!Array.isArray(referencias) || referencias.length === 0) {
+    // Determinar las referencias a usar (compatibilidad con sistema anterior)
+    let referenciasFinales = [];
+    if (Array.isArray(referencias) && referencias.length > 0) {
+      referenciasFinales = referencias;
+    } else if (referencia && referencia.trim().length > 0) {
+      referenciasFinales = [referencia.trim()];
+    } else {
       return res.status(400).json({ error: 'Debe seleccionar al menos una referencia' });
     }
     
@@ -231,7 +238,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
       return res.status(400).json({ error: 'Tiempo estimado no puede ser negativo' });
     }
     
-    console.log('✅ Tarea creada - Usuario:', email, 'Ref:', referencia);
+    console.log('✅ Tarea creada - Usuario:', email, 'Refs:', referenciasFinales);
     
     const client = await pool.connect();
     try {
@@ -252,7 +259,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
       console.log('📝 Insertando tarea en base de datos con datos:', {
         email,
         tareas,
-        referencias,
+        referencias: referenciasFinales,
         cantidadAsignada: Number(cantidadAsignada),
         tiempoEstimado: tiempoEstimadoNum,
         observaciones: observaciones ? observaciones.trim() : ''
@@ -262,7 +269,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
       const insertParams = [
         email, 
         tareas, 
-        referencias.join(', '), // Unir referencias con comas para almacenar
+        referenciasFinales.join(', '), // Unir referencias con comas para almacenar
         Number(cantidadAsignada), 
         0, 
         now, 

@@ -762,7 +762,7 @@ const Empleado = () => {
 
   // Formato de hora
   const formatHora = (date) => {
-    if (!date || isNaN(date.getTime())) return "No disponible";
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return "No disponible";
     return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit', 
@@ -772,7 +772,7 @@ const Empleado = () => {
   };
   
   const formatHoraSimple = (date) => {
-    if (!date || isNaN(date.getTime())) return "No disponible";
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return "No disponible";
     return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
@@ -1066,7 +1066,7 @@ const Empleado = () => {
 
   // Calcular efectividad en tiempo real o promedio del día
   let efectividadEnTiempo = 100;
-  if (enProgreso && horaInicio && horaEstimadaFin && !isNaN(horaInicio.getTime())) {
+  if (enProgreso && horaInicio && horaEstimadaFin && horaInicio instanceof Date && !isNaN(horaInicio.getTime())) {
     const transcurrido = (horaActual - horaInicio) / 60000; // minutos
     if (transcurrido <= tiempoEstimadoValido) {
       efectividadEnTiempo = 100;
@@ -1238,7 +1238,32 @@ const Empleado = () => {
         setTareasSeleccionadas(tareaData.tareas || []);
         setReferenciasSeleccionadas(tareaData.referencias || []);
         setCantidad(tareaData.cantidadAsignada || "");
-        setHoraInicio(tareaData.horaInicio);
+        
+        // Convertir horaInicio a Date de manera segura
+        let horaInicioDate = null;
+        if (tareaData.horaInicio) {
+          try {
+            if (tareaData.horaInicio.toDate) {
+              horaInicioDate = tareaData.horaInicio.toDate();
+            } else if (tareaData.horaInicio._seconds) {
+              horaInicioDate = new Date(tareaData.horaInicio._seconds * 1000);
+            } else if (tareaData.horaInicio instanceof Date) {
+              horaInicioDate = tareaData.horaInicio;
+            } else {
+              horaInicioDate = new Date(tareaData.horaInicio);
+            }
+            
+            // Verificar que la fecha sea válida
+            if (isNaN(horaInicioDate.getTime())) {
+              console.error('Fecha de inicio inválida:', tareaData.horaInicio);
+              horaInicioDate = null;
+            }
+          } catch (error) {
+            console.error('Error al convertir horaInicio:', error);
+            horaInicioDate = null;
+          }
+        }
+        setHoraInicio(horaInicioDate);
         setTiempoEstimadoValido(tareaData.tiempoEstimado || 0);
       }
       

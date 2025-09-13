@@ -1200,8 +1200,16 @@ const Empleado = () => {
 
   // Función para aplicar extensión de tiempo
   const handleAplicarExtension = async () => {
+    console.log('🔍 [FRONTEND] Iniciando extensión de tiempo:', {
+      tiempoExtension,
+      observacionExtension,
+      tareaIdEnProgreso,
+      token: token ? 'presente' : 'ausente'
+    });
+    
     // Validaciones
     if (!tiempoExtension || isNaN(tiempoExtension) || Number(tiempoExtension) <= 0) {
+      console.log('❌ [FRONTEND] Error: Tiempo inválido');
       setError("⚠️ Por favor ingresa una cantidad válida de minutos (1-10).");
       return;
     }
@@ -1223,12 +1231,21 @@ const Empleado = () => {
     }
 
     try {
+      console.log('📤 [FRONTEND] Llamando al API:', {
+        tareaId: tareaIdEnProgreso,
+        datos: {
+          tiempoAdicional: tiempoNum,
+          observacion: observacionExtension.trim()
+        }
+      });
+      
       // Llamar al backend para extender el tiempo
-      await api.extenderTiempoTarea(token, tareaIdEnProgreso, {
+      const resultado = await api.extenderTiempoTarea(token, tareaIdEnProgreso, {
         tiempoAdicional: tiempoNum,
         observacion: observacionExtension.trim()
       });
 
+      console.log('✅ [FRONTEND] Respuesta del API:', resultado);
       setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea.`);
       
       // Recargar la tarea en progreso para actualizar el tiempo estimado
@@ -1274,14 +1291,19 @@ const Empleado = () => {
       setTimeout(() => setSuccessMsg(""), 5000);
 
     } catch (e) {
-      console.error('Error al extender tiempo:', e);
+      console.error('❌ [FRONTEND] Error al extender tiempo:', e);
+      console.error('❌ [FRONTEND] Detalles del error:', {
+        message: e.message,
+        stack: e.stack,
+        name: e.name
+      });
       
       if (e.message && e.message.includes('401')) {
         setError("Error de autenticación. Por favor, vuelve a iniciar sesión.");
         logout();
         navigate("/login");
       } else {
-        setError("Error al extender el tiempo. Intenta de nuevo.");
+        setError(`Error al extender el tiempo: ${e.message || 'Error desconocido'}`);
       }
     }
   };

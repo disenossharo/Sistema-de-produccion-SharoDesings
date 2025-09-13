@@ -506,6 +506,30 @@ export async function deleteOperacion(token, id) {
   }
 }
 
+// Toggle de todas las operaciones (activar/desactivar todas)
+export async function toggleAllOperaciones(token, activa) {
+  try {
+    const res = await fetch(`${API_BASE}/operaciones/toggle-all`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ activa })
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Error ${res.status}: No se pudieron actualizar las operaciones`);
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error al toggle de todas las operaciones:', error);
+    throw error;
+  }
+}
+
 // ===== API PARA REFERENCIAS =====
 
 // Obtener todas las referencias (admin)

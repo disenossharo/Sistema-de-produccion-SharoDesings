@@ -350,3 +350,40 @@ exports.deleteOperacion = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor al eliminar operación' });
   }
 };
+
+// Toggle de todas las operaciones (activar/desactivar todas)
+exports.toggleAllOperaciones = async (req, res) => {
+  try {
+    const { activa } = req.body;
+    
+    // Validaciones
+    if (typeof activa !== 'boolean') {
+      return res.status(400).json({ error: 'El parámetro "activa" debe ser un booleano (true/false)' });
+    }
+    
+    const client = await pool.connect();
+    try {
+      // Actualizar todas las operaciones
+      const result = await client.query(
+        `UPDATE operaciones 
+         SET activa = $1, updated_at = CURRENT_TIMESTAMP
+         RETURNING id, nombre, activa`,
+        [activa]
+      );
+      
+      const estado = activa ? 'activadas' : 'desactivadas';
+      console.log(`🔄 ${estado} ${result.rows.length} operaciones`);
+      
+      res.json({ 
+        message: `Todas las operaciones han sido ${estado}`,
+        operaciones_afectadas: result.rows.length,
+        operaciones: result.rows
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al toggle de todas las operaciones:', error);
+    res.status(500).json({ error: 'Error interno del servidor al actualizar operaciones' });
+  }
+};

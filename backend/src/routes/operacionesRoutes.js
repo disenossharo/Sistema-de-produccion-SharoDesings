@@ -11,5 +11,6 @@ router.get('/:id', authenticateToken, operacionesController.getOperacion);
 router.post('/', authenticateToken, requireAdmin, operacionesController.createOperacion);
 router.put('/:id', authenticateToken, requireAdmin, operacionesController.updateOperacion);
 router.delete('/:id', authenticateToken, requireAdmin, operacionesController.deleteOperacion);
+router.put('/toggle-all', authenticateToken, requireAdmin, operacionesController.toggleAllOperaciones); // Toggle todas las operaciones
 
 module.exports = router;

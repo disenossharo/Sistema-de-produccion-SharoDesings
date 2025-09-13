@@ -365,6 +365,25 @@ const Produccion = () => {
     }
   };
 
+  const handleToggleAllOperaciones = async (activa) => {
+    const accion = activa ? 'activar' : 'desactivar';
+    const confirmacion = activa 
+      ? "¿Estás seguro de que quieres ACTIVAR todas las operaciones?"
+      : "¿Estás seguro de que quieres DESACTIVAR todas las operaciones?";
+    
+    if (window.confirm(confirmacion)) {
+      try {
+        const resultado = await api.toggleAllOperaciones(token, activa);
+        setSuccessMsg(resultado.message);
+        cargarDatos();
+        setTimeout(() => setSuccessMsg(""), 3000);
+      } catch (error) {
+        setError(error.message);
+        setTimeout(() => setError(""), 5000);
+      }
+    }
+  };
+
   // ===== FUNCIONES PARA REFERENCIAS =====
 
   const handleOpenReferenciaModal = (referencia = null) => {
@@ -723,14 +742,32 @@ const Produccion = () => {
                     <FaCogs className="me-3" />
                     Gestión de Operaciones
                   </h2>
-                  <Button 
-                    variant="primary" 
-                    onClick={() => handleOpenOperacionModal()}
-                    style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
-                  >
-                    <FaPlus className="me-2" />
-                    Nueva Operación
-                  </Button>
+                  <div className="d-flex gap-2" style={{ flexDirection: isDesktop ? 'row' : 'column', width: isDesktop ? 'auto' : '100%' }}>
+                    <Button 
+                      variant="success" 
+                      onClick={() => handleToggleAllOperaciones(true)}
+                      style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
+                    >
+                      <FaEye className="me-2" />
+                      Activar Todas
+                    </Button>
+                    <Button 
+                      variant="warning" 
+                      onClick={() => handleToggleAllOperaciones(false)}
+                      style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
+                    >
+                      <FaEyeSlash className="me-2" />
+                      Ocultar Todas
+                    </Button>
+                    <Button 
+                      variant="primary" 
+                      onClick={() => handleOpenOperacionModal()}
+                      style={{ borderRadius: 12, fontWeight: 600, width: isDesktop ? 'auto' : '100%' }}
+                    >
+                      <FaPlus className="me-2" />
+                      Nueva Operación
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Sistema de Búsqueda para Operaciones */}

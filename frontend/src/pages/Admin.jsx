@@ -1405,15 +1405,10 @@ const Admin = () => {
                           if (tarea.tiempoEstimado && tarea.tiempoEstimado > 0) {
                             tiempoEstimado = tarea.tiempoEstimado;
                             console.log('📅 Usando tiempo estimado del backend:', tiempoEstimado, 'minutos');
-                          } else if (tarea.tareas && tarea.cantidadAsignada) {
-                            let total = 0;
-                            const tareasArray = Array.isArray(tarea.tareas) ? tarea.tareas : [tarea.tareas];
-                            tareasArray.forEach(nombre => {
-                              const t = tareasEmpleado.find(tt => tt.nombre === nombre);
-                              if (t && t.tiempoPorUnidad) total += t.tiempoPorUnidad;
-                            });
-                            tiempoEstimado = total * Number(tarea.cantidadAsignada);
-                            console.log('📅 Calculando tiempo estimado:', tiempoEstimado, 'minutos');
+                          } else {
+                            // Si no hay tiempo estimado del backend, usar un valor por defecto
+                            tiempoEstimado = 60; // 60 minutos por defecto
+                            console.log('📅 Usando tiempo estimado por defecto:', tiempoEstimado, 'minutos');
                           }
                           
                           if (tiempoEstimado && tiempoEstimado > 0 && horaInicio) {

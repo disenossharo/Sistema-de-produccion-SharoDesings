@@ -1322,6 +1322,53 @@ const Empleado = () => {
               {!enProgreso && efectividad === null && (
                 <Form style={{ background: '#f8fafc', borderRadius: 16, padding: '24px 18px', boxShadow: '0 1px 8px #e3eaf7', marginBottom: 18 }}>
                   <Form.Group className="mb-3">
+                    <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Referencias</Form.Label>
+                    <div style={{ 
+                      border: '1px solid #ced4da', 
+                      borderRadius: 8, 
+                      padding: '12px', 
+                      maxHeight: '200px', 
+                      overflowY: 'auto',
+                      background: '#fff'
+                    }}>
+                      {referenciasCargando ? (
+                        <div className="text-center py-3">
+                          <Spinner animation="border" size="sm" variant="primary" />
+                          <span className="ms-2">Cargando referencias...</span>
+                        </div>
+                      ) : referencias.length === 0 ? (
+                        <div className="text-center py-3 text-muted">
+                          No hay referencias disponibles
+                        </div>
+                      ) : (
+                        referencias.map((ref) => (
+                          <Form.Check
+                            key={ref.id}
+                            type="checkbox"
+                            id={`referencia-${ref.id}`}
+                            label={`${ref.codigo} - ${ref.nombre}`}
+                            checked={referenciasSeleccionadas.includes(ref.codigo)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setReferenciasSeleccionadas([...referenciasSeleccionadas, ref.codigo]);
+                              } else {
+                                setReferenciasSeleccionadas(referenciasSeleccionadas.filter(codigo => codigo !== ref.codigo));
+                              }
+                            }}
+                            style={{ marginBottom: '8px' }}
+                          />
+                        ))
+                      )}
+                    </div>
+                    {referenciasSeleccionadas.length > 0 && (
+                      <div className="mt-2">
+                        <small className="text-muted">
+                          {referenciasSeleccionadas.length} referencia(s) seleccionada(s)
+                        </small>
+                      </div>
+                    )}
+                  </Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Operaciones</Form.Label>
                     <Accordion alwaysOpen>
                       <Accordion.Item eventKey="0">
@@ -1420,53 +1467,6 @@ const Empleado = () => {
                       )}
                     </Form.Group>
                   )}
-                  <Form.Group className="mb-3">
-                    <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Referencias</Form.Label>
-                    <div style={{ 
-                      border: '1px solid #ced4da', 
-                      borderRadius: 8, 
-                      padding: '12px', 
-                      maxHeight: '200px', 
-                      overflowY: 'auto',
-                      background: '#fff'
-                    }}>
-                      {referenciasCargando ? (
-                        <div className="text-center py-3">
-                          <Spinner animation="border" size="sm" variant="primary" />
-                          <span className="ms-2">Cargando referencias...</span>
-                        </div>
-                      ) : referencias.length === 0 ? (
-                        <div className="text-center py-3 text-muted">
-                          No hay referencias disponibles
-                        </div>
-                      ) : (
-                        referencias.map((ref) => (
-                          <Form.Check
-                            key={ref.id}
-                            type="checkbox"
-                            id={`referencia-${ref.id}`}
-                            label={`${ref.codigo} - ${ref.nombre}`}
-                            checked={referenciasSeleccionadas.includes(ref.codigo)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setReferenciasSeleccionadas([...referenciasSeleccionadas, ref.codigo]);
-                              } else {
-                                setReferenciasSeleccionadas(referenciasSeleccionadas.filter(codigo => codigo !== ref.codigo));
-                              }
-                            }}
-                            style={{ marginBottom: '8px' }}
-                          />
-                        ))
-                      )}
-                    </div>
-                    {referenciasSeleccionadas.length > 0 && (
-                      <div className="mt-2">
-                        <small className="text-muted">
-                          {referenciasSeleccionadas.length} referencia(s) seleccionada(s)
-                        </small>
-                      </div>
-                    )}
-                  </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Cantidad</Form.Label>
                     <Form.Control type="number" value={cantidad} onChange={e => setCantidad(e.target.value)} style={{ fontSize: 16, borderRadius: 8 }} />

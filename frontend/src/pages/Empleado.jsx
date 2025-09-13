@@ -1232,7 +1232,15 @@ const Empleado = () => {
       setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea.`);
       
       // Recargar la tarea en progreso para actualizar el tiempo estimado
-      cargarTareaEnProgreso();
+      const tareaData = await api.getTareaEnProgreso(token);
+      if (tareaData) {
+        setTareaEnProgreso(tareaData);
+        setTareasSeleccionadas(tareaData.tareas || []);
+        setReferenciasSeleccionadas(tareaData.referencias || []);
+        setCantidad(tareaData.cantidadAsignada || "");
+        setHoraInicio(tareaData.horaInicio);
+        setTiempoEstimadoValido(tareaData.tiempoEstimado || 0);
+      }
       
       // Cerrar modal
       handleCerrarExtensionModal();

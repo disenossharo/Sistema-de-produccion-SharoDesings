@@ -187,7 +187,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
     const email = req.user.email;
     const {
       tareas = [],
-      referencia = '',
+      referencias = [],
       cantidadAsignada = 0,
       tiempoEstimado = 0,
       observaciones = ''
@@ -196,7 +196,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
     console.log('🔍 Datos recibidos para crear tarea:', {
       email,
       tareas,
-      referencia,
+      referencias,
       cantidadAsignada,
       tiempoEstimado,
       observaciones
@@ -211,8 +211,8 @@ exports.crearTareaEnProgreso = async (req, res) => {
       return res.status(400).json({ error: 'Debe seleccionar al menos una tarea' });
     }
     
-    if (!referencia || referencia.trim().length === 0) {
-      return res.status(400).json({ error: 'Referencia requerida' });
+    if (!Array.isArray(referencias) || referencias.length === 0) {
+      return res.status(400).json({ error: 'Debe seleccionar al menos una referencia' });
     }
     
     if (!cantidadAsignada || isNaN(cantidadAsignada) || Number(cantidadAsignada) <= 0) {
@@ -252,7 +252,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
       console.log('📝 Insertando tarea en base de datos con datos:', {
         email,
         tareas,
-        referencia: referencia.trim(),
+        referencias,
         cantidadAsignada: Number(cantidadAsignada),
         tiempoEstimado: tiempoEstimadoNum,
         observaciones: observaciones ? observaciones.trim() : ''
@@ -262,7 +262,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
       const insertParams = [
         email, 
         tareas, 
-        referencia.trim(), 
+        referencias.join(', '), // Unir referencias con comas para almacenar
         Number(cantidadAsignada), 
         0, 
         now, 
@@ -288,7 +288,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
       res.status(201).json({
         id: tareaGuardada.id,
         tareas: tareaGuardada.tareas || [],
-        referencia: tareaGuardada.referencia,
+        referencias: tareaGuardada.referencia ? tareaGuardada.referencia.split(', ') : [],
         cantidadAsignada: tareaGuardada.cantidad_asignada,
         cantidadHecha: tareaGuardada.cantidad_hecha,
         horaInicio: tareaGuardada.hora_inicio,

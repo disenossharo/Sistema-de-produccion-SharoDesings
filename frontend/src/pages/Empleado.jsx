@@ -65,7 +65,7 @@ const Empleado = () => {
 
   // Formulario de inicio
   const [tareasSeleccionadas, setTareasSeleccionadas] = useState([]); // array de nombres
-  const [referencia, setReferencia] = useState("");
+  const [referenciasSeleccionadas, setReferenciasSeleccionadas] = useState([]); // array de códigos de referencias
   const [cantidad, setCantidad] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
@@ -241,37 +241,47 @@ const Empleado = () => {
     return () => clearInterval(interval);
   }, [token, logout, navigate]);
 
-  // Cargar operaciones filtradas por referencia seleccionada
+  // Cargar operaciones filtradas por referencias seleccionadas
   useEffect(() => {
-    async function fetchOperacionesPorReferencia() {
+    async function fetchOperacionesPorReferencias() {
       if (!token) return;
       
       try {
-        if (!referencia) {
-          // Si no hay referencia seleccionada, cargar todas las operaciones
+        if (!referenciasSeleccionadas || referenciasSeleccionadas.length === 0) {
+          // Si no hay referencias seleccionadas, cargar todas las operaciones
           const operacionesData = await api.getOperacionesActivas(token);
           setOperaciones(operacionesData);
           setOperacionesCargando(false);
           return;
         }
         
-        // Encontrar el ID de la referencia seleccionada
-        const referenciaSeleccionada = referencias.find(ref => ref.codigo === referencia);
-        if (!referenciaSeleccionada) {
-          // Si no se encuentra la referencia, cargar todas las operaciones
-          const operacionesData = await api.getOperacionesActivas(token);
-          setOperaciones(operacionesData);
-          setOperacionesCargando(false);
-          return;
-        }
+        // Cargar operaciones para todas las referencias seleccionadas
+        const operacionesPromises = referenciasSeleccionadas.map(async (codigoReferencia) => {
+          const referenciaSeleccionada = referencias.find(ref => ref.codigo === codigoReferencia);
+          if (!referenciaSeleccionada) return [];
+          
+          try {
+            const operacionesData = await api.getOperacionesActivasPorReferencia(token, referenciaSeleccionada.id);
+            return operacionesData.operaciones || [];
+          } catch (error) {
+            console.error(`Error al cargar operaciones para referencia ${codigoReferencia}:`, error);
+            return [];
+          }
+        });
         
-        // Cargar operaciones específicas de esta referencia
-        const operacionesData = await api.getOperacionesActivasPorReferencia(token, referenciaSeleccionada.id);
-        setOperaciones(operacionesData.operaciones || []);
+        const operacionesArrays = await Promise.all(operacionesPromises);
+        
+        // Combinar todas las operaciones y eliminar duplicados
+        const todasLasOperaciones = operacionesArrays.flat();
+        const operacionesUnicas = todasLasOperaciones.filter((operacion, index, self) => 
+          index === self.findIndex(op => op.id === operacion.id)
+        );
+        
+        setOperaciones(operacionesUnicas);
         setOperacionesCargando(false);
         
       } catch (e) {
-        console.error('Error al cargar operaciones por referencia:', e);
+        console.error('Error al cargar operaciones por referencias:', e);
         setOperacionesCargando(false);
         // Si hay error de autenticación, redirigir al login
         if (e.message && e.message.includes('401')) {
@@ -281,8 +291,8 @@ const Empleado = () => {
       }
     }
     
-    fetchOperacionesPorReferencia();
-  }, [referencia, referencias, token, logout, navigate]);
+    fetchOperacionesPorReferencias();
+  }, [referenciasSeleccionadas, referencias, token, logout, navigate]);
 
 
   // Obtener historial al cargar
@@ -319,7 +329,7 @@ const Empleado = () => {
           setTareaEnProgreso(tareaData);
           setTareaIdEnProgreso(tareaData.id);
           setTareasSeleccionadas(tareaData.tareas || []);
-          setReferencia(tareaData.referencia || "");
+          setReferenciasSeleccionadas(tareaData.referencias || []);
           setCantidad(tareaData.cantidadAsignada || "");
           
           // Manejar la fecha de inicio correctamente
@@ -365,7 +375,7 @@ const Empleado = () => {
           setTareaEnProgreso(null);
           setTareaIdEnProgreso(null);
           setTareasSeleccionadas([]);
-          setReferencia("");
+          setReferenciasSeleccionadas([]);
           setCantidad("");
           setHoraInicio(null);
           setCantidadHecha("");
@@ -838,8 +848,8 @@ const Empleado = () => {
       return;
     }
     
-    if (!referencia || referencia.trim().length === 0) {
-      setError("Por favor selecciona una referencia.");
+    if (!referenciasSeleccionadas || referenciasSeleccionadas.length === 0) {
+      setError("Por favor selecciona al menos una referencia.");
       return;
     }
     
@@ -867,7 +877,7 @@ const Empleado = () => {
     try {
       console.log('🚀 Enviando datos al backend:', {
         tareas: tareasSeleccionadas,
-        referencia: referencia.trim(),
+        referencias: referenciasSeleccionadas,
         cantidadAsignada: Number(cantidad),
         tiempoEstimado: tiempoEstimadoValido,
         tiempoEstimadoOriginal: tiempoEstimado
@@ -875,7 +885,7 @@ const Empleado = () => {
       
       const tareaEnProgreso = await api.crearTareaEnProgreso(token, {
         tareas: tareasSeleccionadas,
-        referencia: referencia.trim(),
+        referencias: referenciasSeleccionadas,
         cantidadAsignada: Number(cantidad),
         tiempoEstimado: tiempoEstimadoValido
       });
@@ -1130,7 +1140,7 @@ const Empleado = () => {
       
       // Limpiar estado para nueva tarea
       setTareasSeleccionadas([]);
-      setReferencia("");
+      setReferenciasSeleccionadas([]);
       setCantidad("");
       setCantidadHecha("");
       setHoraInicio("");
@@ -1411,21 +1421,51 @@ const Empleado = () => {
                     </Form.Group>
                   )}
                   <Form.Group className="mb-3">
-                    <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Referencia</Form.Label>
-                    <Form.Select value={referencia} onChange={e => setReferencia(e.target.value)} style={{ fontSize: 16, borderRadius: 8 }}>
-                      <option value="">Selecciona una referencia</option>
+                    <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Referencias</Form.Label>
+                    <div style={{ 
+                      border: '1px solid #ced4da', 
+                      borderRadius: 8, 
+                      padding: '12px', 
+                      maxHeight: '200px', 
+                      overflowY: 'auto',
+                      background: '#fff'
+                    }}>
                       {referenciasCargando ? (
-                        <option disabled>Cargando referencias...</option>
+                        <div className="text-center py-3">
+                          <Spinner animation="border" size="sm" variant="primary" />
+                          <span className="ms-2">Cargando referencias...</span>
+                        </div>
                       ) : referencias.length === 0 ? (
-                        <option disabled>No hay referencias disponibles</option>
+                        <div className="text-center py-3 text-muted">
+                          No hay referencias disponibles
+                        </div>
                       ) : (
                         referencias.map((ref) => (
-                          <option key={ref.id} value={ref.codigo}>
-                            {ref.codigo} - {ref.nombre}
-                          </option>
+                          <Form.Check
+                            key={ref.id}
+                            type="checkbox"
+                            id={`referencia-${ref.id}`}
+                            label={`${ref.codigo} - ${ref.nombre}`}
+                            checked={referenciasSeleccionadas.includes(ref.codigo)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setReferenciasSeleccionadas([...referenciasSeleccionadas, ref.codigo]);
+                              } else {
+                                setReferenciasSeleccionadas(referenciasSeleccionadas.filter(codigo => codigo !== ref.codigo));
+                              }
+                            }}
+                            style={{ marginBottom: '8px' }}
+                          />
                         ))
                       )}
-                    </Form.Select>
+                    </div>
+                    {referenciasSeleccionadas.length > 0 && (
+                      <div className="mt-2">
+                        <small className="text-muted">
+                          {referenciasSeleccionadas.length} referencia(s) seleccionada(s)
+                        </small>
+                      </div>
+                    )}
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Cantidad</Form.Label>

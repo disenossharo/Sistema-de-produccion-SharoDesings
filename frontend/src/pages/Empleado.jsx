@@ -1264,7 +1264,7 @@ const Empleado = () => {
           }
         }
         setHoraInicio(horaInicioDate);
-        setTiempoEstimadoValido(tareaData.tiempoEstimado || 0);
+        // tiempoEstimadoValido se calcula automáticamente basado en tiempoEstimado
       }
       
       // Cerrar modal

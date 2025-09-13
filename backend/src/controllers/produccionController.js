@@ -1211,6 +1211,12 @@ exports.logout = async (req, res) => {
 // Extender tiempo de tarea en progreso
 exports.extenderTiempoTarea = async (req, res) => {
   try {
+    console.log('🔍 [EXTENDER TIEMPO] Petición recibida:', {
+      params: req.params,
+      body: req.body,
+      user: req.user?.email
+    });
+    
     const { id } = req.params;
     const { tiempoAdicional, observacion } = req.body;
     const email = req.user.email;
@@ -1268,13 +1274,16 @@ exports.extenderTiempoTarea = async (req, res) => {
 
       console.log(`✅ Tiempo extendido - Usuario: ${email}, Tarea: ${id}, Tiempo añadido: ${tiempoAdicional} min, Nuevo total: ${nuevoTiempo} min`);
 
-      res.json({
+      const response = {
         message: `Se añadieron ${tiempoAdicional} minutos adicionales a la tarea`,
         tiempoEstimadoAnterior: tiempoActual,
         tiempoEstimadoNuevo: nuevoTiempo,
         tiempoAdicional: Number(tiempoAdicional),
         observacion: observacion.trim()
-      });
+      };
+      
+      console.log('📤 [EXTENDER TIEMPO] Respuesta enviada:', response);
+      res.json(response);
 
     } finally {
       client.release();

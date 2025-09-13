@@ -41,11 +41,11 @@ router.get('/estadisticas', authenticateToken, requireAdmin, produccionControlle
 // POST /api/produccion/en-progreso (crear tarea en progreso)
 router.post('/en-progreso', authenticateToken, produccionController.crearTareaEnProgreso);
 
-// PUT /api/produccion/finalizar/:tareaId (finalizar tarea)
-router.put('/finalizar/:tareaId', authenticateToken, produccionController.actualizarTareaFinalizada);
-
 // PUT /api/produccion/:id/extender-tiempo (extender tiempo de tarea en progreso)
 router.put('/:id/extender-tiempo', authenticateToken, produccionController.extenderTiempoTarea);
+
+// PUT /api/produccion/finalizar/:tareaId (finalizar tarea)
+router.put('/finalizar/:tareaId', authenticateToken, produccionController.actualizarTareaFinalizada);
 
 // POST /api/produccion/exportar-excel (exportar datos a Excel)
 router.post('/exportar-excel', authenticateToken, requireAdmin, produccionController.exportarAExcel);

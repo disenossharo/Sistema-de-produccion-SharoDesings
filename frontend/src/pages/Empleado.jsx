@@ -111,6 +111,14 @@ const Empleado = () => {
   const [referencias, setReferencias] = useState([]);
   const [operacionesCargando, setOperacionesCargando] = useState(true);
   const [referenciasCargando, setReferenciasCargando] = useState(true);
+  
+  // Estado para filtro de operaciones
+  const [filtroOperaciones, setFiltroOperaciones] = useState("");
+  
+  // Filtrar operaciones basado en el texto de búsqueda
+  const operacionesFiltradas = operaciones.filter(operacion => 
+    operacion.nombre.toLowerCase().includes(filtroOperaciones.toLowerCase())
+  );
 
 
   // Presencia en línea: marcar online al entrar y offline al salir
@@ -1370,6 +1378,42 @@ const Empleado = () => {
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Operaciones</Form.Label>
+                    
+                    {/* Campo de búsqueda para operaciones */}
+                    <div className="mb-3">
+                      <div className="d-flex gap-2">
+                        <Form.Control
+                          type="text"
+                          placeholder="🔍 Buscar operación..."
+                          value={filtroOperaciones}
+                          onChange={(e) => setFiltroOperaciones(e.target.value)}
+                          style={{ 
+                            fontSize: 16, 
+                            borderRadius: 8, 
+                            border: '2px solid #e9ecef',
+                            padding: '10px 15px',
+                            flex: 1
+                          }}
+                        />
+                        {filtroOperaciones && (
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => setFiltroOperaciones("")}
+                            style={{ borderRadius: 8 }}
+                            title="Limpiar filtro"
+                          >
+                            ✕
+                          </Button>
+                        )}
+                      </div>
+                      {filtroOperaciones && (
+                        <small className="text-muted">
+                          Mostrando {operacionesFiltradas.length} de {operaciones.length} operaciones
+                        </small>
+                      )}
+                    </div>
+                    
                     <Accordion alwaysOpen>
                       <Accordion.Item eventKey="0">
                         <Accordion.Header>Selecciona las operaciones</Accordion.Header>
@@ -1383,9 +1427,13 @@ const Empleado = () => {
                             <div className="text-center py-3 text-muted">
                               No hay operaciones disponibles
                             </div>
+                          ) : operacionesFiltradas.length === 0 ? (
+                            <div className="text-center py-3 text-muted">
+                              No se encontraron operaciones que coincidan con "{filtroOperaciones}"
+                            </div>
                           ) : (
                             <>
-                              {operaciones.map((operacion, idx) => (
+                              {operacionesFiltradas.map((operacion, idx) => (
                                 <Form.Check
                                   key={operacion.id}
                                   type="checkbox"

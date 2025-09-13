@@ -17,7 +17,7 @@ exports.getHistorial = async (req, res) => {
       const historial = result.rows.map(row => ({
         id: row.id,
         tareas: row.tareas || [],
-        referencia: row.referencia,
+        referencias: row.referencia ? row.referencia.split(', ') : [],
         cantidadAsignada: row.cantidad_asignada,
         cantidadHecha: row.cantidad_hecha,
         horaInicio: row.hora_inicio,
@@ -95,7 +95,7 @@ exports.getTareasActivas = async (req, res) => {
           empleadoOnline: isActuallyOnline,
           empleadoLastSeen: row.empleado_last_seen,
           tareas: row.tareas || [],
-          referencia: row.referencia,
+          referencias: row.referencia ? row.referencia.split(', ') : [],
           cantidadAsignada: row.cantidad_asignada,
           cantidadHecha: row.cantidad_hecha,
           horaInicio: row.hora_inicio,
@@ -159,7 +159,7 @@ exports.getAllTareas = async (req, res) => {
         usuario: row.empleado_email,
         empleadoNombre: row.empleado_nombre,
         tareas: row.tareas || [],
-        referencia: row.referencia,
+        referencias: row.referencia ? row.referencia.split(', ') : [],
         cantidadAsignada: row.cantidad_asignada,
         cantidadHecha: row.cantidad_hecha,
         horaInicio: row.hora_inicio,
@@ -409,7 +409,7 @@ exports.actualizarTareaFinalizada = async (req, res) => {
       res.json({
         id: tareaActualizada.id,
         tareas: tareaActualizada.tareas || [],
-        referencia: tareaActualizada.referencia,
+        referencias: tareaActualizada.referencia ? tareaActualizada.referencia.split(', ') : [],
         cantidadAsignada: tareaActualizada.cantidad_asignada,
         cantidadHecha: tareaActualizada.cantidad_hecha,
         horaInicio: tareaActualizada.hora_inicio,
@@ -457,7 +457,7 @@ exports.getTareasDelDia = async (req, res) => {
       }).map(row => ({
         id: row.id,
         tareas: row.tareas || [],
-        referencia: row.referencia,
+        referencias: row.referencia ? row.referencia.split(', ') : [],
         cantidadAsignada: row.cantidad_asignada,
         cantidadHecha: row.cantidad_hecha,
         horaInicio: row.hora_inicio,
@@ -606,7 +606,7 @@ exports.getTareaEnProgreso = async (req, res) => {
         res.json({
           id: tareaData.id,
           tareas: tareaData.tareas || [],
-          referencia: tareaData.referencia,
+          referencias: tareaData.referencia ? tareaData.referencia.split(', ') : [],
           cantidadAsignada: tareaData.cantidad_asignada,
           cantidadHecha: tareaData.cantidad_hecha,
           horaInicio: tareaData.hora_inicio,
@@ -656,7 +656,7 @@ exports.exportarAExcel = async (req, res) => {
       const todasLasTareas = tareasResult.rows.map(row => ({
         id: row.id,
         tareas: row.tareas || [],
-        referencia: row.referencia,
+        referencias: row.referencia ? row.referencia.split(', ') : [],
         cantidadAsignada: row.cantidad_asignada,
         cantidadHecha: row.cantidad_hecha,
         horaInicio: row.hora_inicio,

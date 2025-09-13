@@ -1114,7 +1114,7 @@ const Empleado = () => {
         
         await api.crearProduccion(token, {
           tareas: tareasSeleccionadas,
-          referencia,
+          referencias: referenciasSeleccionadas,
           cantidadAsignada: Number(cantidad),
           cantidadHecha: Number(cantidadHecha),
           horaInicio,
@@ -1663,7 +1663,7 @@ const Empleado = () => {
                   
                   <Row className="mb-3">
                     <Col><strong>Operaciones:</strong> {tareasSeleccionadas.join(", ")}</Col>
-                    <Col><strong>Referencia:</strong> {referencia}</Col>
+                    <Col><strong>Referencias:</strong> {referenciasSeleccionadas.join(", ")}</Col>
                   </Row>
                   <Row className="mb-3">
                     <Col><strong>Cantidad asignada:</strong> {cantidad}</Col>

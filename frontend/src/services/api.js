@@ -749,4 +749,28 @@ export async function cambiarPassword(token, id, password) {
     console.error('Error al cambiar contraseña:', error);
     throw error;
   }
+}
+
+// Extender tiempo de tarea en progreso
+export async function extenderTiempoTarea(token, tareaId, datos) {
+  try {
+    const res = await fetch(`${API_BASE}/produccion/${tareaId}/extender-tiempo`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(datos)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Error ${res.status}: No se pudo extender el tiempo de la tarea`);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('Error al extender tiempo de tarea:', error);
+    throw error;
+  }
 } 

@@ -115,6 +115,11 @@ const Empleado = () => {
   // Estado para filtro de operaciones
   const [filtroOperaciones, setFiltroOperaciones] = useState("");
   
+  // Estados para extensión de tiempo
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [tiempoExtension, setTiempoExtension] = useState("");
+  const [observacionExtension, setObservacionExtension] = useState("");
+  
   // Filtrar operaciones basado en el texto de búsqueda
   const operacionesFiltradas = operaciones.filter(operacion => 
     operacion.nombre.toLowerCase().includes(filtroOperaciones.toLowerCase())
@@ -1178,6 +1183,76 @@ const Empleado = () => {
     }
   };
 
+  // Función para abrir modal de extensión de tiempo
+  const handleAbrirExtensionModal = () => {
+    setTiempoExtension("");
+    setObservacionExtension("");
+    setShowExtensionModal(true);
+  };
+
+  // Función para cerrar modal de extensión de tiempo
+  const handleCerrarExtensionModal = () => {
+    setShowExtensionModal(false);
+    setTiempoExtension("");
+    setObservacionExtension("");
+    setError("");
+  };
+
+  // Función para aplicar extensión de tiempo
+  const handleAplicarExtension = async () => {
+    // Validaciones
+    if (!tiempoExtension || isNaN(tiempoExtension) || Number(tiempoExtension) <= 0) {
+      setError("⚠️ Por favor ingresa una cantidad válida de minutos (1-10).");
+      return;
+    }
+
+    const tiempoNum = Number(tiempoExtension);
+    if (tiempoNum > 10) {
+      setError("⚠️ El tiempo adicional no puede ser mayor a 10 minutos.");
+      return;
+    }
+
+    if (!observacionExtension || observacionExtension.trim() === "") {
+      setError("⚠️ Es obligatorio describir el inconveniente que se presentó.");
+      return;
+    }
+
+    if (!tareaIdEnProgreso) {
+      setError("⚠️ No hay una tarea en progreso para extender.");
+      return;
+    }
+
+    try {
+      // Llamar al backend para extender el tiempo
+      await api.extenderTiempoTarea(token, tareaIdEnProgreso, {
+        tiempoAdicional: tiempoNum,
+        observacion: observacionExtension.trim()
+      });
+
+      setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea.`);
+      
+      // Recargar la tarea en progreso para actualizar el tiempo estimado
+      cargarTareaEnProgreso();
+      
+      // Cerrar modal
+      handleCerrarExtensionModal();
+      
+      // Limpiar mensaje de éxito después de 5 segundos
+      setTimeout(() => setSuccessMsg(""), 5000);
+
+    } catch (e) {
+      console.error('Error al extender tiempo:', e);
+      
+      if (e.message && e.message.includes('401')) {
+        setError("Error de autenticación. Por favor, vuelve a iniciar sesión.");
+        logout();
+        navigate("/login");
+      } else {
+        setError("Error al extender el tiempo. Intenta de nuevo.");
+      }
+    }
+  };
+
   const cargosMaquina = [
     "Operario máquina plana",
     "Operario máquina fileteadora",
@@ -1758,6 +1833,26 @@ const Empleado = () => {
                       </div>
                     )}
                   </Form.Group>
+                  
+                  {/* Botón para extender tiempo */}
+                  <div className="mb-3">
+                    <Button 
+                      variant="warning" 
+                      onClick={handleAbrirExtensionModal}
+                      style={{ 
+                        fontSize: 16, 
+                        borderRadius: 8, 
+                        padding: '8px 16px',
+                        fontWeight: 600
+                      }}
+                    >
+                      ⏰ Añadir tiempo adicional (máx. 10 min)
+                    </Button>
+                    <small className="text-muted d-block mt-1">
+                      Usa esta opción si se presenta algún inconveniente durante la tarea
+                    </small>
+                  </div>
+                  
                   <Button 
                     className="w-100 fw-bold" 
                     variant={cantidadHecha && Number(cantidadHecha) > Number(cantidad) ? "danger" : "success"} 
@@ -1806,6 +1901,65 @@ const Empleado = () => {
                   </Button>
                   <Button variant="primary" onClick={() => handleGuardarModal(false)}>
                     Guardar
+                  </Button>
+                </Modal.Footer>
+              </Modal>
+              
+              {/* Modal para extensión de tiempo */}
+              <Modal show={showExtensionModal} onHide={handleCerrarExtensionModal}>
+                <Modal.Header closeButton>
+                  <Modal.Title>⏰ Añadir Tiempo Adicional</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <div className="mb-3">
+                    <Alert variant="info" style={{ fontSize: 14 }}>
+                      <strong>⚠️ Importante:</strong> Esta opción es para cuando se presenten inconvenientes durante la tarea. 
+                      Es obligatorio describir el problema que se presentó.
+                    </Alert>
+                  </div>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label><strong>Tiempo adicional (minutos)</strong></Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={tiempoExtension}
+                      onChange={(e) => setTiempoExtension(e.target.value)}
+                      placeholder="Ingresa minutos (1-10)"
+                      style={{ fontSize: 16, borderRadius: 8 }}
+                    />
+                    <Form.Text className="text-muted">
+                      Máximo 10 minutos adicionales
+                    </Form.Text>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label><strong>Descripción del inconveniente *</strong></Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={4}
+                      value={observacionExtension}
+                      onChange={(e) => setObservacionExtension(e.target.value)}
+                      placeholder="Describe detalladamente el inconveniente que se presentó..."
+                      style={{ fontSize: 16, borderRadius: 8 }}
+                      required
+                    />
+                    <Form.Text className="text-muted">
+                      * Campo obligatorio - Explica qué problema se presentó
+                    </Form.Text>
+                  </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="secondary" onClick={handleCerrarExtensionModal}>
+                    Cancelar
+                  </Button>
+                  <Button 
+                    variant="warning" 
+                    onClick={handleAplicarExtension}
+                    disabled={!tiempoExtension || !observacionExtension.trim()}
+                  >
+                    ⏰ Añadir Tiempo
                   </Button>
                 </Modal.Footer>
               </Modal>

@@ -44,6 +44,9 @@ router.post('/en-progreso', authenticateToken, produccionController.crearTareaEn
 // PUT /api/produccion/finalizar/:tareaId (finalizar tarea)
 router.put('/finalizar/:tareaId', authenticateToken, produccionController.actualizarTareaFinalizada);
 
+// PUT /api/produccion/:id/extender-tiempo (extender tiempo de tarea en progreso)
+router.put('/:id/extender-tiempo', authenticateToken, produccionController.extenderTiempoTarea);
+
 // POST /api/produccion/exportar-excel (exportar datos a Excel)
 router.post('/exportar-excel', authenticateToken, requireAdmin, produccionController.exportarAExcel);
 

@@ -1206,4 +1206,82 @@ exports.logout = async (req, res) => {
     console.error('❌ Error en logout:', error);
     res.status(500).json({ error: 'Error en logout', details: error.message });
   }
+};
+
+// Extender tiempo de tarea en progreso
+exports.extenderTiempoTarea = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tiempoAdicional, observacion } = req.body;
+    const email = req.user.email;
+
+    // Validaciones
+    if (!tiempoAdicional || isNaN(tiempoAdicional) || Number(tiempoAdicional) <= 0) {
+      return res.status(400).json({ error: 'El tiempo adicional debe ser un número positivo' });
+    }
+
+    if (Number(tiempoAdicional) > 10) {
+      return res.status(400).json({ error: 'El tiempo adicional no puede ser mayor a 10 minutos' });
+    }
+
+    if (!observacion || observacion.trim() === '') {
+      return res.status(400).json({ error: 'Es obligatorio describir el inconveniente que se presentó' });
+    }
+
+    const client = await pool.connect();
+    try {
+      // Verificar que la tarea existe y pertenece al usuario
+      const tareaResult = await client.query(
+        `SELECT id, empleado_email, tiempo_estimado, observaciones 
+         FROM produccion 
+         WHERE id = $1 AND empleado_email = $2 AND estado = 'en_progreso'`,
+        [id, email]
+      );
+
+      if (tareaResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Tarea no encontrada o no está en progreso' });
+      }
+
+      const tarea = tareaResult.rows[0];
+      const tiempoActual = tarea.tiempo_estimado || 0;
+      const nuevoTiempo = tiempoActual + Number(tiempoAdicional);
+      
+      // Actualizar observaciones agregando la nueva observación
+      const observacionesActuales = tarea.observaciones || '';
+      const nuevaObservacion = `[EXTENSIÓN DE TIEMPO - ${new Date().toLocaleString()}] +${tiempoAdicional} min: ${observacion.trim()}`;
+      const observacionesActualizadas = observacionesActuales 
+        ? `${observacionesActuales}\n${nuevaObservacion}`
+        : nuevaObservacion;
+
+      // Actualizar la tarea
+      const updateResult = await client.query(
+        `UPDATE produccion 
+         SET tiempo_estimado = $1, 
+             observaciones = $2, 
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3 AND empleado_email = $4`,
+        [nuevoTiempo, observacionesActualizadas, id, email]
+      );
+
+      if (updateResult.rowCount === 0) {
+        return res.status(404).json({ error: 'No se pudo actualizar la tarea' });
+      }
+
+      console.log(`✅ Tiempo extendido - Usuario: ${email}, Tarea: ${id}, Tiempo añadido: ${tiempoAdicional} min, Nuevo total: ${nuevoTiempo} min`);
+
+      res.json({
+        message: `Se añadieron ${tiempoAdicional} minutos adicionales a la tarea`,
+        tiempoEstimadoAnterior: tiempoActual,
+        tiempoEstimadoNuevo: nuevoTiempo,
+        tiempoAdicional: Number(tiempoAdicional),
+        observacion: observacion.trim()
+      });
+
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('❌ Error al extender tiempo de tarea:', error);
+    res.status(500).json({ error: 'Error interno del servidor al extender tiempo' });
+  }
 }; 

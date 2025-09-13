@@ -9,8 +9,8 @@ router.get('/activas', authenticateToken, operacionesController.getOperacionesAc
 router.get('/por-referencia/:referencia_id', authenticateToken, operacionesController.getOperacionesActivasPorReferencia); // Operaciones por referencia
 router.get('/:id', authenticateToken, operacionesController.getOperacion);
 router.post('/', authenticateToken, requireAdmin, operacionesController.createOperacion);
+router.put('/toggle-all', authenticateToken, requireAdmin, operacionesController.toggleAllOperaciones); // Toggle todas las operaciones - DEBE IR ANTES DE /:id
 router.put('/:id', authenticateToken, requireAdmin, operacionesController.updateOperacion);
 router.delete('/:id', authenticateToken, requireAdmin, operacionesController.deleteOperacion);
-router.put('/toggle-all', authenticateToken, requireAdmin, operacionesController.toggleAllOperaciones); // Toggle todas las operaciones
 
 module.exports = router;

@@ -1257,8 +1257,7 @@ exports.extenderTiempoTarea = async (req, res) => {
       const updateResult = await client.query(
         `UPDATE produccion 
          SET tiempo_estimado = $1, 
-             observaciones = $2, 
-             updated_at = CURRENT_TIMESTAMP
+             observaciones = $2
          WHERE id = $3 AND empleado_email = $4`,
         [nuevoTiempo, observacionesActualizadas, id, email]
       );

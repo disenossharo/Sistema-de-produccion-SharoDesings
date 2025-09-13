@@ -1249,8 +1249,8 @@ exports.extenderTiempoTarea = async (req, res) => {
       }
 
       const tarea = tareaResult.rows[0];
-      const tiempoActual = tarea.tiempo_estimado || 0;
-      const nuevoTiempo = tiempoActual + Number(tiempoAdicional);
+      const tiempoActual = parseFloat(tarea.tiempo_estimado) || 0;
+      const nuevoTiempo = Math.ceil(tiempoActual + Number(tiempoAdicional));
       
       // Actualizar observaciones agregando la nueva observación
       const observacionesActuales = tarea.observaciones || '';

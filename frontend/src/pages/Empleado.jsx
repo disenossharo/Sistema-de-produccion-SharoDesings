@@ -842,14 +842,14 @@ const Empleado = () => {
     }
   })();
 
-  // Validar que el tiempo estimado sea un número válido
+  // Validar que el tiempo estimado sea un número válido y redondear hacia arriba
   const tiempoEstimadoValido = (() => {
     const tiempo = Number(tiempoEstimado);
     if (isNaN(tiempo) || tiempo < 0) {
       console.warn('⚠️ Tiempo estimado inválido:', tiempoEstimado, 'usando 0');
       return 0;
     }
-    return tiempo;
+    return Math.ceil(tiempo); // Redondear hacia arriba
   })();
 
 
@@ -1281,7 +1281,14 @@ const Empleado = () => {
           }
         }
         setHoraInicio(horaInicioDate);
-        // tiempoEstimadoValido se calcula automáticamente basado en tiempoEstimado
+        
+        // Recalcular hora estimada de fin con el nuevo tiempo
+        if (tareaData.tiempoEstimado && horaInicioDate) {
+          const nuevoTiempoEstimado = Math.ceil(tareaData.tiempoEstimado);
+          const fin = new Date(horaInicioDate.getTime() + nuevoTiempoEstimado * 60000);
+          setHoraEstimadaFin(fin);
+          console.log('🕐 [FRONTEND] Nueva hora estimada de fin:', fin.toLocaleTimeString());
+        }
       }
       
       // Cerrar modal

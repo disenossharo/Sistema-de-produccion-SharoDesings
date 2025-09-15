@@ -21,10 +21,36 @@ const operacionesRoutes = require('./routes/operacionesRoutes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware CORS personalizado - Railway compatible
+// Configuración CORS mejorada para Vercel y Railway
+const corsOptions = {
+  origin: [
+    'https://sistema-produccion-sharo-v2.vercel.app',
+    'https://sistema-produccion-sharo.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  credentials: false,
+  optionsSuccessStatus: 200
+};
+
+// Aplicar CORS con configuración específica
+app.use(cors(corsOptions));
+
+// Middleware adicional para asegurar CORS en todas las respuestas
 app.use((req, res, next) => {
-  // Permitir todos los orígenes
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = corsOptions.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'false');
@@ -35,14 +61,6 @@ app.use((req, res, next) => {
     return;
   }
   
-  next();
-});
-
-// Middleware adicional para forzar CORS después de las rutas
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   next();
 });
 app.use(express.json());
@@ -70,10 +88,29 @@ app.use('/api/operaciones', operacionesRoutes);
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Servidor funcionando correctamente - v15.0 ACTUALIZACIÓN FORZADA',
+    message: 'Servidor funcionando correctamente - v16.0 CORS FIX',
     timestamp: new Date().toISOString(),
-    version: 'v15.0',
-    routes: ['/health', '/debug', '/api/auth/login', '/api/empleados', '/api/produccion', '/api/referencias', '/api/operaciones']
+    version: 'v16.0',
+    cors: {
+      enabled: true,
+      allowedOrigins: corsOptions.origin,
+      currentOrigin: req.headers.origin || 'unknown'
+    },
+    routes: ['/health', '/debug', '/cors-test', '/api/auth/login', '/api/empleados', '/api/produccion', '/api/referencias', '/api/operaciones']
+  });
+});
+
+// Endpoint específico para probar CORS
+app.get('/cors-test', (req, res) => {
+  res.json({
+    message: 'CORS funcionando correctamente',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    headers: {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Methods': res.getHeader('Access-Control-Allow-Methods'),
+      'Access-Control-Allow-Headers': res.getHeader('Access-Control-Allow-Headers')
+    }
   });
 });
 

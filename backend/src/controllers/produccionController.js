@@ -1226,8 +1226,8 @@ exports.extenderTiempoTarea = async (req, res) => {
       return res.status(400).json({ error: 'El tiempo adicional debe ser un número positivo' });
     }
 
-    if (Number(tiempoAdicional) > 10) {
-      return res.status(400).json({ error: 'El tiempo adicional no puede ser mayor a 10 minutos' });
+    if (Number(tiempoAdicional) > 30) {
+      return res.status(400).json({ error: 'El tiempo adicional no puede ser mayor a 30 minutos' });
     }
 
     if (!observacion || observacion.trim() === '') {

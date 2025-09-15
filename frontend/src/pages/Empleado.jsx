@@ -1210,13 +1210,13 @@ const Empleado = () => {
     // Validaciones
     if (!tiempoExtension || isNaN(tiempoExtension) || Number(tiempoExtension) <= 0) {
       console.log('❌ [FRONTEND] Error: Tiempo inválido');
-      setError("⚠️ Por favor ingresa una cantidad válida de minutos (1-10).");
+      setError("⚠️ Por favor ingresa una cantidad válida de minutos (1-30).");
       return;
     }
 
     const tiempoNum = Number(tiempoExtension);
-    if (tiempoNum > 10) {
-      setError("⚠️ El tiempo adicional no puede ser mayor a 10 minutos.");
+    if (tiempoNum > 30) {
+      setError("⚠️ El tiempo adicional no puede ser mayor a 30 minutos.");
       return;
     }
 
@@ -1246,7 +1246,9 @@ const Empleado = () => {
       });
 
       console.log('✅ [FRONTEND] Respuesta del API:', resultado);
-      setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea.`);
+      const tiempoOriginal = Math.ceil(tareaEnProgreso.tiempoEstimado);
+      const tiempoTotal = tiempoOriginal + tiempoNum;
+      setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea. Tiempo original: ${tiempoOriginal} min + ${tiempoNum} min = ${tiempoTotal} min total.`);
       
       // Recargar la tarea en progreso para actualizar el tiempo estimado
       const tareaData = await api.getTareaEnProgreso(token);
@@ -1852,7 +1854,13 @@ const Empleado = () => {
                   </Row>
                   <Row className="mb-3">
                     <Col><strong>Cantidad asignada:</strong> {cantidad}</Col>
-                    <Col><strong>Tiempo estimado:</strong> {tiempoEstimadoValido} min</Col>
+                    <Col><strong>Tiempo estimado:</strong> {tiempoEstimadoValido} min
+                      {tareaEnProgreso?.observaciones?.includes('[EXTENSIÓN DE TIEMPO') && (
+                        <span className="text-warning ms-2">
+                          <small>(+ tiempo adicional)</small>
+                        </span>
+                      )}
+                    </Col>
                   </Row>
                   <div className="mb-2">
                     <strong>Hora de inicio:</strong> {formatHora(horaInicio)}
@@ -1985,14 +1993,14 @@ const Empleado = () => {
                     <Form.Control
                       type="number"
                       min="1"
-                      max="10"
+                      max="30"
                       value={tiempoExtension}
                       onChange={(e) => setTiempoExtension(e.target.value)}
-                      placeholder="Ingresa minutos (1-10)"
+                      placeholder="Ingresa minutos (1-30)"
                       style={{ fontSize: 16, borderRadius: 8 }}
                     />
                     <Form.Text className="text-muted">
-                      Máximo 10 minutos adicionales
+                      Máximo 30 minutos adicionales
                     </Form.Text>
                   </Form.Group>
                   

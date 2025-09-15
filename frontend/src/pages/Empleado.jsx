@@ -991,9 +991,28 @@ const Empleado = () => {
         usoTiempoAutomatico: tiempoCalculadoAuto > 0
       });
       
+      // Convertir nombres de tareas a IDs para el backend
+      const tareasIds = tareasSeleccionadas.map(nombreTarea => {
+        const operacion = operaciones.find(op => op.nombre === nombreTarea);
+        return operacion ? operacion.id : nombreTarea;
+      }).filter(Boolean);
+      
+      // Convertir códigos de referencias a objetos con ID y código
+      const referenciasData = referenciasSeleccionadas.map(codigoRef => {
+        const referencia = referencias.find(ref => ref.codigo === codigoRef);
+        return referencia ? { id: referencia.id, codigo: referencia.codigo } : { codigo: codigoRef };
+      });
+      
+      console.log('📤 Datos convertidos para backend:', {
+        tareasIds,
+        referenciasData,
+        cantidadAsignada: Number(cantidad),
+        tiempoEstimado: tiempoFinalAUsar
+      });
+      
       const tareaEnProgreso = await api.crearTareaEnProgreso(token, {
-        tareas: tareasSeleccionadas,
-        referencias: referenciasSeleccionadas,
+        tareas: tareasIds,
+        referencias: referenciasData,
         cantidadAsignada: Number(cantidad),
         tiempoEstimado: tiempoFinalAUsar
       });

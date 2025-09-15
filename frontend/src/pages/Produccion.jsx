@@ -38,6 +38,7 @@ import * as api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ReferenceSearch from '../components/ReferenceSearch';
+import MultipleReferenceSelector from '../components/MultipleReferenceSelector';
 
 const Produccion = () => {
   const { user, token, logout, isAdmin } = useAuth();
@@ -91,6 +92,10 @@ const Produccion = () => {
     categoria: '',
     activa: true
   });
+
+  // Estados para modal de referencias de operación
+  const [showReferenciasModal, setShowReferenciasModal] = useState(false);
+  const [operacionReferencias, setOperacionReferencias] = useState(null);
 
   // Estados para usuarios
   const [usuarios, setUsuarios] = useState([]);
@@ -352,22 +357,6 @@ const Produccion = () => {
     }
   };
 
-  // Funciones para manejar referencias múltiples
-  const handleAddReferencia = (referencia) => {
-    if (!formOperacion.referencias.find(ref => ref.id === referencia.id)) {
-      setFormOperacion({
-        ...formOperacion,
-        referencias: [...formOperacion.referencias, referencia]
-      });
-    }
-  };
-
-  const handleRemoveReferencia = (referenciaId) => {
-    setFormOperacion({
-      ...formOperacion,
-      referencias: formOperacion.referencias.filter(ref => ref.id !== referenciaId)
-    });
-  };
 
   const handleDeleteOperacion = async (id) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar esta operación?")) {
@@ -381,6 +370,12 @@ const Produccion = () => {
         setTimeout(() => setError(""), 5000);
       }
     }
+  };
+
+  // Función para mostrar referencias de una operación
+  const handleShowReferencias = (operacion) => {
+    setOperacionReferencias(operacion);
+    setShowReferenciasModal(true);
   };
 
   const handleToggleAllOperaciones = async (activa) => {
@@ -900,16 +895,42 @@ const Produccion = () => {
                             </td>
                             <td>
                               {operacion.referencias && operacion.referencias.length > 0 ? (
-                                <div className="d-flex flex-wrap gap-1">
-                                  {operacion.referencias.map((ref, index) => (
-                                    <Badge key={ref.id || index} bg="warning" style={{ fontSize: 11 }}>
-                                      <FaTag className="me-1" />
-                                      {ref.codigo}
-                                    </Badge>
-                                  ))}
+                                <div>
+                                  <div className="d-flex flex-wrap gap-1 mb-1">
+                                    {operacion.referencias.slice(0, 2).map((ref, index) => (
+                                      <Badge key={ref.id || index} bg="warning" style={{ fontSize: 11 }}>
+                                        <FaTag className="me-1" />
+                                        {ref.codigo}
+                                      </Badge>
+                                    ))}
+                                    {operacion.referencias.length > 2 && (
+                                      <Badge bg="secondary" style={{ fontSize: 11 }}>
+                                        +{operacion.referencias.length - 2} más
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="p-0"
+                                    style={{ fontSize: 10, textDecoration: 'none' }}
+                                    onClick={() => handleShowReferencias(operacion)}
+                                  >
+                                    Ver todas ({operacion.referencias.length})
+                                  </Button>
                                 </div>
                               ) : (
-                                <span style={{ color: '#6c757d', fontSize: 12 }}>General</span>
+                                <div>
+                                  <Badge bg="light" text="dark" style={{ fontSize: 11 }}>
+                                    <FaTag className="me-1" />
+                                    General
+                                  </Badge>
+                                  <div>
+                                    <small className="text-muted" style={{ fontSize: 10 }}>
+                                      Sin referencias específicas
+                                    </small>
+                                  </div>
+                                </div>
                               )}
                             </td>
                             <td>
@@ -1358,50 +1379,21 @@ const Produccion = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col md={12}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600 }}>Referencias (Opcional)</Form.Label>
-                  <ReferenceSearch
-                    value=""
-                    onChange={(referencia) => {
-                      if (referencia) {
-                        handleAddReferencia(referencia);
-                        // Limpiar el campo después de seleccionar
-                        setTimeout(() => {
-                          const input = document.querySelector('input[placeholder="Buscar referencia por código o nombre..."]');
-                          if (input) input.value = '';
-                        }, 100);
-                      }
-                    }}
+                  <Form.Label style={{ fontWeight: 600 }}>Referencias Vinculadas (Opcional)</Form.Label>
+                  <MultipleReferenceSelector
+                    selectedReferences={formOperacion.referencias}
+                    onChange={(referencias) => setFormOperacion({...formOperacion, referencias})}
                     referencias={referencias}
-                    placeholder="Buscar referencia por código o nombre..."
+                    placeholder="Buscar referencias para vincular a esta operación..."
+                    maxHeight="250px"
                   />
                   <Form.Text className="text-muted" style={{ fontSize: '12px' }}>
-                    Escribe el código o nombre de la referencia para buscarla y seleccionarla
+                    <FaPlus className="me-1" />
+                    Selecciona una o más referencias que se aplicarán a esta operación. 
+                    Puedes buscar por código, nombre o descripción.
                   </Form.Text>
-                  
-                  {/* Mostrar referencias seleccionadas */}
-                  {formOperacion.referencias.length > 0 && (
-                    <div className="mt-2">
-                      <div className="d-flex flex-wrap gap-1">
-                        {formOperacion.referencias.map((ref, index) => (
-                          <Badge key={ref.id || index} bg="warning" style={{ fontSize: 12 }}>
-                            <FaTag className="me-1" />
-                            {ref.codigo} - {ref.nombre}
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="p-0 ms-1"
-                              style={{ color: 'white', textDecoration: 'none' }}
-                              onClick={() => handleRemoveReferencia(ref.id)}
-                            >
-                              ×
-                            </Button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </Form.Group>
               </Col>
             </Row>
@@ -1429,6 +1421,85 @@ const Produccion = () => {
           </Button>
           <Button variant="primary" onClick={handleSaveOperacion}>
             {operacionEditando ? 'Actualizar' : 'Crear'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal para mostrar referencias de una operación */}
+      <Modal show={showReferenciasModal} onHide={() => setShowReferenciasModal(false)} size="lg">
+        <Modal.Header closeButton style={{ background: '#e3f0ff' }}>
+          <Modal.Title style={{ fontWeight: 700, color: '#0d6efd' }}>
+            <FaTag className="me-2" />
+            Referencias de la Operación: {operacionReferencias?.nombre}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {operacionReferencias?.referencias && operacionReferencias.referencias.length > 0 ? (
+            <div>
+              <div className="mb-3">
+                <Badge bg="info" style={{ fontSize: 14 }}>
+                  {operacionReferencias.referencias.length} referencia{operacionReferencias.referencias.length !== 1 ? 's' : ''} vinculada{operacionReferencias.referencias.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+              <Row>
+                {operacionReferencias.referencias.map((ref, index) => (
+                  <Col md={6} key={ref.id || index} className="mb-3">
+                    <Card style={{ border: '1px solid #dee2e6', borderRadius: 8 }}>
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-start gap-3">
+                          <FaTag style={{ color: '#0d6efd', fontSize: '18px', marginTop: '2px' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ 
+                              fontWeight: 600, 
+                              color: '#2c3e50',
+                              fontSize: '16px',
+                              marginBottom: '4px'
+                            }}>
+                              {ref.codigo}
+                            </div>
+                            <div style={{ 
+                              color: '#6c757d',
+                              fontSize: '14px',
+                              marginBottom: '4px'
+                            }}>
+                              {ref.nombre}
+                            </div>
+                            {ref.descripcion && (
+                              <div style={{ 
+                                color: '#adb5bd',
+                                fontSize: '12px',
+                                fontStyle: 'italic'
+                              }}>
+                                {ref.descripcion}
+                              </div>
+                            )}
+                          </div>
+                          <Badge 
+                            bg="primary" 
+                            style={{ fontSize: '11px' }}
+                          >
+                            #{index + 1}
+                          </Badge>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <FaTag size={48} className="mb-3" style={{ opacity: 0.3, color: '#6c757d' }} />
+              <h5 className="text-muted">Sin referencias vinculadas</h5>
+              <p className="text-muted mb-0">
+                Esta operación no tiene referencias específicas asignadas.
+              </p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowReferenciasModal(false)}>
+            Cerrar
           </Button>
         </Modal.Footer>
       </Modal>

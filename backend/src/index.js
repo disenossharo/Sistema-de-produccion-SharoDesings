@@ -7,6 +7,7 @@ const addCategoriaColumn = require('../scripts/add-categoria-operaciones');
 const fixProduccionTable = require('../scripts/maintenance/fixProduccionTable');
 const { addReferenciaOperacionesRelation } = require('../scripts/maintenance/addReferenciaOperacionesRelation');
 const { fixTiempoEstimadoColumn } = require('../scripts/maintenance/fixTiempoEstimadoColumn');
+const { syncRailwayStructure } = require('../scripts/maintenance/syncRailwayStructure');
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -68,9 +69,9 @@ app.use('/api/operaciones', operacionesRoutes);
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Servidor funcionando correctamente - v12.0 FORZANDO REDESPLIEGUE COMPLETO',
+    message: 'Servidor funcionando correctamente - v14.0 SINCRONIZACIÓN RAILWAY',
     timestamp: new Date().toISOString(),
-    version: 'v12.0',
+    version: 'v14.0',
     routes: ['/health', '/debug', '/api/auth/login', '/api/empleados', '/api/produccion', '/api/referencias', '/api/operaciones']
   });
 });
@@ -162,7 +163,7 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v13.0 - REDESPLIEGUE MANUAL FORZADO');
+    console.log('🔧 CORS configurado para Railway - v14.0 - SINCRONIZACIÓN RAILWAY');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
     console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');
@@ -206,6 +207,14 @@ async function initializeServer() {
                console.log('✅ Columna tiempo_estimado corregida');
              } catch (error) {
                console.error('⚠️ Error corrigiendo columna tiempo_estimado (continuando):', error.message);
+             }
+
+             // Sincronizar estructura con Railway
+             try {
+               await syncRailwayStructure();
+               console.log('✅ Estructura sincronizada con Railway');
+             } catch (error) {
+               console.error('⚠️ Error sincronizando con Railway (continuando):', error.message);
              }
     
     // Iniciar servidor

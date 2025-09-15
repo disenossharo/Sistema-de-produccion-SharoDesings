@@ -1248,7 +1248,7 @@ const Empleado = () => {
       console.log('✅ [FRONTEND] Respuesta del API:', resultado);
       const tiempoOriginal = Math.ceil(tareaEnProgreso.tiempoEstimado);
       const tiempoTotal = tiempoOriginal + tiempoNum;
-      setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea. Tiempo original: ${tiempoOriginal} min + ${tiempoNum} min = ${tiempoTotal} min total.`);
+      setSuccessMsg(`✅ Se añadieron ${tiempoNum} minutos adicionales a la tarea. Ver observaciones para más detalles.`);
       
       // Recargar la tarea en progreso para actualizar el tiempo estimado
       const tareaData = await api.getTareaEnProgreso(token);
@@ -1871,6 +1871,29 @@ const Empleado = () => {
                   <div className="mb-2">
                     <strong>Tiempo transcurrido:</strong> {enProgreso && horaInicio ? `${tiempoTranscurridoTarea} min ${Math.floor(((horaActual - horaInicio) % 60000) / 1000)} seg` : "No disponible"}
                   </div>
+                  {tareaEnProgreso?.observaciones && (
+                    <div className="mb-3">
+                      <strong>Observaciones:</strong>
+                      <div className="mt-1 p-2" style={{ 
+                        backgroundColor: '#f8f9fa', 
+                        border: '1px solid #dee2e6', 
+                        borderRadius: '6px',
+                        fontSize: '14px'
+                      }}>
+                        {tareaEnProgreso.observaciones.split('\n').map((line, index) => (
+                          <div key={index}>
+                            {line.includes('[EXTENSIÓN DE TIEMPO') ? (
+                              <span className="text-warning">
+                                <strong>⏰ {line}</strong>
+                              </span>
+                            ) : (
+                              line
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="mb-3">
                     <strong>Efectividad en tiempo real:</strong> {efectividadEnTiempo}%
                     <ProgressBar now={efectividadEnTiempo} label={`${efectividadEnTiempo}%`} className="mt-1" style={{ height: 22, fontSize: 16, borderRadius: 10, background: '#e9ecef', boxShadow: '0 1px 6px #b6c6e0' }} variant={efectividadEnTiempo >= 80 ? "success" : efectividadEnTiempo >= 50 ? "warning" : "danger"} animated />

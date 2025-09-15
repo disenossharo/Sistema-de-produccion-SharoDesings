@@ -50,6 +50,9 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
           const refId = refSeleccionada.id || refSeleccionada;
           const refCodigo = refSeleccionada.codigo || refSeleccionada;
           
+          console.log(`🔍 Buscando referencia: ID=${refId}, Código=${refCodigo}`);
+          console.log(`📋 Referencias vinculadas disponibles:`, operacionesVinculadas.map(r => `${r.codigo} (${r.tiempo_por_referencia} min)`));
+          
           // Buscar en las referencias vinculadas
           const refVinculada = operacionesVinculadas.find(ref => 
             ref.id == refId || ref.codigo === refCodigo
@@ -61,6 +64,8 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
             tiempoOperacion = Math.max(tiempoOperacion, tiempoEspecifico); // Usar el mayor tiempo si hay múltiples referencias
             referenciaEncontrada = true;
             console.log(`✅ Tiempo específico para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
+          } else {
+            console.log(`❌ Referencia ${refCodigo} no encontrada en las referencias vinculadas`);
           }
         }
         
@@ -354,10 +359,10 @@ exports.crearTareaEnProgreso = async (req, res) => {
     console.log('🧮 Calculando tiempo estimado automáticamente...');
     const tiempoCalculado = await calcularTiempoEstimado(tareas, referenciasFinales, Number(cantidadAsignada));
     
-    // Priorizar el tiempo proporcionado por el frontend si es mayor a 0, sino usar el calculado automáticamente
-    const tiempoEstimadoFinal = (Number(tiempoEstimado) > 0) ? Number(tiempoEstimado) : tiempoCalculado;
+    // SIEMPRE usar el tiempo calculado automáticamente por el backend (es el correcto)
+    const tiempoEstimadoFinal = tiempoCalculado;
     
-    console.log(`✅ Tiempo estimado - Frontend: ${tiempoEstimado} min, Calculado: ${tiempoCalculado} min, Usando: ${tiempoEstimadoFinal} min`);
+    console.log(`✅ Tiempo estimado - Frontend: ${tiempoEstimado} min, Calculado: ${tiempoCalculado} min, Usando: ${tiempoEstimadoFinal} min (BACKEND CALCULADO)`);
     
     // Validar tiempo estimado final
     if (tiempoEstimadoFinal < 0) {

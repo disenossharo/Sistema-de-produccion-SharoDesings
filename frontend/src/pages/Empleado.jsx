@@ -833,6 +833,12 @@ const Empleado = () => {
         return referencia ? { id: referencia.id, codigo: referencia.codigo } : { codigo: codigoRef };
       });
 
+      console.log('📤 Enviando datos al endpoint de cálculo:', {
+        tareas: tareasIds,
+        referencias: referenciasData,
+        cantidadAsignada: Number(cantidad)
+      });
+
       const resultado = await api.calcularTiempoTareas(token, {
         tareas: tareasIds,
         referencias: referenciasData,
@@ -840,6 +846,7 @@ const Empleado = () => {
       });
 
       console.log('✅ Tiempo calculado automáticamente:', resultado);
+      console.log('🔢 Tiempo específico recibido:', resultado.tiempoEstimado);
       setTiempoCalculadoAuto(resultado.tiempoEstimado || 0);
 
     } catch (error) {
@@ -853,13 +860,25 @@ const Empleado = () => {
 
   // useEffect para calcular tiempo automáticamente cuando cambien las selecciones
   useEffect(() => {
+    console.log('🔄 useEffect ejecutado - Estado actual:', {
+      tareasSeleccionadas: tareasSeleccionadas.length,
+      referenciasSeleccionadas: referenciasSeleccionadas.length,
+      cantidad,
+      operaciones: operaciones.length,
+      referencias: referencias.length,
+      token: !!token
+    });
+
     if (tareasSeleccionadas.length > 0 && referenciasSeleccionadas.length > 0 && cantidad && operaciones.length > 0 && referencias.length > 0) {
+      console.log('⏰ Programando cálculo automático en 500ms...');
       const timeoutId = setTimeout(() => {
+        console.log('🚀 Ejecutando cálculo automático...');
         calcularTiempoAutomatico();
       }, 500); // Debounce de 500ms para evitar muchas llamadas
       
       return () => clearTimeout(timeoutId);
     } else {
+      console.log('❌ Condiciones no cumplidas, limpiando tiempo calculado');
       setTiempoCalculadoAuto(0);
       setErrorCalculoTiempo("");
     }

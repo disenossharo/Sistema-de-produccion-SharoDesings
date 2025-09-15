@@ -59,11 +59,17 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
           );
           
           if (refVinculada) {
-            // Usar el tiempo específico de la referencia
-            const tiempoEspecifico = refVinculada.tiempo_por_referencia || operacion.tiempo_por_unidad;
-            tiempoOperacion = Math.max(tiempoOperacion, tiempoEspecifico); // Usar el mayor tiempo si hay múltiples referencias
-            referenciaEncontrada = true;
-            console.log(`✅ Tiempo específico para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
+            // SIEMPRE usar el tiempo específico de la referencia si existe la relación
+            const tiempoEspecifico = refVinculada.tiempo_por_referencia;
+            if (tiempoEspecifico && tiempoEspecifico > 0) {
+              tiempoOperacion = Math.max(tiempoOperacion, tiempoEspecifico); // Usar el mayor tiempo si hay múltiples referencias
+              referenciaEncontrada = true;
+              console.log(`✅ Tiempo específico para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
+            } else {
+              console.log(`⚠️ Referencia ${refVinculada.codigo} vinculada pero sin tiempo específico, usando tiempo por unidad`);
+              tiempoOperacion = Math.max(tiempoOperacion, operacion.tiempo_por_unidad);
+              referenciaEncontrada = true;
+            }
           } else {
             console.log(`❌ Referencia ${refCodigo} no encontrada en las referencias vinculadas`);
           }

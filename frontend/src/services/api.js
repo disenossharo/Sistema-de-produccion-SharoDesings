@@ -773,4 +773,28 @@ export async function extenderTiempoTarea(token, tareaId, datos) {
     console.error('Error al extender tiempo de tarea:', error);
     throw error;
   }
+}
+
+// Calcular tiempo estimado para tareas y referencias específicas
+export async function calcularTiempoTareas(token, datos) {
+  try {
+    const res = await fetch(`${API_BASE}/produccion/calcular-tiempo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(datos)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Error ${res.status}: No se pudo calcular el tiempo estimado`);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('Error al calcular tiempo de tareas:', error);
+    throw error;
+  }
 } 

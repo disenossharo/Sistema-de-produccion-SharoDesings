@@ -120,6 +120,11 @@ const Empleado = () => {
   const [tiempoExtension, setTiempoExtension] = useState("");
   const [observacionExtension, setObservacionExtension] = useState("");
   
+  // Estados para cálculo automático de tiempo
+  const [tiempoCalculadoAuto, setTiempoCalculadoAuto] = useState(0);
+  const [calculandoTiempo, setCalculandoTiempo] = useState(false);
+  const [errorCalculoTiempo, setErrorCalculoTiempo] = useState("");
+  
   // Filtrar operaciones basado en el texto de búsqueda
   const operacionesFiltradas = operaciones.filter(operacion => 
     operacion.nombre.toLowerCase().includes(filtroOperaciones.toLowerCase())
@@ -794,6 +799,72 @@ const Empleado = () => {
     }
   };
 
+  // Función para calcular tiempo automáticamente usando el backend
+  const calcularTiempoAutomatico = async () => {
+    // Validar que tengamos datos suficientes
+    if (!tareasSeleccionadas || tareasSeleccionadas.length === 0 || 
+        !referenciasSeleccionadas || referenciasSeleccionadas.length === 0 || 
+        !cantidad || Number(cantidad) <= 0) {
+      console.log('⚠️ Datos insuficientes para cálculo automático');
+      setTiempoCalculadoAuto(0);
+      setErrorCalculoTiempo("");
+      return;
+    }
+
+    setCalculandoTiempo(true);
+    setErrorCalculoTiempo("");
+
+    try {
+      console.log('🧮 Calculando tiempo automático con:', {
+        tareas: tareasSeleccionadas,
+        referencias: referenciasSeleccionadas,
+        cantidadAsignada: Number(cantidad)
+      });
+
+      // Convertir nombres de tareas a IDs
+      const tareasIds = tareasSeleccionadas.map(nombreTarea => {
+        const operacion = operaciones.find(op => op.nombre === nombreTarea);
+        return operacion ? operacion.id : nombreTarea;
+      }).filter(Boolean);
+
+      // Convertir códigos de referencias a IDs o mantener códigos
+      const referenciasData = referenciasSeleccionadas.map(codigoRef => {
+        const referencia = referencias.find(ref => ref.codigo === codigoRef);
+        return referencia ? { id: referencia.id, codigo: referencia.codigo } : { codigo: codigoRef };
+      });
+
+      const resultado = await api.calcularTiempoTareas(token, {
+        tareas: tareasIds,
+        referencias: referenciasData,
+        cantidadAsignada: Number(cantidad)
+      });
+
+      console.log('✅ Tiempo calculado automáticamente:', resultado);
+      setTiempoCalculadoAuto(resultado.tiempoEstimado || 0);
+
+    } catch (error) {
+      console.error('❌ Error calculando tiempo automático:', error);
+      setErrorCalculoTiempo('Error al calcular tiempo automáticamente');
+      setTiempoCalculadoAuto(0);
+    } finally {
+      setCalculandoTiempo(false);
+    }
+  };
+
+  // useEffect para calcular tiempo automáticamente cuando cambien las selecciones
+  useEffect(() => {
+    if (tareasSeleccionadas.length > 0 && referenciasSeleccionadas.length > 0 && cantidad && operaciones.length > 0 && referencias.length > 0) {
+      const timeoutId = setTimeout(() => {
+        calcularTiempoAutomatico();
+      }, 500); // Debounce de 500ms para evitar muchas llamadas
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setTiempoCalculadoAuto(0);
+      setErrorCalculoTiempo("");
+    }
+  }, [tareasSeleccionadas, referenciasSeleccionadas, cantidad, operaciones, referencias, token]);
+
   // Calcular tiempo estimado total con validaciones robustas
   const tiempoEstimado = (() => {
     // Validar que tengamos todos los datos necesarios
@@ -881,8 +952,11 @@ const Empleado = () => {
     setError("");
     setHoraInicio(horaActual);
     
+    // Usar tiempo calculado automáticamente si está disponible, sino usar el manual
+    const tiempoFinalAUsar = tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : tiempoEstimadoValido;
+    
     // Calcular hora estimada de fin
-    const fin = new Date(horaActual.getTime() + tiempoEstimadoValido * 60000);
+    const fin = new Date(horaActual.getTime() + tiempoFinalAUsar * 60000);
     setHoraEstimadaFin(fin);
     setEnProgreso(true);
     
@@ -892,15 +966,17 @@ const Empleado = () => {
         tareas: tareasSeleccionadas,
         referencias: referenciasSeleccionadas,
         cantidadAsignada: Number(cantidad),
-        tiempoEstimado: tiempoEstimadoValido,
-        tiempoEstimadoOriginal: tiempoEstimado
+        tiempoEstimado: tiempoFinalAUsar,
+        tiempoCalculadoAuto: tiempoCalculadoAuto,
+        tiempoEstimadoManual: tiempoEstimadoValido,
+        usoTiempoAutomatico: tiempoCalculadoAuto > 0
       });
       
       const tareaEnProgreso = await api.crearTareaEnProgreso(token, {
         tareas: tareasSeleccionadas,
         referencias: referenciasSeleccionadas,
         cantidadAsignada: Number(cantidad),
-        tiempoEstimado: tiempoEstimadoValido
+        tiempoEstimado: tiempoFinalAUsar
       });
       
       setTareaIdEnProgreso(tareaEnProgreso.id);
@@ -1641,14 +1717,32 @@ const Empleado = () => {
                       </Accordion>
                       
                       {/* Mostrar tiempo estimado total */}
-                      {cantidad && tiempoEstimadoValido > 0 && (
+                      {cantidad && (tiempoCalculadoAuto > 0 || tiempoEstimadoValido > 0) && (
                         <div className="mt-3 p-3 bg-info bg-opacity-10 rounded border border-info">
                           <div className="text-center">
                             <strong className="text-info">⏱️ Tiempo Estimado Total:</strong>
-                            <div className="h4 text-info mb-0">{tiempoEstimadoValido} minutos</div>
-                            <small className="text-muted">
+                            <div className="h4 text-info mb-0">
+                              {tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : tiempoEstimadoValido} minutos
+                            </div>
+                            <small className="text-muted d-block">
                               {tareasSeleccionadas.length} operación(es) × {cantidad} unidad(es)
                             </small>
+                            {tiempoCalculadoAuto > 0 && (
+                              <Badge bg="success" className="mt-2">
+                                ✅ Tiempo calculado por referencias específicas
+                              </Badge>
+                            )}
+                            {calculandoTiempo && (
+                              <div className="mt-2">
+                                <Spinner animation="border" size="sm" variant="info" />
+                                <span className="ms-2 text-info">Calculando tiempo...</span>
+                              </div>
+                            )}
+                            {errorCalculoTiempo && (
+                              <Alert variant="warning" className="mt-2 mb-0 py-2" style={{ fontSize: 14 }}>
+                                ⚠️ {errorCalculoTiempo}. Usando cálculo manual.
+                              </Alert>
+                            )}
                           </div>
                         </div>
                       )}

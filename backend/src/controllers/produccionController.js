@@ -354,10 +354,10 @@ exports.crearTareaEnProgreso = async (req, res) => {
     console.log('🧮 Calculando tiempo estimado automáticamente...');
     const tiempoCalculado = await calcularTiempoEstimado(tareas, referenciasFinales, Number(cantidadAsignada));
     
-    // Usar el tiempo calculado si es mayor a 0, sino usar el tiempo proporcionado
-    const tiempoEstimadoFinal = tiempoCalculado > 0 ? tiempoCalculado : Number(tiempoEstimado) || 0;
+    // Priorizar el tiempo proporcionado por el frontend si es mayor a 0, sino usar el calculado automáticamente
+    const tiempoEstimadoFinal = (Number(tiempoEstimado) > 0) ? Number(tiempoEstimado) : tiempoCalculado;
     
-    console.log(`✅ Tiempo estimado calculado: ${tiempoCalculado} min, usando: ${tiempoEstimadoFinal} min`);
+    console.log(`✅ Tiempo estimado - Frontend: ${tiempoEstimado} min, Calculado: ${tiempoCalculado} min, Usando: ${tiempoEstimadoFinal} min`);
     
     // Validar tiempo estimado final
     if (tiempoEstimadoFinal < 0) {

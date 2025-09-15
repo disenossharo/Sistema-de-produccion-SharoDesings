@@ -12,7 +12,7 @@ exports.getOperaciones = async (req, res) => {
       
       let query = `
         SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, 
-               o.categoria, o.activa,
+               o.categoria, o.activa, o.video_tutorial, o.cr,
                COALESCE(
                  JSON_AGG(
                    JSON_BUILD_OBJECT(
@@ -75,7 +75,7 @@ exports.getOperaciones = async (req, res) => {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa ORDER BY o.nombre';
+      query += ' GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa, o.video_tutorial, o.cr ORDER BY o.nombre';
 
       console.log('🔍 Ejecutando consulta...');
       const result = await client.query(query, params);
@@ -99,7 +99,7 @@ exports.getOperacionesActivas = async (req, res) => {
     try {
       // Query optimizada con información de referencias múltiples
       const result = await client.query(`
-        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
+        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.video_tutorial, o.cr,
                COALESCE(
                  JSON_AGG(
                    JSON_BUILD_OBJECT(
@@ -115,7 +115,7 @@ exports.getOperacionesActivas = async (req, res) => {
         LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
         LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
         WHERE o.activa = true 
-        GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria
+        GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.video_tutorial, o.cr
         ORDER BY o.nombre
       `);
       
@@ -152,7 +152,7 @@ exports.getOperacionesActivasPorReferencia = async (req, res) => {
       
       // Obtener operaciones vinculadas a esta referencia Y operaciones sin referencia (generales)
       const result = await client.query(
-        `        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
+        `        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.video_tutorial, o.cr,
                 COALESCE(
                   JSON_AGG(
                     JSON_BUILD_OBJECT(
@@ -209,7 +209,7 @@ exports.getOperacion = async (req, res) => {
     
     try {
       const result = await client.query(
-        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa,
+        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa, o.video_tutorial, o.cr,
                 COALESCE(
                   JSON_AGG(
                     JSON_BUILD_OBJECT(
@@ -225,7 +225,7 @@ exports.getOperacion = async (req, res) => {
          LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
          LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
          WHERE o.id = $1 AND o.activa = true
-         GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa`,
+         GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa, o.video_tutorial, o.cr`,
         [id]
       );
       

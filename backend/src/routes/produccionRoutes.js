@@ -38,6 +38,9 @@ router.get('/tareas-del-dia/:email', authenticateToken, produccionController.get
 // GET /api/produccion/estadisticas (estadísticas para admin)
 router.get('/estadisticas', authenticateToken, requireAdmin, produccionController.getEstadisticas);
 
+// POST /api/produccion/calcular-tiempo (calcular tiempo estimado para tareas)
+router.post('/calcular-tiempo', authenticateToken, produccionController.calcularTiempoTareas);
+
 // POST /api/produccion/en-progreso (crear tarea en progreso)
 router.post('/en-progreso', authenticateToken, produccionController.crearTareaEnProgreso);
 

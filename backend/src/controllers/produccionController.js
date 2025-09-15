@@ -1,6 +1,130 @@
 const { pool } = require('../config/database');
 
+// Función para calcular tiempo estimado basado en referencias y operaciones
+async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
+  const client = await pool.connect();
+  try {
+    console.log('🧮 Calculando tiempo estimado para:', { tareas, referencias, cantidadAsignada });
+    
+    let tiempoTotal = 0;
+    
+    for (const tarea of tareas) {
+      const operacionId = tarea.id || tarea;
+      
+      // Buscar la operación con sus referencias vinculadas
+      const operacionResult = await client.query(`
+        SELECT o.id, o.nombre, o.tiempo_por_unidad,
+               COALESCE(
+                 JSON_AGG(
+                   JSON_BUILD_OBJECT(
+                     'id', r.id,
+                     'codigo', r.codigo,
+                     'nombre', r.nombre,
+                     'tiempo_por_referencia', COALESCE(ro.tiempo_por_referencia, o.tiempo_por_unidad)
+                   )
+                 ) FILTER (WHERE r.id IS NOT NULL),
+                 '[]'::json
+               ) as referencias
+        FROM operaciones o
+        LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+        LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
+        WHERE o.id = $1 AND o.activa = true
+        GROUP BY o.id, o.nombre, o.tiempo_por_unidad
+      `, [operacionId]);
+      
+      if (operacionResult.rows.length === 0) {
+        console.log(`⚠️ Operación ${operacionId} no encontrada, usando tiempo por defecto`);
+        continue;
+      }
+      
+      const operacion = operacionResult.rows[0];
+      const operacionesVinculadas = operacion.referencias || [];
+      
+      // Si la operación tiene referencias vinculadas
+      if (operacionesVinculadas.length > 0) {
+        // Buscar si alguna de las referencias seleccionadas está vinculada a esta operación
+        let tiempoOperacion = 0;
+        let referenciaEncontrada = false;
+        
+        for (const refSeleccionada of referencias) {
+          const refId = refSeleccionada.id || refSeleccionada;
+          const refCodigo = refSeleccionada.codigo || refSeleccionada;
+          
+          // Buscar en las referencias vinculadas
+          const refVinculada = operacionesVinculadas.find(ref => 
+            ref.id == refId || ref.codigo === refCodigo
+          );
+          
+          if (refVinculada) {
+            // Usar el tiempo específico de la referencia
+            const tiempoEspecifico = refVinculada.tiempo_por_referencia || operacion.tiempo_por_unidad;
+            tiempoOperacion = Math.max(tiempoOperacion, tiempoEspecifico); // Usar el mayor tiempo si hay múltiples referencias
+            referenciaEncontrada = true;
+            console.log(`✅ Tiempo específico para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
+          }
+        }
+        
+        if (referenciaEncontrada) {
+          tiempoTotal += tiempoOperacion;
+        } else {
+          // Si no se encuentra la referencia específica, usar tiempo por unidad
+          tiempoTotal += operacion.tiempo_por_unidad;
+          console.log(`ℹ️ Usando tiempo por unidad para ${operacion.nombre}: ${operacion.tiempo_por_unidad} min`);
+        }
+      } else {
+        // Si la operación no tiene referencias vinculadas, usar tiempo por unidad
+        tiempoTotal += operacion.tiempo_por_unidad;
+        console.log(`ℹ️ Operación sin referencias específicas ${operacion.nombre}: ${operacion.tiempo_por_unidad} min`);
+      }
+    }
+    
+    // Multiplicar por la cantidad asignada
+    const tiempoFinal = tiempoTotal * cantidadAsignada;
+    console.log(`🧮 Tiempo calculado: ${tiempoTotal} min/uni × ${cantidadAsignada} uni = ${tiempoFinal} min`);
+    
+    return tiempoFinal;
+    
+  } catch (error) {
+    console.error('❌ Error calculando tiempo estimado:', error);
+    // En caso de error, retornar 0 para que se use el tiempo por defecto
+    return 0;
+  } finally {
+    client.release();
+  }
+}
 
+
+
+// Calcular tiempo estimado para tareas (endpoint para frontend)
+exports.calcularTiempoTareas = async (req, res) => {
+  try {
+    const { tareas = [], referencias = [], cantidadAsignada = 1 } = req.body;
+    
+    console.log('🧮 Calculando tiempo para tareas:', { tareas, referencias, cantidadAsignada });
+    
+    if (!Array.isArray(tareas) || tareas.length === 0) {
+      return res.status(400).json({ error: 'Debe proporcionar al menos una tarea' });
+    }
+    
+    if (!Array.isArray(referencias) || referencias.length === 0) {
+      return res.status(400).json({ error: 'Debe proporcionar al menos una referencia' });
+    }
+    
+    const tiempoCalculado = await calcularTiempoEstimado(tareas, referencias, Number(cantidadAsignada));
+    
+    res.json({
+      tiempoEstimado: tiempoCalculado,
+      cantidadAsignada: Number(cantidadAsignada),
+      tiempoPorUnidad: tiempoCalculado / Number(cantidadAsignada),
+      tareas: tareas.length,
+      referencias: referencias.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error calculando tiempo de tareas:', error);
+    res.status(500).json({ error: 'Error interno del servidor al calcular tiempo' });
+  }
+};
 
 // Obtener historial de producción del usuario autenticado
 exports.getHistorial = async (req, res) => {
@@ -226,15 +350,18 @@ exports.crearTareaEnProgreso = async (req, res) => {
       return res.status(400).json({ error: 'Cantidad asignada debe ser mayor a 0' });
     }
     
-    // Validar tiempo estimado - permitir 0 pero asegurar que sea un número válido
-    if (isNaN(tiempoEstimado)) {
-      console.log('⚠️ Tiempo estimado no es un número válido:', tiempoEstimado);
-      return res.status(400).json({ error: 'Tiempo estimado debe ser un número válido' });
-    }
+    // Calcular tiempo estimado basado en referencias y operaciones
+    console.log('🧮 Calculando tiempo estimado automáticamente...');
+    const tiempoCalculado = await calcularTiempoEstimado(tareas, referenciasFinales, Number(cantidadAsignada));
     
-    const tiempoEstimadoNum = Number(tiempoEstimado);
-    if (tiempoEstimadoNum < 0) {
-      console.log('⚠️ Tiempo estimado negativo:', tiempoEstimadoNum);
+    // Usar el tiempo calculado si es mayor a 0, sino usar el tiempo proporcionado
+    const tiempoEstimadoFinal = tiempoCalculado > 0 ? tiempoCalculado : Number(tiempoEstimado) || 0;
+    
+    console.log(`✅ Tiempo estimado calculado: ${tiempoCalculado} min, usando: ${tiempoEstimadoFinal} min`);
+    
+    // Validar tiempo estimado final
+    if (tiempoEstimadoFinal < 0) {
+      console.log('⚠️ Tiempo estimado negativo:', tiempoEstimadoFinal);
       return res.status(400).json({ error: 'Tiempo estimado no puede ser negativo' });
     }
     
@@ -261,7 +388,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
         tareas,
         referencias: referenciasFinales,
         cantidadAsignada: Number(cantidadAsignada),
-        tiempoEstimado: tiempoEstimadoNum,
+        tiempoEstimado: tiempoEstimadoFinal,
         observaciones: observaciones ? observaciones.trim() : ''
       });
       
@@ -277,7 +404,7 @@ exports.crearTareaEnProgreso = async (req, res) => {
         null, 
         observaciones ? observaciones.trim() : '', 
         fecha, 
-        tiempoEstimadoNum, 
+        tiempoEstimadoFinal, 
         'en_progreso'
       ];
       

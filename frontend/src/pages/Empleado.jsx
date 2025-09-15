@@ -933,7 +933,14 @@ const Empleado = () => {
   })();
 
   // Validar que el tiempo estimado sea un número válido y redondear hacia arriba
+  // SIEMPRE priorizar el tiempo calculado automáticamente por el backend
   const tiempoEstimadoValido = (() => {
+    // Si tenemos tiempo calculado automáticamente, usarlo
+    if (tiempoCalculadoAuto > 0) {
+      return tiempoCalculadoAuto;
+    }
+    
+    // Si no, usar el cálculo manual como fallback
     const tiempo = Number(tiempoEstimado);
     if (isNaN(tiempo) || tiempo < 0) {
       console.warn('⚠️ Tiempo estimado inválido:', tiempoEstimado, 'usando 0');
@@ -971,8 +978,13 @@ const Empleado = () => {
     setError("");
     setHoraInicio(horaActual);
     
-    // Usar tiempo calculado automáticamente si está disponible, sino usar el manual
-    const tiempoFinalAUsar = tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : tiempoEstimadoValido;
+    // SIEMPRE usar el tiempo calculado automáticamente por el backend (es el correcto)
+    const tiempoFinalAUsar = tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : 0;
+    
+    if (tiempoFinalAUsar === 0) {
+      setError("Error: No se pudo calcular el tiempo estimado. Intenta de nuevo.");
+      return;
+    }
     
     // Calcular hora estimada de fin
     const fin = new Date(horaActual.getTime() + tiempoFinalAUsar * 60000);

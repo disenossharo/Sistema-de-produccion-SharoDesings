@@ -7,7 +7,8 @@ const MultipleReferenceSelector = ({
   onChange, 
   referencias = [], 
   placeholder = "Buscar referencias...",
-  maxHeight = "300px"
+  maxHeight = "300px",
+  allowTimeConfiguration = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -41,10 +42,24 @@ const MultipleReferenceSelector = ({
       const newSelection = selectedReferences.filter(ref => ref.id !== reference.id);
       onChange(newSelection);
     } else {
-      // Agregar a seleccionadas
-      const newSelection = [...selectedReferences, reference];
+      // Agregar a seleccionadas con tiempo por defecto
+      const newReference = {
+        ...reference,
+        tiempo_por_referencia: reference.tiempo_por_referencia || 1.0
+      };
+      const newSelection = [...selectedReferences, newReference];
       onChange(newSelection);
     }
+  };
+
+  // Manejar cambio de tiempo para una referencia específica
+  const handleTimeChange = (referenceId, newTime) => {
+    const newSelection = selectedReferences.map(ref => 
+      ref.id === referenceId 
+        ? { ...ref, tiempo_por_referencia: parseFloat(newTime) || 1.0 }
+        : ref
+    );
+    onChange(newSelection);
   };
 
   // Remover referencia específica
@@ -128,20 +143,49 @@ const MultipleReferenceSelector = ({
           </div>
           <div className="d-flex flex-wrap gap-2">
             {selectedReferences.map((ref) => (
-              <Badge 
+              <Card 
                 key={ref.id} 
-                bg="success" 
-                style={{ fontSize: '12px', padding: '8px 12px' }}
-                className="d-flex align-items-center gap-1"
+                style={{ 
+                  fontSize: '12px', 
+                  padding: '8px 12px',
+                  background: '#d4edda',
+                  border: '1px solid #c3e6cb',
+                  borderRadius: '8px',
+                  minWidth: '200px'
+                }}
+                className="d-flex align-items-center gap-2"
               >
-                <FaTag />
-                <span>{ref.codigo} - {ref.nombre}</span>
+                <FaTag style={{ color: '#155724' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, color: '#155724' }}>
+                    {ref.codigo} - {ref.nombre}
+                  </div>
+                  {allowTimeConfiguration && (
+                    <div className="d-flex align-items-center gap-1 mt-1">
+                      <small style={{ color: '#155724' }}>Tiempo:</small>
+                      <Form.Control
+                        type="number"
+                        size="sm"
+                        value={ref.tiempo_por_referencia || 1.0}
+                        onChange={(e) => handleTimeChange(ref.id, e.target.value)}
+                        style={{ 
+                          width: '60px', 
+                          fontSize: '11px',
+                          padding: '2px 4px'
+                        }}
+                        min="0.1"
+                        step="0.1"
+                      />
+                      <small style={{ color: '#155724' }}>min</small>
+                    </div>
+                  )}
+                </div>
                 <Button
                   variant="link"
                   size="sm"
                   className="p-0"
                   style={{ 
-                    color: 'white', 
+                    color: '#155724', 
                     textDecoration: 'none',
                     fontSize: '14px',
                     lineHeight: 1
@@ -150,7 +194,7 @@ const MultipleReferenceSelector = ({
                 >
                   ×
                 </Button>
-              </Badge>
+              </Card>
             ))}
           </div>
         </div>

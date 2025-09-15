@@ -898,10 +898,17 @@ const Produccion = () => {
                                 <div>
                                   <div className="d-flex flex-wrap gap-1 mb-1">
                                     {operacion.referencias.slice(0, 2).map((ref, index) => (
-                                      <Badge key={ref.id || index} bg="warning" style={{ fontSize: 11 }}>
-                                        <FaTag className="me-1" />
-                                        {ref.codigo}
-                                      </Badge>
+                                      <div key={ref.id || index} className="d-flex flex-column gap-1">
+                                        <Badge bg="warning" style={{ fontSize: 11 }}>
+                                          <FaTag className="me-1" />
+                                          {ref.codigo}
+                                        </Badge>
+                                        {ref.tiempo_por_referencia && (
+                                          <small className="text-muted" style={{ fontSize: 9 }}>
+                                            {ref.tiempo_por_referencia} min
+                                          </small>
+                                        )}
+                                      </div>
                                     ))}
                                     {operacion.referencias.length > 2 && (
                                       <Badge bg="secondary" style={{ fontSize: 11 }}>
@@ -927,7 +934,7 @@ const Produccion = () => {
                                   </Badge>
                                   <div>
                                     <small className="text-muted" style={{ fontSize: 10 }}>
-                                      Sin referencias específicas
+                                      {operacion.tiempo_por_unidad} min/unidad
                                     </small>
                                   </div>
                                 </div>
@@ -1388,6 +1395,7 @@ const Produccion = () => {
                     referencias={referencias}
                     placeholder="Buscar referencias para vincular a esta operación..."
                     maxHeight="250px"
+                    allowTimeConfiguration={true}
                   />
                   <Form.Text className="text-muted" style={{ fontSize: '12px' }}>
                     <FaPlus className="me-1" />
@@ -1468,18 +1476,39 @@ const Produccion = () => {
                               <div style={{ 
                                 color: '#adb5bd',
                                 fontSize: '12px',
-                                fontStyle: 'italic'
+                                fontStyle: 'italic',
+                                marginBottom: '4px'
                               }}>
                                 {ref.descripcion}
                               </div>
                             )}
+                            {ref.tiempo_por_referencia && (
+                              <div style={{ 
+                                color: '#0d6efd',
+                                fontSize: '12px',
+                                fontWeight: 600
+                              }}>
+                                <FaClock className="me-1" />
+                                Tiempo específico: {ref.tiempo_por_referencia} minutos
+                              </div>
+                            )}
                           </div>
-                          <Badge 
-                            bg="primary" 
-                            style={{ fontSize: '11px' }}
-                          >
-                            #{index + 1}
-                          </Badge>
+                          <div className="d-flex flex-column align-items-end gap-1">
+                            <Badge 
+                              bg="primary" 
+                              style={{ fontSize: '11px' }}
+                            >
+                              #{index + 1}
+                            </Badge>
+                            {ref.tiempo_por_referencia && (
+                              <Badge 
+                                bg="info" 
+                                style={{ fontSize: '10px' }}
+                              >
+                                {ref.tiempo_por_referencia} min
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>

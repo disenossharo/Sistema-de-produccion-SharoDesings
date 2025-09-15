@@ -16,5 +16,6 @@ router.delete('/:id', authenticateToken, requireAdmin, operacionesController.del
 // Rutas para gestión de referencias en operaciones
 router.post('/:id/referencias', authenticateToken, requireAdmin, operacionesController.addReferenciasToOperacion);
 router.delete('/:id/referencias', authenticateToken, requireAdmin, operacionesController.removeReferenciasFromOperacion);
+router.put('/:id/tiempo-referencia', authenticateToken, requireAdmin, operacionesController.updateTiempoPorReferencia);
 
 module.exports = router;

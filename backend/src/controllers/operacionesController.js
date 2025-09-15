@@ -15,7 +15,8 @@ exports.getOperaciones = async (req, res) => {
                    JSON_BUILD_OBJECT(
                      'id', r.id,
                      'codigo', r.codigo,
-                     'nombre', r.nombre
+                     'nombre', r.nombre,
+                     'tiempo_por_referencia', ro.tiempo_por_referencia
                    )
                  ) FILTER (WHERE r.id IS NOT NULL),
                  '[]'::json
@@ -97,7 +98,8 @@ exports.getOperacionesActivas = async (req, res) => {
                    JSON_BUILD_OBJECT(
                      'id', r.id,
                      'codigo', r.codigo,
-                     'nombre', r.nombre
+                     'nombre', r.nombre,
+                     'tiempo_por_referencia', ro.tiempo_por_referencia
                    )
                  ) FILTER (WHERE r.id IS NOT NULL),
                  '[]'::json
@@ -143,13 +145,14 @@ exports.getOperacionesActivasPorReferencia = async (req, res) => {
       
       // Obtener operaciones vinculadas a esta referencia Y operaciones sin referencia (generales)
       const result = await client.query(
-        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
+        `        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
                 COALESCE(
                   JSON_AGG(
                     JSON_BUILD_OBJECT(
                       'id', r.id,
                       'codigo', r.codigo,
-                      'nombre', r.nombre
+                      'nombre', r.nombre,
+                      'tiempo_por_referencia', ro.tiempo_por_referencia
                     )
                   ) FILTER (WHERE r.id IS NOT NULL),
                   '[]'::json
@@ -205,7 +208,8 @@ exports.getOperacion = async (req, res) => {
                     JSON_BUILD_OBJECT(
                       'id', r.id,
                       'codigo', r.codigo,
-                      'nombre', r.nombre
+                      'nombre', r.nombre,
+                      'tiempo_por_referencia', ro.tiempo_por_referencia
                     )
                   ) FILTER (WHERE r.id IS NOT NULL),
                   '[]'::json
@@ -285,11 +289,12 @@ exports.createOperacion = async (req, res) => {
           const ref = referencias[i];
           const referenciaId = ref.id || ref;
           const orden = ref.orden || i + 1;
+          const tiempoPorReferencia = ref.tiempo_por_referencia || operacion.tiempo_por_unidad;
           
           await client.query(
-            `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa)
-             VALUES ($1, $2, $3, $4)`,
-            [referenciaId, operacion.id, orden, true]
+            `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa, tiempo_por_referencia)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [referenciaId, operacion.id, orden, true, tiempoPorReferencia]
           );
         }
       }
@@ -409,11 +414,12 @@ exports.updateOperacion = async (req, res) => {
           const ref = referencias[i];
           const referenciaId = ref.id || ref;
           const orden = ref.orden || i + 1;
+          const tiempoPorReferencia = ref.tiempo_por_referencia || result.rows[0].tiempo_por_unidad;
           
           await client.query(
-            `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa)
-             VALUES ($1, $2, $3, $4)`,
-            [referenciaId, id, orden, true]
+            `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa, tiempo_por_referencia)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [referenciaId, id, orden, true, tiempoPorReferencia]
           );
         }
       }
@@ -620,14 +626,16 @@ exports.addReferenciasToOperacion = async (req, res) => {
         const ref = referencias[i];
         const referenciaId = ref.id || ref;
         const orden = ref.orden || i + 1;
+        const tiempoPorReferencia = ref.tiempo_por_referencia || 1.0; // Tiempo por defecto
         
         await client.query(
-          `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa)
-           VALUES ($1, $2, $3, $4)
+          `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa, tiempo_por_referencia)
+           VALUES ($1, $2, $3, $4, $5)
            ON CONFLICT (referencia_id, operacion_id) DO UPDATE SET
            activa = EXCLUDED.activa,
-           orden = EXCLUDED.orden`,
-          [referenciaId, id, orden, true]
+           orden = EXCLUDED.orden,
+           tiempo_por_referencia = EXCLUDED.tiempo_por_referencia`,
+          [referenciaId, id, orden, true, tiempoPorReferencia]
         );
       }
       
@@ -698,5 +706,79 @@ exports.removeReferenciasFromOperacion = async (req, res) => {
   } catch (error) {
     console.error('Error al remover referencias de operación:', error);
     res.status(500).json({ error: 'Error interno del servidor al remover referencias' });
+  }
+};
+
+// Actualizar tiempo de operación para una referencia específica
+exports.updateTiempoPorReferencia = async (req, res) => {
+  try {
+    const { id } = req.params; // ID de la operación
+    const { referencia_id, tiempo_por_referencia } = req.body;
+    
+    if (!referencia_id || !tiempo_por_referencia) {
+      return res.status(400).json({ error: 'ID de referencia y tiempo son requeridos' });
+    }
+    
+    if (tiempo_por_referencia <= 0) {
+      return res.status(400).json({ error: 'El tiempo debe ser mayor a 0' });
+    }
+    
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Verificar que la operación existe
+      const operacionCheck = await client.query(
+        'SELECT id, nombre FROM operaciones WHERE id = $1',
+        [id]
+      );
+      
+      if (operacionCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Operación no encontrada' });
+      }
+      
+      // Verificar que la referencia existe
+      const referenciaCheck = await client.query(
+        'SELECT id, codigo, nombre FROM referencias WHERE id = $1 AND activa = true',
+        [referencia_id]
+      );
+      
+      if (referenciaCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Referencia no encontrada' });
+      }
+      
+      // Actualizar el tiempo específico para esta referencia
+      const result = await client.query(
+        `UPDATE referencia_operaciones 
+         SET tiempo_por_referencia = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE operacion_id = $2 AND referencia_id = $3
+         RETURNING *`,
+        [tiempo_por_referencia, id, referencia_id]
+      );
+      
+      if (result.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'La operación no está vinculada a esta referencia' });
+      }
+      
+      await client.query('COMMIT');
+      
+      res.json({ 
+        message: 'Tiempo actualizado exitosamente',
+        operacion: operacionCheck.rows[0],
+        referencia: referenciaCheck.rows[0],
+        tiempo_por_referencia: tiempo_por_referencia
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al actualizar tiempo por referencia:', error);
+    res.status(500).json({ error: 'Error interno del servidor al actualizar tiempo' });
   }
 };

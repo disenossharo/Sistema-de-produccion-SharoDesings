@@ -8,6 +8,7 @@ const fixProduccionTable = require('../scripts/maintenance/fixProduccionTable');
 const { addReferenciaOperacionesRelation } = require('../scripts/maintenance/addReferenciaOperacionesRelation');
 const { fixTiempoEstimadoColumn } = require('../scripts/maintenance/fixTiempoEstimadoColumn');
 const { syncRailwayStructure } = require('../scripts/maintenance/syncRailwayStructure');
+const { forceRailwayUpdate } = require('../scripts/maintenance/forceRailwayUpdate');
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -69,9 +70,9 @@ app.use('/api/operaciones', operacionesRoutes);
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Servidor funcionando correctamente - v14.0 SINCRONIZACIÓN RAILWAY',
+    message: 'Servidor funcionando correctamente - v15.0 ACTUALIZACIÓN FORZADA',
     timestamp: new Date().toISOString(),
-    version: 'v14.0',
+    version: 'v15.0',
     routes: ['/health', '/debug', '/api/auth/login', '/api/empleados', '/api/produccion', '/api/referencias', '/api/operaciones']
   });
 });
@@ -163,7 +164,7 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v14.0 - SINCRONIZACIÓN RAILWAY');
+    console.log('🔧 CORS configurado para Railway - v15.0 - ACTUALIZACIÓN FORZADA');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
     console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');
@@ -215,6 +216,14 @@ async function initializeServer() {
                console.log('✅ Estructura sincronizada con Railway');
              } catch (error) {
                console.error('⚠️ Error sincronizando con Railway (continuando):', error.message);
+             }
+
+             // Forzar actualización de Railway
+             try {
+               await forceRailwayUpdate();
+               console.log('✅ Actualización forzada de Railway completada');
+             } catch (error) {
+               console.error('⚠️ Error en actualización forzada (continuando):', error.message);
              }
     
     // Iniciar servidor

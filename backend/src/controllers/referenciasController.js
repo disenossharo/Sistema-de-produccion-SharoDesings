@@ -78,9 +78,10 @@ exports.getReferenciasConOperaciones = async (req, res) => {
       // Query para obtener referencias activas con conteo de operaciones
       const result = await client.query(`
         SELECT r.id, r.codigo, r.nombre, r.descripcion, r.categoria,
-               COUNT(o.id) as operaciones_count
+               COUNT(DISTINCT ro.operacion_id) as operaciones_count
         FROM referencias r
-        LEFT JOIN operaciones o ON r.id = o.referencia_id AND o.activa = true
+        LEFT JOIN referencia_operaciones ro ON r.id = ro.referencia_id AND ro.activa = true
+        LEFT JOIN operaciones o ON ro.operacion_id = o.id AND o.activa = true
         WHERE r.activa = true
         GROUP BY r.id, r.codigo, r.nombre, r.descripcion, r.categoria
         ORDER BY r.codigo
@@ -119,6 +120,46 @@ exports.getReferencia = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener referencia:', error);
     res.status(500).json({ error: 'Error interno del servidor al obtener referencia' });
+  }
+};
+
+// Obtener una referencia con sus operaciones vinculadas
+exports.getReferenciaConOperaciones = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await pool.connect();
+    
+    try {
+      // Verificar que la referencia existe
+      const referenciaCheck = await client.query(
+        'SELECT id, codigo, nombre, descripcion, categoria FROM referencias WHERE id = $1 AND activa = true',
+        [id]
+      );
+      
+      if (referenciaCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Referencia no encontrada' });
+      }
+      
+      // Obtener las operaciones vinculadas
+      const operacionesResult = await client.query(`
+        SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
+               ro.orden
+        FROM operaciones o
+        JOIN referencia_operaciones ro ON o.id = ro.operacion_id
+        WHERE ro.referencia_id = $1 AND o.activa = true AND ro.activa = true
+        ORDER BY ro.orden, o.nombre
+      `, [id]);
+      
+      res.json({
+        ...referenciaCheck.rows[0],
+        operaciones: operacionesResult.rows
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al obtener referencia con operaciones:', error);
+    res.status(500).json({ error: 'Error interno del servidor al obtener referencia con operaciones' });
   }
 };
 

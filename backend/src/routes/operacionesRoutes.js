@@ -13,4 +13,8 @@ router.put('/toggle-all', authenticateToken, requireAdmin, operacionesController
 router.put('/:id', authenticateToken, requireAdmin, operacionesController.updateOperacion);
 router.delete('/:id', authenticateToken, requireAdmin, operacionesController.deleteOperacion);
 
+// Rutas para gestión de referencias en operaciones
+router.post('/:id/referencias', authenticateToken, requireAdmin, operacionesController.addReferenciasToOperacion);
+router.delete('/:id/referencias', authenticateToken, requireAdmin, operacionesController.removeReferenciasFromOperacion);
+
 module.exports = router;

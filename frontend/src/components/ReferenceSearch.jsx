@@ -52,7 +52,7 @@ const ReferenceSearch = ({
     // Si se borra el campo, limpiar la selección
     if (!newSearchTerm.trim()) {
       setSelectedReference(null);
-      onChange('');
+      onChange(null);
     }
   };
 
@@ -60,14 +60,14 @@ const ReferenceSearch = ({
     setSelectedReference(reference);
     setSearchTerm(`${reference.codigo} - ${reference.nombre}`);
     setShowDropdown(false);
-    onChange(reference.id);
+    onChange(reference); // Pasar el objeto completo en lugar del ID
   };
 
   const handleClear = () => {
     setSearchTerm('');
     setSelectedReference(null);
     setShowDropdown(false);
-    onChange('');
+    onChange(null);
   };
 
   const handleFocus = () => {

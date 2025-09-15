@@ -74,7 +74,7 @@ const Produccion = () => {
     tiempo_por_unidad: 1.0,
     categoria: '',
     activa: true,
-    referencia_id: ''
+    referencias: []
   });
 
   // Estados para referencias
@@ -183,10 +183,11 @@ const Produccion = () => {
           (operacion.descripcion && operacion.descripcion.toLowerCase().includes(textoFiltro)) ||
           (operacion.categoria && operacion.categoria.toLowerCase().includes(textoFiltro));
         
-        // Buscar en referencia vinculada
-        const matchesReference = 
-          (operacion.referencia_codigo && operacion.referencia_codigo.toLowerCase().includes(textoFiltro)) ||
-          (operacion.referencia_nombre && operacion.referencia_nombre.toLowerCase().includes(textoFiltro));
+        // Buscar en referencias vinculadas
+        const matchesReference = operacion.referencias && operacion.referencias.some(ref => 
+          ref.codigo.toLowerCase().includes(textoFiltro) ||
+          ref.nombre.toLowerCase().includes(textoFiltro)
+        );
         
         return matchesBasicFields || matchesReference;
       });
@@ -314,7 +315,7 @@ const Produccion = () => {
         video_tutorial: operacion.video_tutorial || '',
         categoria: operacion.categoria || '',
         activa: operacion.activa,
-        referencia_id: operacion.referencia_id || ''
+        referencias: operacion.referencias || []
       });
     } else {
       setOperacionEditando(null);
@@ -325,7 +326,7 @@ const Produccion = () => {
         video_tutorial: '',
         categoria: '',
         activa: true,
-        referencia_id: ''
+        referencias: []
       });
     }
     setShowOperacionModal(true);
@@ -349,6 +350,23 @@ const Produccion = () => {
       setError(error.message);
       setTimeout(() => setError(""), 5000);
     }
+  };
+
+  // Funciones para manejar referencias múltiples
+  const handleAddReferencia = (referencia) => {
+    if (!formOperacion.referencias.find(ref => ref.id === referencia.id)) {
+      setFormOperacion({
+        ...formOperacion,
+        referencias: [...formOperacion.referencias, referencia]
+      });
+    }
+  };
+
+  const handleRemoveReferencia = (referenciaId) => {
+    setFormOperacion({
+      ...formOperacion,
+      referencias: formOperacion.referencias.filter(ref => ref.id !== referenciaId)
+    });
   };
 
   const handleDeleteOperacion = async (id) => {
@@ -881,11 +899,15 @@ const Produccion = () => {
                               </Badge>
                             </td>
                             <td>
-                              {operacion.referencia_codigo ? (
-                                <Badge bg="warning" style={{ fontSize: 11 }}>
-                                  <FaTag className="me-1" />
-                                  {operacion.referencia_codigo}
-                                </Badge>
+                              {operacion.referencias && operacion.referencias.length > 0 ? (
+                                <div className="d-flex flex-wrap gap-1">
+                                  {operacion.referencias.map((ref, index) => (
+                                    <Badge key={ref.id || index} bg="warning" style={{ fontSize: 11 }}>
+                                      <FaTag className="me-1" />
+                                      {ref.codigo}
+                                    </Badge>
+                                  ))}
+                                </div>
                               ) : (
                                 <span style={{ color: '#6c757d', fontSize: 12 }}>General</span>
                               )}
@@ -1338,16 +1360,48 @@ const Produccion = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600 }}>Referencia (Opcional)</Form.Label>
+                  <Form.Label style={{ fontWeight: 600 }}>Referencias (Opcional)</Form.Label>
                   <ReferenceSearch
-                    value={formOperacion.referencia_id}
-                    onChange={(referenciaId) => setFormOperacion({...formOperacion, referencia_id: referenciaId})}
+                    value=""
+                    onChange={(referencia) => {
+                      if (referencia) {
+                        handleAddReferencia(referencia);
+                        // Limpiar el campo después de seleccionar
+                        setTimeout(() => {
+                          const input = document.querySelector('input[placeholder="Buscar referencia por código o nombre..."]');
+                          if (input) input.value = '';
+                        }, 100);
+                      }
+                    }}
                     referencias={referencias}
                     placeholder="Buscar referencia por código o nombre..."
                   />
                   <Form.Text className="text-muted" style={{ fontSize: '12px' }}>
                     Escribe el código o nombre de la referencia para buscarla y seleccionarla
                   </Form.Text>
+                  
+                  {/* Mostrar referencias seleccionadas */}
+                  {formOperacion.referencias.length > 0 && (
+                    <div className="mt-2">
+                      <div className="d-flex flex-wrap gap-1">
+                        {formOperacion.referencias.map((ref, index) => (
+                          <Badge key={ref.id || index} bg="warning" style={{ fontSize: 12 }}>
+                            <FaTag className="me-1" />
+                            {ref.codigo} - {ref.nombre}
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="p-0 ms-1"
+                              style={{ color: 'white', textDecoration: 'none' }}
+                              onClick={() => handleRemoveReferencia(ref.id)}
+                            >
+                              ×
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </Form.Group>
               </Col>
             </Row>

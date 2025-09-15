@@ -8,6 +8,7 @@ router.get('/', authenticateToken, referenciasController.getReferencias); // Adm
 router.get('/activas', authenticateToken, referenciasController.getReferenciasActivas); // Empleados ven solo activas
 router.get('/con-operaciones', authenticateToken, referenciasController.getReferenciasConOperaciones); // Referencias con conteo de operaciones
 router.get('/:id', authenticateToken, referenciasController.getReferencia);
+router.get('/:id/operaciones', authenticateToken, referenciasController.getReferenciaConOperaciones); // Referencia con operaciones vinculadas
 router.get('/categoria/:categoria', authenticateToken, referenciasController.getReferenciasPorCategoria);
 router.post('/', authenticateToken, requireAdmin, referenciasController.createReferencia);
 router.put('/:id', authenticateToken, requireAdmin, referenciasController.updateReferencia);

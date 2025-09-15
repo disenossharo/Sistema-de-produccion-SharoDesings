@@ -5,14 +5,24 @@ exports.getOperaciones = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
-      // Query optimizada con filtros opcionales y información de referencia
+      // Query optimizada con filtros opcionales y información de referencias múltiples
       const { activa, categoria, search, referencia_id } = req.query;
       let query = `
         SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, 
-               o.categoria, o.activa, o.referencia_id,
-               r.codigo as referencia_codigo, r.nombre as referencia_nombre
+               o.categoria, o.activa,
+               COALESCE(
+                 JSON_AGG(
+                   JSON_BUILD_OBJECT(
+                     'id', r.id,
+                     'codigo', r.codigo,
+                     'nombre', r.nombre
+                   )
+                 ) FILTER (WHERE r.id IS NOT NULL),
+                 '[]'::json
+               ) as referencias
         FROM operaciones o
-        LEFT JOIN referencias r ON o.referencia_id = r.id
+        LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+        LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
       `;
       const params = [];
       let paramCount = 0;
@@ -35,14 +45,25 @@ exports.getOperaciones = async (req, res) => {
       // Filtro por referencia
       if (referencia_id && referencia_id.trim()) {
         paramCount++;
-        conditions.push(`o.referencia_id = $${paramCount}`);
+        conditions.push(`EXISTS (
+          SELECT 1 FROM referencia_operaciones ro2 
+          WHERE ro2.operacion_id = o.id 
+          AND ro2.referencia_id = $${paramCount} 
+          AND ro2.activa = true
+        )`);
         params.push(parseInt(referencia_id));
       }
 
       // Filtro por búsqueda de texto
       if (search && search.trim()) {
         paramCount++;
-        conditions.push(`(o.nombre ILIKE $${paramCount} OR o.descripcion ILIKE $${paramCount} OR o.categoria ILIKE $${paramCount} OR r.nombre ILIKE $${paramCount})`);
+        conditions.push(`(o.nombre ILIKE $${paramCount} OR o.descripcion ILIKE $${paramCount} OR o.categoria ILIKE $${paramCount} OR EXISTS (
+          SELECT 1 FROM referencia_operaciones ro3 
+          JOIN referencias r3 ON ro3.referencia_id = r3.id 
+          WHERE ro3.operacion_id = o.id 
+          AND ro3.activa = true 
+          AND r3.nombre ILIKE $${paramCount}
+        ))`);
         params.push(`%${search.trim()}%`);
       }
 
@@ -50,7 +71,7 @@ exports.getOperaciones = async (req, res) => {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' ORDER BY o.nombre';
+      query += ' GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa ORDER BY o.nombre';
 
       const result = await client.query(query, params);
       res.json(result.rows);
@@ -68,13 +89,24 @@ exports.getOperacionesActivas = async (req, res) => {
   try {
     const client = await pool.connect();
     try {
-      // Query optimizada con información de referencia
+      // Query optimizada con información de referencias múltiples
       const result = await client.query(`
         SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
-               o.referencia_id, r.codigo as referencia_codigo, r.nombre as referencia_nombre
+               COALESCE(
+                 JSON_AGG(
+                   JSON_BUILD_OBJECT(
+                     'id', r.id,
+                     'codigo', r.codigo,
+                     'nombre', r.nombre
+                   )
+                 ) FILTER (WHERE r.id IS NOT NULL),
+                 '[]'::json
+               ) as referencias
         FROM operaciones o
-        LEFT JOIN referencias r ON o.referencia_id = r.id
+        LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+        LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
         WHERE o.activa = true 
+        GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria
         ORDER BY o.nombre
       `);
       
@@ -112,12 +144,37 @@ exports.getOperacionesActivasPorReferencia = async (req, res) => {
       // Obtener operaciones vinculadas a esta referencia Y operaciones sin referencia (generales)
       const result = await client.query(
         `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria,
-                o.referencia_id, r.codigo as referencia_codigo, r.nombre as referencia_nombre
+                COALESCE(
+                  JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', r.id,
+                      'codigo', r.codigo,
+                      'nombre', r.nombre
+                    )
+                  ) FILTER (WHERE r.id IS NOT NULL),
+                  '[]'::json
+                ) as referencias
          FROM operaciones o
-         LEFT JOIN referencias r ON o.referencia_id = r.id
+         LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+         LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
          WHERE o.activa = true 
-         AND (o.referencia_id = $1 OR o.referencia_id IS NULL)
-         ORDER BY o.referencia_id NULLS LAST, o.nombre`,
+         AND (EXISTS (
+           SELECT 1 FROM referencia_operaciones ro2 
+           WHERE ro2.operacion_id = o.id 
+           AND ro2.referencia_id = $1 
+           AND ro2.activa = true
+         ) OR NOT EXISTS (
+           SELECT 1 FROM referencia_operaciones ro3 
+           WHERE ro3.operacion_id = o.id 
+           AND ro3.activa = true
+         ))
+         GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria
+         ORDER BY CASE WHEN EXISTS (
+           SELECT 1 FROM referencia_operaciones ro4 
+           WHERE ro4.operacion_id = o.id 
+           AND ro4.referencia_id = $1 
+           AND ro4.activa = true
+         ) THEN 0 ELSE 1 END, o.nombre`,
         [referencia_id]
       );
       
@@ -142,7 +199,22 @@ exports.getOperacion = async (req, res) => {
     
     try {
       const result = await client.query(
-        'SELECT * FROM operaciones WHERE id = $1 AND activa = true',
+        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa,
+                COALESCE(
+                  JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', r.id,
+                      'codigo', r.codigo,
+                      'nombre', r.nombre
+                    )
+                  ) FILTER (WHERE r.id IS NOT NULL),
+                  '[]'::json
+                ) as referencias
+         FROM operaciones o
+         LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+         LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
+         WHERE o.id = $1 AND o.activa = true
+         GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa`,
         [id]
       );
       
@@ -163,7 +235,7 @@ exports.getOperacion = async (req, res) => {
 // Crear una nueva operación
 exports.createOperacion = async (req, res) => {
   try {
-    const { nombre, descripcion, tiempo_por_unidad, categoria, activa, referencia_id } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, categoria, activa, referencias } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -176,33 +248,79 @@ exports.createOperacion = async (req, res) => {
     
     const client = await pool.connect();
     try {
-      // Verificar que la referencia existe si se proporciona
-      if (referencia_id) {
-        const referenciaCheck = await client.query(
-          'SELECT id FROM referencias WHERE id = $1 AND activa = true',
-          [referencia_id]
-        );
-        
-        if (referenciaCheck.rows.length === 0) {
-          return res.status(400).json({ error: 'La referencia seleccionada no existe o está inactiva' });
-        }
-      }
+      await client.query('BEGIN');
       
+      // Crear la operación
       const result = await client.query(
-        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, categoria, activa, referencia_id)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO operaciones (nombre, descripcion, tiempo_por_unidad, categoria, activa)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
         [
           nombre.trim(), 
           descripcion ? descripcion.trim() : '', 
           tiempo_por_unidad, 
           categoria ? categoria.trim() : '', 
-          activa === undefined ? true : activa,
-          referencia_id || null
+          activa === undefined ? true : activa
         ]
       );
       
-      res.status(201).json(result.rows[0]);
+      const operacion = result.rows[0];
+      
+      // Si se proporcionan referencias, crear las relaciones
+      if (referencias && Array.isArray(referencias) && referencias.length > 0) {
+        // Verificar que todas las referencias existen y están activas
+        const referenciaIds = referencias.map(ref => ref.id || ref);
+        const referenciaCheck = await client.query(
+          'SELECT id FROM referencias WHERE id = ANY($1) AND activa = true',
+          [referenciaIds]
+        );
+        
+        if (referenciaCheck.rows.length !== referenciaIds.length) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'Una o más referencias seleccionadas no existen o están inactivas' });
+        }
+        
+        // Crear las relaciones en la tabla referencia_operaciones
+        for (let i = 0; i < referencias.length; i++) {
+          const ref = referencias[i];
+          const referenciaId = ref.id || ref;
+          const orden = ref.orden || i + 1;
+          
+          await client.query(
+            `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa)
+             VALUES ($1, $2, $3, $4)`,
+            [referenciaId, operacion.id, orden, true]
+          );
+        }
+      }
+      
+      await client.query('COMMIT');
+      
+      // Obtener la operación con sus referencias para la respuesta
+      const operacionCompleta = await client.query(
+        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa,
+                COALESCE(
+                  JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', r.id,
+                      'codigo', r.codigo,
+                      'nombre', r.nombre
+                    )
+                  ) FILTER (WHERE r.id IS NOT NULL),
+                  '[]'::json
+                ) as referencias
+         FROM operaciones o
+         LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+         LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
+         WHERE o.id = $1
+         GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa`,
+        [operacion.id]
+      );
+      
+      res.status(201).json(operacionCompleta.rows[0]);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     } finally {
       client.release();
     }
@@ -211,7 +329,7 @@ exports.createOperacion = async (req, res) => {
     
     if (error.code === '23505') { // Unique violation
       res.status(409).json({ 
-        error: 'Ya existe una operación con ese nombre para la misma referencia. Puedes crear operaciones con el mismo nombre pero para diferentes referencias.' 
+        error: 'Ya existe una operación con ese nombre. Los nombres de operaciones deben ser únicos.' 
       });
     } else {
       res.status(500).json({ error: 'Error interno del servidor al crear operación' });
@@ -223,7 +341,7 @@ exports.createOperacion = async (req, res) => {
 exports.updateOperacion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, tiempo_por_unidad, categoria, activa, referencia_id } = req.body;
+    const { nombre, descripcion, tiempo_por_unidad, categoria, activa, referencias } = req.body;
     
     // Validaciones
     if (!nombre || nombre.trim().length === 0) {
@@ -236,23 +354,25 @@ exports.updateOperacion = async (req, res) => {
     
     const client = await pool.connect();
     try {
-      // Verificar que la referencia existe si se proporciona
-      if (referencia_id) {
-        const referenciaCheck = await client.query(
-          'SELECT id FROM referencias WHERE id = $1 AND activa = true',
-          [referencia_id]
-        );
-        
-        if (referenciaCheck.rows.length === 0) {
-          return res.status(400).json({ error: 'La referencia seleccionada no existe o está inactiva' });
-        }
+      await client.query('BEGIN');
+      
+      // Verificar que la operación existe
+      const operacionCheck = await client.query(
+        'SELECT id FROM operaciones WHERE id = $1',
+        [id]
+      );
+      
+      if (operacionCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Operación no encontrada' });
       }
       
+      // Actualizar la operación
       const result = await client.query(
         `UPDATE operaciones 
          SET nombre = $1, descripcion = $2, tiempo_por_unidad = $3, 
-             categoria = $4, activa = $5, referencia_id = $6, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $7
+             categoria = $4, activa = $5, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $6
          RETURNING *`,
         [
           nombre.trim(), 
@@ -260,16 +380,71 @@ exports.updateOperacion = async (req, res) => {
           tiempo_por_unidad, 
           categoria ? categoria.trim() : '', 
           activa, 
-          referencia_id || null,
           id
         ]
       );
       
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Operación no encontrada' });
+      // Eliminar relaciones existentes
+      await client.query(
+        'DELETE FROM referencia_operaciones WHERE operacion_id = $1',
+        [id]
+      );
+      
+      // Si se proporcionan referencias, crear las nuevas relaciones
+      if (referencias && Array.isArray(referencias) && referencias.length > 0) {
+        // Verificar que todas las referencias existen y están activas
+        const referenciaIds = referencias.map(ref => ref.id || ref);
+        const referenciaCheck = await client.query(
+          'SELECT id FROM referencias WHERE id = ANY($1) AND activa = true',
+          [referenciaIds]
+        );
+        
+        if (referenciaCheck.rows.length !== referenciaIds.length) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'Una o más referencias seleccionadas no existen o están inactivas' });
+        }
+        
+        // Crear las nuevas relaciones en la tabla referencia_operaciones
+        for (let i = 0; i < referencias.length; i++) {
+          const ref = referencias[i];
+          const referenciaId = ref.id || ref;
+          const orden = ref.orden || i + 1;
+          
+          await client.query(
+            `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa)
+             VALUES ($1, $2, $3, $4)`,
+            [referenciaId, id, orden, true]
+          );
+        }
       }
       
-      res.json(result.rows[0]);
+      await client.query('COMMIT');
+      
+      // Obtener la operación actualizada con sus referencias para la respuesta
+      const operacionCompleta = await client.query(
+        `SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa,
+                COALESCE(
+                  JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', r.id,
+                      'codigo', r.codigo,
+                      'nombre', r.nombre
+                    )
+                  ) FILTER (WHERE r.id IS NOT NULL),
+                  '[]'::json
+                ) as referencias
+         FROM operaciones o
+         LEFT JOIN referencia_operaciones ro ON o.id = ro.operacion_id AND ro.activa = true
+         LEFT JOIN referencias r ON ro.referencia_id = r.id AND r.activa = true
+         WHERE o.id = $1
+         GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa`,
+        [id]
+      );
+      
+      res.json(operacionCompleta.rows[0]);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     } finally {
       client.release();
     }
@@ -278,7 +453,7 @@ exports.updateOperacion = async (req, res) => {
     
     if (error.code === '23505') { // Unique violation
       res.status(409).json({ 
-        error: 'Ya existe una operación con ese nombre para la misma referencia. Puedes crear operaciones con el mismo nombre pero para diferentes referencias.' 
+        error: 'Ya existe una operación con ese nombre. Los nombres de operaciones deben ser únicos.' 
       });
     } else {
       res.status(500).json({ error: 'Error interno del servidor al actualizar operación' });
@@ -293,6 +468,8 @@ exports.deleteOperacion = async (req, res) => {
     const client = await pool.connect();
     
     try {
+      await client.query('BEGIN');
+      
       // Verificar si la operación existe
       const operacionCheck = await client.query(
         'SELECT id, nombre FROM operaciones WHERE id = $1',
@@ -300,6 +477,7 @@ exports.deleteOperacion = async (req, res) => {
       );
       
       if (operacionCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
         return res.status(404).json({ error: 'Operación no encontrada' });
       }
       
@@ -314,6 +492,7 @@ exports.deleteOperacion = async (req, res) => {
       `, [operacion.nombre]);
       
       if (parseInt(tareasEnProgreso.rows[0].count) > 0) {
+        await client.query('ROLLBACK');
         return res.status(409).json({ 
           error: 'No se puede eliminar la operación porque hay tareas en progreso que la utilizan' 
         });
@@ -330,11 +509,19 @@ exports.deleteOperacion = async (req, res) => {
         console.log('💡 Se eliminará la operación pero se mantendrá el historial para auditoría');
       }
       
+      // Eliminar las relaciones en referencia_operaciones (se eliminarán automáticamente por CASCADE)
+      await client.query(
+        'DELETE FROM referencia_operaciones WHERE operacion_id = $1',
+        [id]
+      );
+      
       // Eliminar la operación completamente
       const result = await client.query(
         'DELETE FROM operaciones WHERE id = $1 RETURNING id, nombre',
         [id]
       );
+      
+      await client.query('COMMIT');
       
       console.log(`✅ Operación eliminada completamente: ${result.rows[0].nombre}`);
       
@@ -342,6 +529,9 @@ exports.deleteOperacion = async (req, res) => {
         message: 'Operación eliminada completamente',
         operacion: result.rows[0]
       });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     } finally {
       client.release();
     }
@@ -385,5 +575,128 @@ exports.toggleAllOperaciones = async (req, res) => {
   } catch (error) {
     console.error('Error al toggle de todas las operaciones:', error);
     res.status(500).json({ error: 'Error interno del servidor al actualizar operaciones' });
+  }
+};
+
+// Agregar referencias a una operación
+exports.addReferenciasToOperacion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { referencias } = req.body;
+    
+    if (!referencias || !Array.isArray(referencias) || referencias.length === 0) {
+      return res.status(400).json({ error: 'Se requiere al menos una referencia' });
+    }
+    
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Verificar que la operación existe
+      const operacionCheck = await client.query(
+        'SELECT id, nombre FROM operaciones WHERE id = $1',
+        [id]
+      );
+      
+      if (operacionCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Operación no encontrada' });
+      }
+      
+      // Verificar que todas las referencias existen y están activas
+      const referenciaIds = referencias.map(ref => ref.id || ref);
+      const referenciaCheck = await client.query(
+        'SELECT id FROM referencias WHERE id = ANY($1) AND activa = true',
+        [referenciaIds]
+      );
+      
+      if (referenciaCheck.rows.length !== referenciaIds.length) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Una o más referencias seleccionadas no existen o están inactivas' });
+      }
+      
+      // Agregar las relaciones (ignorar duplicados)
+      for (let i = 0; i < referencias.length; i++) {
+        const ref = referencias[i];
+        const referenciaId = ref.id || ref;
+        const orden = ref.orden || i + 1;
+        
+        await client.query(
+          `INSERT INTO referencia_operaciones (referencia_id, operacion_id, orden, activa)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (referencia_id, operacion_id) DO UPDATE SET
+           activa = EXCLUDED.activa,
+           orden = EXCLUDED.orden`,
+          [referenciaId, id, orden, true]
+        );
+      }
+      
+      await client.query('COMMIT');
+      
+      res.json({ 
+        message: 'Referencias agregadas exitosamente a la operación',
+        operacion_id: id,
+        referencias_agregadas: referencias.length
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al agregar referencias a operación:', error);
+    res.status(500).json({ error: 'Error interno del servidor al agregar referencias' });
+  }
+};
+
+// Remover referencias de una operación
+exports.removeReferenciasFromOperacion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { referencias } = req.body;
+    
+    if (!referencias || !Array.isArray(referencias) || referencias.length === 0) {
+      return res.status(400).json({ error: 'Se requiere al menos una referencia' });
+    }
+    
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Verificar que la operación existe
+      const operacionCheck = await client.query(
+        'SELECT id, nombre FROM operaciones WHERE id = $1',
+        [id]
+      );
+      
+      if (operacionCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Operación no encontrada' });
+      }
+      
+      // Remover las relaciones
+      const referenciaIds = referencias.map(ref => ref.id || ref);
+      const result = await client.query(
+        'DELETE FROM referencia_operaciones WHERE operacion_id = $1 AND referencia_id = ANY($2)',
+        [id, referenciaIds]
+      );
+      
+      await client.query('COMMIT');
+      
+      res.json({ 
+        message: 'Referencias removidas exitosamente de la operación',
+        operacion_id: id,
+        referencias_removidas: result.rowCount
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error al remover referencias de operación:', error);
+    res.status(500).json({ error: 'Error interno del servidor al remover referencias' });
   }
 };

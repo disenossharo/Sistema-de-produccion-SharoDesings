@@ -3,10 +3,13 @@ const { pool } = require('../config/database');
 // Obtener todas las operaciones (activas e inactivas) - para admin - OPTIMIZADO
 exports.getOperaciones = async (req, res) => {
   try {
+    console.log('🔍 Iniciando getOperaciones...');
     const client = await pool.connect();
     try {
       // Query optimizada con filtros opcionales y información de referencias múltiples
       const { activa, categoria, search, referencia_id } = req.query;
+      console.log('📋 Parámetros recibidos:', { activa, categoria, search, referencia_id });
+      
       let query = `
         SELECT o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, 
                o.categoria, o.activa,
@@ -74,13 +77,17 @@ exports.getOperaciones = async (req, res) => {
 
       query += ' GROUP BY o.id, o.nombre, o.descripcion, o.tiempo_por_unidad, o.categoria, o.activa ORDER BY o.nombre';
 
+      console.log('🔍 Ejecutando consulta...');
       const result = await client.query(query, params);
+      console.log('✅ Consulta ejecutada exitosamente, resultados:', result.rows.length);
+      
       res.json(result.rows);
     } finally {
       client.release();
     }
   } catch (error) {
-    console.error('Error al obtener operaciones:', error);
+    console.error('❌ Error al obtener operaciones:', error);
+    console.error('📝 Stack trace:', error.stack);
     res.status(500).json({ error: 'Error interno del servidor al obtener operaciones' });
   }
 };

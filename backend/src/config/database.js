@@ -2,13 +2,21 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Configuración de la base de datos PostgreSQL
-const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'produccion_sharo',
-  password: process.env.DB_PASSWORD || 'tu_password',
-  port: process.env.DB_PORT || 5432,
-});
+// Priorizar DATABASE_URL de Railway si está disponible
+const pool = new Pool(
+  process.env.DATABASE_URL 
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+      }
+    : {
+        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'produccion_sharo',
+        password: process.env.DB_PASSWORD || 'tu_password',
+        port: process.env.DB_PORT || 5432,
+      }
+);
 
 // Función para probar la conexión
 async function testConnection() {

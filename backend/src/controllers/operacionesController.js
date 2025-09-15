@@ -19,7 +19,7 @@ exports.getOperaciones = async (req, res) => {
                      'id', r.id,
                      'codigo', r.codigo,
                      'nombre', r.nombre,
-                     'tiempo_por_referencia', ro.tiempo_por_referencia
+                     'tiempo_por_referencia', COALESCE(ro.tiempo_por_referencia, o.tiempo_por_unidad)
                    )
                  ) FILTER (WHERE r.id IS NOT NULL),
                  '[]'::json
@@ -106,7 +106,7 @@ exports.getOperacionesActivas = async (req, res) => {
                      'id', r.id,
                      'codigo', r.codigo,
                      'nombre', r.nombre,
-                     'tiempo_por_referencia', ro.tiempo_por_referencia
+                     'tiempo_por_referencia', COALESCE(ro.tiempo_por_referencia, o.tiempo_por_unidad)
                    )
                  ) FILTER (WHERE r.id IS NOT NULL),
                  '[]'::json
@@ -159,7 +159,7 @@ exports.getOperacionesActivasPorReferencia = async (req, res) => {
                       'id', r.id,
                       'codigo', r.codigo,
                       'nombre', r.nombre,
-                      'tiempo_por_referencia', ro.tiempo_por_referencia
+                      'tiempo_por_referencia', COALESCE(ro.tiempo_por_referencia, o.tiempo_por_unidad)
                     )
                   ) FILTER (WHERE r.id IS NOT NULL),
                   '[]'::json
@@ -216,7 +216,7 @@ exports.getOperacion = async (req, res) => {
                       'id', r.id,
                       'codigo', r.codigo,
                       'nombre', r.nombre,
-                      'tiempo_por_referencia', ro.tiempo_por_referencia
+                      'tiempo_por_referencia', COALESCE(ro.tiempo_por_referencia, o.tiempo_por_unidad)
                     )
                   ) FILTER (WHERE r.id IS NOT NULL),
                   '[]'::json

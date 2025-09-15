@@ -1676,7 +1676,26 @@ const Empleado = () => {
                                     <span style={{ fontWeight: 600, fontSize: 16 }}>
                                       {operacion.nombre}
                                       <span className="text-muted ms-2">
-                                        ({operacion.tiempo_por_unidad || 0} min/unidad)
+                                        {(() => {
+                                          // Mostrar tiempo específico si hay referencia seleccionada
+                                          if (referenciasSeleccionadas && referenciasSeleccionadas.length > 0 && operacion.referencias) {
+                                            const refSeleccionada = referenciasSeleccionadas[0];
+                                            const refVinculada = operacion.referencias.find(ref => 
+                                              ref.codigo === refSeleccionada || ref.id == refSeleccionada
+                                            );
+                                            
+                                            if (refVinculada && refVinculada.tiempo_por_referencia) {
+                                              return (
+                                                <span className="text-success fw-bold">
+                                                  ({refVinculada.tiempo_por_referencia} min/unidad - {refVinculada.codigo})
+                                                </span>
+                                              );
+                                            }
+                                          }
+                                          
+                                          // Fallback al tiempo general
+                                          return `(${operacion.tiempo_por_unidad || 0} min/unidad)`;
+                                        })()}
                                       </span>
                                     </span>
                                   }
@@ -1721,7 +1740,34 @@ const Empleado = () => {
                                     {operacion.referencia_codigo || 'General'}
                                   </Badge>
                                 </div>
-                                <div><strong>Tiempo por unidad:</strong> {operacion.tiempo_por_unidad || 0} minutos</div>
+                                <div><strong>Tiempo por unidad:</strong> 
+                                  {(() => {
+                                    // Buscar el tiempo específico para la referencia seleccionada
+                                    if (referenciasSeleccionadas && referenciasSeleccionadas.length > 0 && operacion.referencias) {
+                                      const refSeleccionada = referenciasSeleccionadas[0]; // Usar la primera referencia seleccionada
+                                      const refVinculada = operacion.referencias.find(ref => 
+                                        ref.codigo === refSeleccionada || ref.id == refSeleccionada
+                                      );
+                                      
+                                      if (refVinculada && refVinculada.tiempo_por_referencia) {
+                                        return (
+                                          <span>
+                                            <span className="text-success fw-bold">{refVinculada.tiempo_por_referencia} min</span>
+                                            <small className="text-muted ms-2">(específico para {refVinculada.codigo})</small>
+                                          </span>
+                                        );
+                                      }
+                                    }
+                                    
+                                    // Fallback al tiempo por unidad general
+                                    return (
+                                      <span>
+                                        <span className="text-muted">{operacion.tiempo_por_unidad || 0} min</span>
+                                        <small className="text-muted ms-2">(general)</small>
+                                      </span>
+                                    );
+                                  })()}
+                                </div>
                                 {operacion.video_tutorial && (
                                   <div className="mt-2">
                                     <a href={operacion.video_tutorial} target="_blank" rel="noopener noreferrer" style={{ color: '#0d6efd', textDecoration: 'underline', fontWeight: 500 }}>

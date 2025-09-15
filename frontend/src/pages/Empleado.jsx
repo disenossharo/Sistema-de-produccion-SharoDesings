@@ -1916,7 +1916,7 @@ const Empleado = () => {
                         fontWeight: 600
                       }}
                     >
-                      ⏰ Añadir tiempo adicional (máx. 10 min)
+                      ⏰ Añadir tiempo adicional (máx. 30 min)
                     </Button>
                     <small className="text-muted d-block mt-1">
                       Usa esta opción si se presenta algún inconveniente durante la tarea

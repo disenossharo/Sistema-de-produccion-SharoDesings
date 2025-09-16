@@ -2133,6 +2133,7 @@ const Admin = () => {
                                 <th style={{ minWidth: 80 }}>Asignada</th>
                                 <th style={{ minWidth: 80 }}>Hecha</th>
                                 <th style={{ minWidth: 110 }}>Efectividad (%)</th>
+                                <th style={{ minWidth: 120 }}>Tiempo Transcurrido</th>
                                 <th style={{ minWidth: 100 }}>Estado</th>
                                 <th style={{ minWidth: 140 }}>Observaciones</th>
                               </tr>
@@ -2147,6 +2148,9 @@ const Admin = () => {
                                      <td style={{ maxWidth: 80, textAlign: 'center' }}>{h.cantidadAsignada}</td>
                                      <td style={{ maxWidth: 80, textAlign: 'center' }}>{h.cantidadHecha}</td>
                                      <td style={{ maxWidth: 110, fontWeight: 700, color: h.efectividad >= 80 ? '#28a745' : h.efectividad >= 50 ? '#ffc107' : '#dc3545', textAlign: 'center' }}>{h.efectividad || '-'}</td>
+                                     <td style={{ maxWidth: 120, textAlign: 'center', fontWeight: 600, color: '#2c3e50' }}>
+                                       {h.tiempoTranscurrido ? `${h.tiempoTranscurrido} min` : '-'}
+                                     </td>
                                      <td style={{ maxWidth: 100, textAlign: 'center' }}>
                                        <span style={{ 
                                          padding: '4px 8px', 
@@ -2164,7 +2168,7 @@ const Admin = () => {
                                  ))
                                ) : (
                                  <tr>
-                                   <td colSpan="8" style={{ textAlign: 'center', padding: '40px 20px', color: '#6c757d', fontSize: 16 }}>
+                                   <td colSpan="9" style={{ textAlign: 'center', padding: '40px 20px', color: '#6c757d', fontSize: 16 }}>
                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                                        <FaChartLine style={{ fontSize: 32, color: '#e3eaf7' }} />
                                        <span style={{ fontWeight: 600 }}>No hay tareas en este período</span>

@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 
+
 // Función para calcular tiempo estimado basado en referencias y operaciones
 async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
   const client = await pool.connect();
@@ -45,6 +46,7 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
         // Buscar si alguna de las referencias seleccionadas está vinculada a esta operación
         let tiempoOperacion = 0;
         let referenciaEncontrada = false;
+        let tieneTiempoEspecifico = false;
         
         for (const refSeleccionada of referencias) {
           const refId = refSeleccionada.id || refSeleccionada;
@@ -59,26 +61,32 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
           );
           
           if (refVinculada) {
-            // SIEMPRE usar el tiempo específico de la referencia si existe la relación
+            referenciaEncontrada = true;
             const tiempoEspecifico = refVinculada.tiempo_por_referencia;
             if (tiempoEspecifico && tiempoEspecifico > 0) {
-              tiempoOperacion = Math.max(tiempoOperacion, tiempoEspecifico); // Usar el mayor tiempo si hay múltiples referencias
-              referenciaEncontrada = true;
+              // Si hay tiempo específico, usarlo (sumar si hay múltiples referencias)
+              tiempoOperacion += tiempoEspecifico;
+              tieneTiempoEspecifico = true;
               console.log(`✅ Tiempo específico para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
             } else {
-              console.log(`⚠️ Referencia ${refVinculada.codigo} vinculada pero sin tiempo específico, usando tiempo por unidad`);
-              tiempoOperacion = Math.max(tiempoOperacion, operacion.tiempo_por_unidad);
-              referenciaEncontrada = true;
+              console.log(`⚠️ Referencia ${refVinculada.codigo} vinculada pero sin tiempo específico`);
             }
           } else {
             console.log(`❌ Referencia ${refCodigo} no encontrada en las referencias vinculadas`);
           }
         }
         
-        if (referenciaEncontrada) {
+        if (referenciaEncontrada && tieneTiempoEspecifico) {
+          // Solo usar tiempo por referencia si hay tiempo específico configurado
           tiempoTotal += tiempoOperacion;
+          console.log(`✅ Usando tiempo por referencia para ${operacion.nombre}: ${tiempoOperacion} min`);
+        } else if (referenciaEncontrada && !tieneTiempoEspecifico) {
+          // Si la operación tiene referencias vinculadas pero ninguna tiene tiempo específico,
+          // NO usar tiempo por unidad (según requerimiento del usuario)
+          console.log(`⚠️ Operación ${operacion.nombre} tiene referencias vinculadas pero sin tiempo específico - NO se calcula tiempo`);
+          // No agregar tiempo a tiempoTotal
         } else {
-          // Si no se encuentra la referencia específica, usar tiempo por unidad
+          // Si no se encuentra ninguna referencia vinculada, usar tiempo por unidad
           tiempoTotal += operacion.tiempo_por_unidad;
           console.log(`ℹ️ Usando tiempo por unidad para ${operacion.nombre}: ${operacion.tiempo_por_unidad} min`);
         }
@@ -149,21 +157,43 @@ exports.getHistorial = async (req, res) => {
         [email]
       );
       
-      const historial = result.rows.map(row => ({
-        id: row.id,
-        tareas: row.tareas || [],
-        referencias: row.referencia ? row.referencia.split(', ') : [],
-        cantidadAsignada: row.cantidad_asignada,
-        cantidadHecha: row.cantidad_hecha,
-        horaInicio: row.hora_inicio,
-        horaFin: row.hora_fin,
-        efectividad: row.efectividad,
-        observaciones: row.observaciones,
-        fecha: row.fecha,
-        tiempoEstimado: row.tiempo_estimado,
-        tiempoTranscurrido: row.tiempo_transcurrido,
-        estado: row.estado
-      }));
+      // Obtener todas las operaciones para mapear IDs a nombres
+      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
+      const operacionesMap = {};
+      operacionesResult.rows.forEach(op => {
+        operacionesMap[op.id] = op.nombre;
+      });
+      
+      const historial = result.rows.map(row => {
+        // Convertir IDs de tareas a nombres de operaciones
+        let tareasNombres = [];
+        if (row.tareas && Array.isArray(row.tareas)) {
+          tareasNombres = row.tareas.map(tareaId => {
+            // Si ya es un nombre (string), mantenerlo
+            if (isNaN(tareaId)) {
+              return tareaId;
+            }
+            // Si es un ID (número), convertirlo a nombre
+            return operacionesMap[tareaId] || `Operación ${tareaId}`;
+          });
+        }
+        
+        return {
+          id: row.id,
+          tareas: tareasNombres,
+          referencias: row.referencia ? row.referencia.split(', ') : [],
+          cantidadAsignada: row.cantidad_asignada,
+          cantidadHecha: row.cantidad_hecha,
+          horaInicio: row.hora_inicio,
+          horaFin: row.hora_fin,
+          efectividad: row.efectividad,
+          observaciones: row.observaciones,
+          fecha: row.fecha,
+          tiempoEstimado: row.tiempo_estimado,
+          tiempoTranscurrido: row.tiempo_transcurrido,
+          estado: row.estado
+        };
+      });
       
       res.json(historial);
     } finally {
@@ -190,6 +220,7 @@ exports.getTareasActivas = async (req, res) => {
       console.log('🔄 Ejecutando query para obtener tareas activas...');
       
       // Query optimizada para obtener TODAS las tareas activas, sin importar el estado de presencia
+      // Incluye JOIN con operaciones para obtener nombres en lugar de IDs
       const result = await client.query(
         `SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
                 p.cantidad_hecha, p.hora_inicio, p.efectividad, p.observaciones, 
@@ -215,6 +246,13 @@ exports.getTareasActivas = async (req, res) => {
         hora_fin: row.hora_fin
       })));
       
+      // Obtener todas las operaciones para mapear IDs a nombres
+      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
+      const operacionesMap = {};
+      operacionesResult.rows.forEach(op => {
+        operacionesMap[op.id] = op.nombre;
+      });
+
       // Mapeo optimizado con información de presencia
       const tareasActivas = result.rows.map(row => {
         // Calcular si el empleado está realmente online (más tolerante - 10 minutos)
@@ -223,13 +261,26 @@ exports.getTareasActivas = async (req, res) => {
         const minutesDiff = (now - lastSeen) / (1000 * 60);
         const isActuallyOnline = row.empleado_online && minutesDiff <= 10;
         
+        // Convertir IDs de tareas a nombres de operaciones
+        let tareasNombres = [];
+        if (row.tareas && Array.isArray(row.tareas)) {
+          tareasNombres = row.tareas.map(tareaId => {
+            // Si ya es un nombre (string), mantenerlo
+            if (isNaN(tareaId)) {
+              return tareaId;
+            }
+            // Si es un ID (número), convertirlo a nombre
+            return operacionesMap[tareaId] || `Operación ${tareaId}`;
+          });
+        }
+        
         return {
           id: row.id,
           usuario: row.empleado_email,
           empleadoNombre: `${row.empleado_nombre} ${row.apellidos || ''}`.trim(),
           empleadoOnline: isActuallyOnline,
           empleadoLastSeen: row.empleado_last_seen,
-          tareas: row.tareas || [],
+          tareas: tareasNombres,
           referencias: row.referencia ? row.referencia.split(', ') : [],
           cantidadAsignada: row.cantidad_asignada,
           cantidadHecha: row.cantidad_hecha,
@@ -289,22 +340,44 @@ exports.getAllTareas = async (req, res) => {
         [limit, offset]
       );
       
-      const allTareas = result.rows.map(row => ({
-        id: row.id,
-        usuario: row.empleado_email,
-        empleadoNombre: row.empleado_nombre,
-        tareas: row.tareas || [],
-        referencias: row.referencia ? row.referencia.split(', ') : [],
-        cantidadAsignada: row.cantidad_asignada,
-        cantidadHecha: row.cantidad_hecha,
-        horaInicio: row.hora_inicio,
-        horaFin: row.hora_fin,
-        efectividad: row.efectividad,
-        observaciones: row.observaciones,
-        fecha: row.fecha,
-        tiempoEstimado: row.tiempo_estimado,
-        estado: row.estado
-      }));
+      // Obtener todas las operaciones para mapear IDs a nombres
+      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
+      const operacionesMap = {};
+      operacionesResult.rows.forEach(op => {
+        operacionesMap[op.id] = op.nombre;
+      });
+
+      const allTareas = result.rows.map(row => {
+        // Convertir IDs de tareas a nombres de operaciones
+        let tareasNombres = [];
+        if (row.tareas && Array.isArray(row.tareas)) {
+          tareasNombres = row.tareas.map(tareaId => {
+            // Si ya es un nombre (string), mantenerlo
+            if (isNaN(tareaId)) {
+              return tareaId;
+            }
+            // Si es un ID (número), convertirlo a nombre
+            return operacionesMap[tareaId] || `Operación ${tareaId}`;
+          });
+        }
+        
+        return {
+          id: row.id,
+          usuario: row.empleado_email,
+          empleadoNombre: row.empleado_nombre,
+          tareas: tareasNombres,
+          referencias: row.referencia ? row.referencia.split(', ') : [],
+          cantidadAsignada: row.cantidad_asignada,
+          cantidadHecha: row.cantidad_hecha,
+          horaInicio: row.hora_inicio,
+          horaFin: row.hora_fin,
+          efectividad: row.efectividad,
+          observaciones: row.observaciones,
+          fecha: row.fecha,
+          tiempoEstimado: row.tiempo_estimado,
+          estado: row.estado
+        };
+      });
       
       res.json(allTareas);
     } finally {

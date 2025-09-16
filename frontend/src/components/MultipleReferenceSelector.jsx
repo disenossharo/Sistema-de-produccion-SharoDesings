@@ -54,12 +54,34 @@ const MultipleReferenceSelector = ({
 
   // Manejar cambio de tiempo para una referencia específica
   const handleTimeChange = (referenceId, newTime) => {
+    // Permitir valores vacíos temporalmente para facilitar la edición
+    let tiempoValue;
+    if (newTime === '' || newTime === null || newTime === undefined) {
+      tiempoValue = ''; // Permitir vacío temporalmente
+    } else {
+      const parsed = parseFloat(newTime);
+      tiempoValue = isNaN(parsed) || parsed < 0.1 ? 1.0 : parsed;
+    }
+    
     const newSelection = selectedReferences.map(ref => 
       ref.id === referenceId 
-        ? { ...ref, tiempo_por_referencia: parseFloat(newTime) || 1.0 }
+        ? { ...ref, tiempo_por_referencia: tiempoValue }
         : ref
     );
     onChange(newSelection);
+  };
+
+  // Manejar cuando se pierde el foco del input (blur) para asegurar un valor válido
+  const handleTimeBlur = (referenceId, currentValue) => {
+    if (currentValue === '' || currentValue === null || currentValue === undefined) {
+      // Si está vacío, establecer valor por defecto
+      const newSelection = selectedReferences.map(ref => 
+        ref.id === referenceId 
+          ? { ...ref, tiempo_por_referencia: 1.0 }
+          : ref
+      );
+      onChange(newSelection);
+    }
   };
 
   // Remover referencia específica
@@ -146,14 +168,15 @@ const MultipleReferenceSelector = ({
               <Card 
                 key={ref.id} 
                 style={{ 
-                  fontSize: '12px', 
-                  padding: '8px 12px',
+                  fontSize: '13px', 
+                  padding: '12px 16px',
                   background: '#d4edda',
-                  border: '1px solid #c3e6cb',
-                  borderRadius: '8px',
-                  minWidth: '200px'
+                  border: '2px solid #c3e6cb',
+                  borderRadius: '12px',
+                  minWidth: '250px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
-                className="d-flex align-items-center gap-2"
+                className="d-flex align-items-start gap-3"
               >
                 <FaTag style={{ color: '#155724' }} />
                 <div style={{ flex: 1 }}>
@@ -161,36 +184,52 @@ const MultipleReferenceSelector = ({
                     {ref.codigo} - {ref.nombre}
                   </div>
                   {allowTimeConfiguration && (
-                    <div className="d-flex align-items-center gap-1 mt-1">
-                      <small style={{ color: '#155724' }}>Tiempo:</small>
-                      <Form.Control
-                        type="number"
-                        size="sm"
-                        value={ref.tiempo_por_referencia || 1.0}
-                        onChange={(e) => handleTimeChange(ref.id, e.target.value)}
-                        style={{ 
-                          width: '60px', 
-                          fontSize: '11px',
-                          padding: '2px 4px'
-                        }}
-                        min="0.1"
-                        step="0.1"
-                      />
-                      <small style={{ color: '#155724' }}>min</small>
+                    <div className="d-flex align-items-center gap-2 mt-2">
+                      <small style={{ color: '#155724', fontWeight: 600 }}>Tiempo:</small>
+                      <div className="d-flex align-items-center gap-1">
+                        <Form.Control
+                          type="number"
+                          size="sm"
+                          value={ref.tiempo_por_referencia || ''}
+                          onChange={(e) => handleTimeChange(ref.id, e.target.value)}
+                          onBlur={(e) => handleTimeBlur(ref.id, e.target.value)}
+                          placeholder="1.0"
+                          style={{ 
+                            width: '80px', 
+                            fontSize: '13px',
+                            padding: '4px 8px',
+                            textAlign: 'center',
+                            border: '2px solid #c3e6cb',
+                            borderRadius: '6px',
+                            fontWeight: 600
+                          }}
+                          min="0.1"
+                          step="0.1"
+                          inputMode="decimal"
+                        />
+                        <small style={{ color: '#155724', fontWeight: 600 }}>min</small>
+                      </div>
                     </div>
                   )}
                 </div>
                 <Button
-                  variant="link"
+                  variant="outline-danger"
                   size="sm"
-                  className="p-0"
+                  className="p-1"
                   style={{ 
-                    color: '#155724', 
-                    textDecoration: 'none',
+                    color: '#dc3545', 
+                    borderColor: '#dc3545',
                     fontSize: '14px',
-                    lineHeight: 1
+                    lineHeight: 1,
+                    minWidth: '28px',
+                    minHeight: '28px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   onClick={() => handleRemoveReference(ref.id)}
+                  title="Eliminar referencia"
                 >
                   ×
                 </Button>

@@ -1,5 +1,27 @@
 const { pool } = require('../config/database');
 
+// Función auxiliar para convertir IDs de operaciones a nombres
+async function convertirIdsANombres(tareas, client) {
+  if (!tareas || !Array.isArray(tareas) || tareas.length === 0) {
+    return [];
+  }
+
+  // Obtener todas las operaciones para mapear IDs a nombres
+  const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
+  const operacionesMap = {};
+  operacionesResult.rows.forEach(op => {
+    operacionesMap[op.id] = op.nombre;
+  });
+
+  return tareas.map(tareaId => {
+    // Si ya es un nombre (string), mantenerlo
+    if (isNaN(tareaId)) {
+      return tareaId;
+    }
+    // Si es un ID (número), convertirlo a nombre
+    return operacionesMap[tareaId] || `Operación ${tareaId}`;
+  });
+}
 
 // Función para calcular tiempo estimado basado en referencias y operaciones
 async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
@@ -157,26 +179,9 @@ exports.getHistorial = async (req, res) => {
         [email]
       );
       
-      // Obtener todas las operaciones para mapear IDs a nombres
-      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
-      const operacionesMap = {};
-      operacionesResult.rows.forEach(op => {
-        operacionesMap[op.id] = op.nombre;
-      });
-      
-      const historial = result.rows.map(row => {
+      const historial = await Promise.all(result.rows.map(async row => {
         // Convertir IDs de tareas a nombres de operaciones
-        let tareasNombres = [];
-        if (row.tareas && Array.isArray(row.tareas)) {
-          tareasNombres = row.tareas.map(tareaId => {
-            // Si ya es un nombre (string), mantenerlo
-            if (isNaN(tareaId)) {
-              return tareaId;
-            }
-            // Si es un ID (número), convertirlo a nombre
-            return operacionesMap[tareaId] || `Operación ${tareaId}`;
-          });
-        }
+        const tareasNombres = await convertirIdsANombres(row.tareas, client);
         
         return {
           id: row.id,
@@ -193,7 +198,7 @@ exports.getHistorial = async (req, res) => {
           tiempoTranscurrido: row.tiempo_transcurrido,
           estado: row.estado
         };
-      });
+      }));
       
       res.json(historial);
     } finally {
@@ -246,15 +251,8 @@ exports.getTareasActivas = async (req, res) => {
         hora_fin: row.hora_fin
       })));
       
-      // Obtener todas las operaciones para mapear IDs a nombres
-      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
-      const operacionesMap = {};
-      operacionesResult.rows.forEach(op => {
-        operacionesMap[op.id] = op.nombre;
-      });
-
       // Mapeo optimizado con información de presencia
-      const tareasActivas = result.rows.map(row => {
+      const tareasActivas = await Promise.all(result.rows.map(async row => {
         // Calcular si el empleado está realmente online (más tolerante - 10 minutos)
         const lastSeen = new Date(row.empleado_last_seen);
         const now = new Date();
@@ -262,17 +260,7 @@ exports.getTareasActivas = async (req, res) => {
         const isActuallyOnline = row.empleado_online && minutesDiff <= 10;
         
         // Convertir IDs de tareas a nombres de operaciones
-        let tareasNombres = [];
-        if (row.tareas && Array.isArray(row.tareas)) {
-          tareasNombres = row.tareas.map(tareaId => {
-            // Si ya es un nombre (string), mantenerlo
-            if (isNaN(tareaId)) {
-              return tareaId;
-            }
-            // Si es un ID (número), convertirlo a nombre
-            return operacionesMap[tareaId] || `Operación ${tareaId}`;
-          });
-        }
+        const tareasNombres = await convertirIdsANombres(row.tareas, client);
         
         return {
           id: row.id,
@@ -340,26 +328,9 @@ exports.getAllTareas = async (req, res) => {
         [limit, offset]
       );
       
-      // Obtener todas las operaciones para mapear IDs a nombres
-      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
-      const operacionesMap = {};
-      operacionesResult.rows.forEach(op => {
-        operacionesMap[op.id] = op.nombre;
-      });
-
-      const allTareas = result.rows.map(row => {
+      const allTareas = await Promise.all(result.rows.map(async row => {
         // Convertir IDs de tareas a nombres de operaciones
-        let tareasNombres = [];
-        if (row.tareas && Array.isArray(row.tareas)) {
-          tareasNombres = row.tareas.map(tareaId => {
-            // Si ya es un nombre (string), mantenerlo
-            if (isNaN(tareaId)) {
-              return tareaId;
-            }
-            // Si es un ID (número), convertirlo a nombre
-            return operacionesMap[tareaId] || `Operación ${tareaId}`;
-          });
-        }
+        const tareasNombres = await convertirIdsANombres(row.tareas, client);
         
         return {
           id: row.id,
@@ -814,12 +785,9 @@ exports.getTareaEnProgreso = async (req, res) => {
       
       // Verificación adicional para asegurar que es una tarea activa
       if (tareaData.efectividad === null && tareaData.hora_inicio) {
-        // Convertir IDs de tareas a nombres de operaciones
-        const tareasNombres = await convertirIdsANombres(tareaData.tareas, client);
-        
         res.json({
           id: tareaData.id,
-          tareas: tareasNombres,
+          tareas: tareaData.tareas || [],
           referencias: tareaData.referencia ? tareaData.referencia.split(', ') : [],
           cantidadAsignada: tareaData.cantidad_asignada,
           cantidadHecha: tareaData.cantidad_hecha,

@@ -383,6 +383,16 @@ const Empleado = () => {
           setObservaciones(tareaData.observaciones || "");
           setEnProgreso(true);
           
+          // Restaurar estado de eficiencia si la tarea tiene cantidad hecha
+          if (tareaData.cantidadHecha && tareaData.cantidadHecha > 0 && tareaData.cantidadAsignada && tareaData.cantidadAsignada > 0) {
+            // Calcular eficiencia basada en cantidad hecha vs asignada
+            const cantidadHechaNum = Number(tareaData.cantidadHecha);
+            const cantidadAsignadaNum = Number(tareaData.cantidadAsignada);
+            const eficienciaCalculada = Math.max(0, Math.min(100, (cantidadHechaNum / cantidadAsignadaNum) * 100));
+            setEfectividad(eficienciaCalculada);
+            console.log('🔄 Eficiencia restaurada:', eficienciaCalculada, '%');
+          }
+          
           // Calcular hora estimada de fin
           if (tareaData.tiempoEstimado && horaInicioDate) {
             const fin = new Date(horaInicioDate.getTime() + tareaData.tiempoEstimado * 60000);
@@ -1104,10 +1114,33 @@ const Empleado = () => {
       }
     }
     
-    // La efectividad final es el promedio ponderado (70% cantidad, 30% tiempo)
-    const efectividadFinal = Math.round(
-      (efectividadCantidad * 0.7 + efectividadTiempo * 0.3) * 10
-    ) / 10;
+    // Usar el cálculo más relevante: priorizar cantidad, pero considerar tiempo si es significativo
+    let efectividadFinal;
+    if (cantidadHechaNum > 0) {
+      // Si hay cantidad hecha, usar principalmente el cálculo de cantidad
+      if (tiempoTranscurridoTarea > 0 && tiempoEstimadoValido > 0) {
+        // Si también hay datos de tiempo, usar un promedio más balanceado (80% cantidad, 20% tiempo)
+        efectividadFinal = Math.round(
+          (efectividadCantidad * 0.8 + efectividadTiempo * 0.2) * 10
+        ) / 10;
+      } else {
+        // Solo cantidad
+        efectividadFinal = efectividadCantidad;
+      }
+    } else {
+      // Si no hay cantidad hecha, usar solo tiempo
+      efectividadFinal = efectividadTiempo;
+    }
+    
+    console.log('🧮 Cálculo de eficiencia:', {
+      cantidadHecha: cantidadHechaNum,
+      cantidadAsignada: cantidadNum,
+      efectividadCantidad: efectividadCantidad,
+      tiempoTranscurrido: tiempoTranscurridoTarea,
+      tiempoEstimado: tiempoEstimadoValido,
+      efectividadTiempo: efectividadTiempo,
+      efectividadFinal: efectividadFinal
+    });
     
     setEfectividad(efectividadFinal);
     setHoraFin(new Date());
@@ -1192,12 +1225,26 @@ const Empleado = () => {
 
   // Calcular efectividad en tiempo real o promedio del día
   let efectividadEnTiempo = 100;
-  if (enProgreso && horaInicio && horaEstimadaFin && horaInicio instanceof Date && !isNaN(horaInicio.getTime())) {
-    const transcurrido = (horaActual - horaInicio) / 60000; // minutos
-    if (transcurrido <= tiempoEstimadoValido) {
-      efectividadEnTiempo = 100;
+  
+  if (enProgreso && horaInicio && horaInicio instanceof Date && !isNaN(horaInicio.getTime())) {
+    // Si hay una tarea en progreso, calcular eficiencia en tiempo real
+    if (cantidadHecha && Number(cantidadHecha) > 0 && cantidad && Number(cantidad) > 0) {
+      // Si ya hay cantidad hecha, calcular eficiencia basada en cantidad
+      const cantidadHechaNum = Number(cantidadHecha);
+      const cantidadAsignadaNum = Number(cantidad);
+      efectividadEnTiempo = Math.max(0, Math.min(100, (cantidadHechaNum / cantidadAsignadaNum) * 100));
+      console.log('📊 Eficiencia en tiempo real (cantidad):', efectividadEnTiempo, '%');
+    } else if (tiempoEstimadoValido && tiempoEstimadoValido > 0) {
+      // Si no hay cantidad hecha pero hay tiempo estimado, calcular por tiempo
+      const transcurrido = (horaActual - horaInicio) / 60000; // minutos
+      if (transcurrido <= tiempoEstimadoValido) {
+        efectividadEnTiempo = 100;
+      } else {
+        efectividadEnTiempo = Math.max(0, (tiempoEstimadoValido / transcurrido) * 100);
+      }
+      console.log('⏰ Eficiencia en tiempo real (tiempo):', efectividadEnTiempo, '%');
     } else {
-      efectividadEnTiempo = Math.max(0, (tiempoEstimadoValido / transcurrido) * 100).toFixed(1);
+      efectividadEnTiempo = 100; // Sin datos suficientes, asumir 100%
     }
   } else if (!enProgreso && historial.length > 0) {
     // Calcular promedio de efectividad solo de las tareas del día actual
@@ -1210,11 +1257,14 @@ const Empleado = () => {
     if (tareasHoy.length > 0) {
       const suma = tareasHoy.reduce((acc, h) => acc + Number(h.efectividad), 0);
       efectividadEnTiempo = (suma / tareasHoy.length).toFixed(1);
+      console.log('📈 Eficiencia promedio del día:', efectividadEnTiempo, '%');
     } else {
       efectividadEnTiempo = 100;
     }
   } else if (!enProgreso && efectividad !== null) {
+    // Si no hay tarea en progreso pero hay eficiencia calculada, usarla
     efectividadEnTiempo = efectividad;
+    console.log('💾 Eficiencia guardada:', efectividadEnTiempo, '%');
   }
 
   // Guardar y cerrar modal de observaciones

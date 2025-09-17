@@ -455,7 +455,8 @@ exports.crearTareaEnProgreso = async (req, res) => {
     
     // Calcular tiempo estimado basado en referencias y operaciones
     console.log('🧮 Calculando tiempo estimado automáticamente...');
-    const tiempoCalculado = await calcularTiempoEstimado(tareas, referenciasFinales, Number(cantidadAsignada));
+    // Para el cálculo de tiempo, usar los objetos originales de referencias
+    const tiempoCalculado = await calcularTiempoEstimado(tareas, referencias, Number(cantidadAsignada));
     
     // SIEMPRE usar el tiempo calculado automáticamente por el backend (es el correcto)
     const tiempoEstimadoFinal = tiempoCalculado;

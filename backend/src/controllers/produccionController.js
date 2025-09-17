@@ -440,11 +440,29 @@ exports.crearTareaEnProgreso = async (req, res) => {
       referenciasFinales = referencias.map(ref => {
         if (typeof ref === 'object' && ref !== null) {
           console.log('🔍 [DEBUG] Referencia objeto recibida:', ref);
-          const codigo = ref.codigo || ref.id || ref.nombre || String(ref);
+          
+          // Intentar extraer el código de diferentes formas
+          let codigo = null;
+          if (ref.codigo) {
+            codigo = ref.codigo;
+          } else if (ref.id && typeof ref.id === 'string' && !isNaN(ref.id)) {
+            // Si id es un string numérico, buscar el código en la BD
+            codigo = ref.id;
+          } else if (ref.nombre) {
+            codigo = ref.nombre;
+          } else {
+            // Si no se puede extraer, convertir a string
+            codigo = String(ref);
+          }
+          
           console.log('🔍 [DEBUG] Código extraído:', codigo);
           return codigo;
+        } else if (typeof ref === 'string') {
+          return ref;
+        } else {
+          console.log('⚠️ [DEBUG] Tipo de referencia inesperado:', typeof ref, ref);
+          return String(ref);
         }
-        return String(ref);
       });
       console.log('✅ [DEBUG] Referencias finales procesadas:', referenciasFinales);
     } else if (referencia && referencia.trim().length > 0) {

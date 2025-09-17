@@ -637,7 +637,21 @@ const Admin = () => {
       
       // Obtener todas las tareas del empleado
       const todasLasTareas = await api.getAllTareas(token);
+      console.log('🔍 [DEBUG] Todas las tareas obtenidas:', todasLasTareas.length);
+      
       const tareasEmpleado = todasLasTareas.filter(tarea => tarea.usuario === empleado.id);
+      console.log('🔍 [DEBUG] Tareas filtradas para empleado:', tareasEmpleado.length);
+      
+      // Debuggear las referencias de las primeras tareas
+      tareasEmpleado.slice(0, 3).forEach((tarea, index) => {
+        console.log(`🔍 [DEBUG] Tarea ${index + 1}:`, {
+          id: tarea.id,
+          operaciones: tarea.tareas,
+          referencias: tarea.referencias,
+          tipoReferencias: typeof tarea.referencias
+        });
+      });
+      
       setHistorialEmpleadoDetallado(tareasEmpleado);
       console.log(`✅ Historial cargado para ${empleado.nombre}: ${tareasEmpleado.length} tareas`);
       

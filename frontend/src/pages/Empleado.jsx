@@ -351,11 +351,11 @@ const Empleado = () => {
         window.location.reload();
       } else {
         console.log('❌ [FORZAR] No se pudo recuperar ninguna tarea');
-        alert('No se encontró ninguna tarea activa. Contacta al administrador.');
+        alert('No se encontró ninguna tarea activa. Ve a "Inicio" para crear una nueva tarea.');
       }
     } catch (error) {
       console.error('💥 [FORZAR] Error en recuperación forzada:', error);
-      alert('Error al recuperar tarea. Contacta al administrador.');
+      alert('Error al recuperar tarea. Ve a "Inicio" para crear una nueva tarea.');
     } finally {
       setTareaEnProgresoCargando(false);
     }

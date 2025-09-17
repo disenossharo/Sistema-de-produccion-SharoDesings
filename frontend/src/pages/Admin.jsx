@@ -1666,12 +1666,37 @@ const Admin = () => {
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Ref</div>
                                         <div style={{ fontWeight: 600 }}>
                                           {(() => {
-                                            console.log('🔍 [DEBUG] Referencias para tarea:', tarea.id, tarea.referencias);
+                                            console.log('🔍 [DEBUG] Referencias para tarea:', tarea.id, tarea.referencias, 'Tipo:', typeof tarea.referencias);
+                                            
                                             if (!tarea.referencias) return '-';
+                                            
+                                            // Si es un array
                                             if (Array.isArray(tarea.referencias)) {
-                                              return tarea.referencias.length > 0 ? tarea.referencias.join(', ') : '-';
+                                              if (tarea.referencias.length === 0) return '-';
+                                              
+                                              // Si los elementos del array son objetos, extraer la propiedad correcta
+                                              const refsStrings = tarea.referencias.map(ref => {
+                                                if (typeof ref === 'object' && ref !== null) {
+                                                  // Si es un objeto, intentar extraer codigo, id o convertir a string
+                                                  return ref.codigo || ref.id || ref.nombre || JSON.stringify(ref);
+                                                }
+                                                return String(ref);
+                                              });
+                                              
+                                              return refsStrings.join(', ');
                                             }
-                                            // Si no es array, intentar convertir a string
+                                            
+                                            // Si es un string, devolverlo directamente
+                                            if (typeof tarea.referencias === 'string') {
+                                              return tarea.referencias || '-';
+                                            }
+                                            
+                                            // Si es un objeto, intentar extraer propiedades útiles
+                                            if (typeof tarea.referencias === 'object' && tarea.referencias !== null) {
+                                              return tarea.referencias.codigo || tarea.referencias.id || tarea.referencias.nombre || '-';
+                                            }
+                                            
+                                            // Fallback final
                                             return String(tarea.referencias);
                                           })()}
                                         </div>

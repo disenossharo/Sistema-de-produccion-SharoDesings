@@ -1664,7 +1664,11 @@ const Admin = () => {
                                       </div>
                                       <div style={{ marginBottom: 6 }}>
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Ref</div>
-                                        <div style={{ fontWeight: 600 }}>{tarea.referencia}</div>
+                                        <div style={{ fontWeight: 600 }}>
+                                          {tarea.referencias && tarea.referencias.length > 0 
+                                            ? tarea.referencias.join(', ') 
+                                            : '-'}
+                                        </div>
                                       </div>
                                       <div style={{ marginBottom: 6 }}>
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Cantidad</div>

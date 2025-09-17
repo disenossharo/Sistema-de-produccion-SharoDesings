@@ -431,7 +431,15 @@ exports.crearTareaEnProgreso = async (req, res) => {
     // Determinar las referencias a usar (compatibilidad con sistema anterior)
     let referenciasFinales = [];
     if (Array.isArray(referencias) && referencias.length > 0) {
-      referenciasFinales = referencias;
+      // Extraer códigos de referencias si son objetos
+      referenciasFinales = referencias.map(ref => {
+        if (typeof ref === 'object' && ref !== null) {
+          console.log('🔍 [DEBUG] Referencia objeto recibida:', ref);
+          return ref.codigo || ref.id || ref.nombre || String(ref);
+        }
+        return String(ref);
+      });
+      console.log('✅ [DEBUG] Referencias finales procesadas:', referenciasFinales);
     } else if (referencia && referencia.trim().length > 0) {
       referenciasFinales = [referencia.trim()];
     } else {

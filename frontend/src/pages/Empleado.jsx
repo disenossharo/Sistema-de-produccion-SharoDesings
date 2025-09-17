@@ -1917,7 +1917,9 @@ const Empleado = () => {
                             <div className="text-center">
                               <strong className="text-info" style={{ fontSize: '16px', fontWeight: 600 }}>⏱️ Tiempo Estimado Total:</strong>
                               <div className="h4 text-info mb-2" style={{ fontSize: '24px', fontWeight: 700, lineHeight: '1.2' }}>
-                                {tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : tiempoEstimadoValido} minutos
+                                {tiempoCalculadoAuto > 0 
+                                  ? Math.round(tiempoCalculadoAuto * 10) / 10 
+                                  : Math.round(tiempoEstimadoValido * 10) / 10} minutos
                               </div>
                               <small className="text-muted d-block mb-3" style={{ fontSize: '14px' }}>
                                 {tareasSeleccionadas.length} operación(es) × {cantidad} unidad(es)
@@ -2218,7 +2220,7 @@ const Empleado = () => {
                   </Row>
                   <Row className="mb-3">
                     <Col><strong>Cantidad asignada:</strong> {cantidad}</Col>
-                    <Col><strong>Tiempo estimado:</strong> {tiempoEstimadoValido} min
+                    <Col><strong>Tiempo estimado:</strong> {Math.round(tiempoEstimadoValido * 10) / 10} min
                       {tareaEnProgreso?.observaciones?.includes('[EXTENSIÓN DE TIEMPO') && (
                         <span className="text-warning ms-2">
                           <small>(+ tiempo adicional)</small>

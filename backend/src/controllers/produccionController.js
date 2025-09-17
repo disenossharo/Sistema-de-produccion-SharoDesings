@@ -101,7 +101,11 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
     const tiempoFinal = tiempoTotal * cantidadAsignada;
     console.log(`🧮 Tiempo calculado: ${tiempoTotal} min/uni × ${cantidadAsignada} uni = ${tiempoFinal} min`);
     
-    return tiempoFinal;
+    // Redondear a 1 decimal para evitar números con muchos decimales
+    const tiempoFinalRedondeado = Math.round(tiempoFinal * 10) / 10;
+    console.log(`🔢 Tiempo final redondeado: ${tiempoFinalRedondeado} min`);
+    
+    return tiempoFinalRedondeado;
     
   } catch (error) {
     console.error('❌ Error calculando tiempo estimado:', error);

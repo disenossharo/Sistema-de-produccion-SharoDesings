@@ -812,10 +812,19 @@ exports.getTareaEnProgreso = async (req, res) => {
       
       const tareaData = result.rows[0];
       
-      // Verificación adicional para asegurar que es una tarea activa
-      if (tareaData.efectividad === null && tareaData.hora_inicio) {
+      // Verificar que la tarea tiene hora_inicio (requisito básico)
+      if (tareaData.hora_inicio) {
         // Convertir IDs de tareas a nombres de operaciones
         const tareasNombres = await convertirIdsANombres(tareaData.tareas, client);
+        
+        console.log('✅ Tarea en progreso encontrada:', {
+          id: tareaData.id,
+          empleado: email,
+          estado: tareaData.estado,
+          efectividad: tareaData.efectividad,
+          horaInicio: tareaData.hora_inicio,
+          horaFin: tareaData.hora_fin
+        });
         
         res.json({
           id: tareaData.id,
@@ -832,6 +841,7 @@ exports.getTareaEnProgreso = async (req, res) => {
           estado: tareaData.estado
         });
       } else {
+        console.log('⚠️ Tarea sin hora_inicio encontrada, ignorando:', tareaData.id);
         res.json(null);
       }
     } finally {

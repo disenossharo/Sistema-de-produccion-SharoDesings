@@ -339,11 +339,21 @@ const Empleado = () => {
     async function fetchTareaEnProgreso() {
       if (!usuario || !token) return;
       
+      console.log('🔍 [RECUPERACIÓN] Buscando tarea en progreso para:', usuario.email);
       setTareaEnProgresoCargando(true);
       try {
         const tareaData = await api.getTareaEnProgreso(token);
         
+        console.log('📋 [RECUPERACIÓN] Respuesta del backend:', tareaData);
+        
         if (tareaData) {
+          console.log('✅ [RECUPERACIÓN] Tarea encontrada, restaurando estado:', {
+            id: tareaData.id,
+            tareas: tareaData.tareas,
+            cantidadAsignada: tareaData.cantidadAsignada,
+            horaInicio: tareaData.horaInicio,
+            estado: tareaData.estado
+          });
           setTareaEnProgreso(tareaData);
           setTareaIdEnProgreso(tareaData.id);
           setTareasSeleccionadas(tareaData.tareas || []);
@@ -398,17 +408,20 @@ const Empleado = () => {
             const fin = new Date(horaInicioDate.getTime() + tareaData.tiempoEstimado * 60000);
             setHoraEstimadaFin(fin);
           }
+        } else {
+          console.log('❌ [RECUPERACIÓN] No se encontró ninguna tarea en progreso');
         }
-              } catch (e) {
-          setTareaEnProgreso(null);
-          setTareaIdEnProgreso(null);
-          setTareasSeleccionadas([]);
-          setReferenciasSeleccionadas([]);
-          setCantidad("");
-          setHoraInicio(null);
-          setCantidadHecha("");
-          setEnProgreso(false);
-        } finally {
+      } catch (e) {
+        console.error('💥 [RECUPERACIÓN] Error al buscar tarea en progreso:', e);
+        setTareaEnProgreso(null);
+        setTareaIdEnProgreso(null);
+        setTareasSeleccionadas([]);
+        setReferenciasSeleccionadas([]);
+        setCantidad("");
+        setHoraInicio(null);
+        setCantidadHecha("");
+        setEnProgreso(false);
+      } finally {
         setTareaEnProgresoCargando(false);
       }
     }

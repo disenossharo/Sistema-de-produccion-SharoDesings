@@ -342,7 +342,7 @@ exports.getAllTareas = async (req, res) => {
       const result = await client.query(
         `SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
                 p.cantidad_hecha, p.hora_inicio, p.hora_fin, p.efectividad, 
-                p.observaciones, p.fecha, p.tiempo_estimado, p.estado, 
+                p.observaciones, p.fecha, p.tiempo_estimado, p.tiempo_transcurrido, p.estado, 
                 e.nombre as empleado_nombre
          FROM produccion p 
          INNER JOIN empleados e ON p.empleado_email = e.email 
@@ -386,6 +386,7 @@ exports.getAllTareas = async (req, res) => {
           observaciones: row.observaciones,
           fecha: row.fecha,
           tiempoEstimado: row.tiempo_estimado,
+          tiempoTranscurrido: row.tiempo_transcurrido,
           estado: row.estado
         };
       });

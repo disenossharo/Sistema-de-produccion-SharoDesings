@@ -1162,15 +1162,25 @@ const Empleado = () => {
       }
     }
     
-    // Usar el cálculo más relevante: priorizar cantidad, pero considerar tiempo si es significativo
+    // Usar el cálculo más relevante: considerar tanto cantidad como tiempo
     let efectividadFinal;
     if (cantidadHechaNum > 0) {
-      // Si hay cantidad hecha, usar principalmente el cálculo de cantidad
+      // Si hay cantidad hecha, calcular efectividad combinada
       if (tiempoTranscurridoTarea > 0 && tiempoEstimadoValido > 0) {
-        // Si también hay datos de tiempo, usar un promedio más balanceado (80% cantidad, 20% tiempo)
-        efectividadFinal = Math.round(
-          (efectividadCantidad * 0.8 + efectividadTiempo * 0.2) * 10
-        ) / 10;
+        // Calcular efectividad basada en la relación entre tiempo estimado y real
+        // Si se demora más del tiempo estimado, la efectividad baja significativamente
+        const factorTiempo = tiempoEstimadoValido / tiempoTranscurridoTarea;
+        
+        // Si la cantidad está completa pero el tiempo excede, penalizar más
+        if (efectividadCantidad >= 100 && factorTiempo < 1) {
+          // Si completó la cantidad pero se demoró más, usar principalmente el factor de tiempo
+          efectividadFinal = Math.round(factorTiempo * 100 * 10) / 10;
+        } else {
+          // Promedio más balanceado (60% cantidad, 40% tiempo)
+          efectividadFinal = Math.round(
+            (efectividadCantidad * 0.6 + efectividadTiempo * 0.4) * 10
+          ) / 10;
+        }
       } else {
         // Solo cantidad
         efectividadFinal = efectividadCantidad;
@@ -1187,7 +1197,9 @@ const Empleado = () => {
       tiempoTranscurrido: tiempoTranscurridoTarea,
       tiempoEstimado: tiempoEstimadoValido,
       efectividadTiempo: efectividadTiempo,
-      efectividadFinal: efectividadFinal
+      factorTiempo: tiempoEstimadoValido ? tiempoEstimadoValido / tiempoTranscurridoTarea : 'N/A',
+      efectividadFinal: efectividadFinal,
+      razonCalculo: efectividadCantidad >= 100 && (tiempoEstimadoValido / tiempoTranscurridoTarea) < 1 ? 'Factor tiempo (se demoró más)' : 'Promedio balanceado'
     });
     
     setEfectividad(efectividadFinal);

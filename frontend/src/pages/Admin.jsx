@@ -1665,9 +1665,15 @@ const Admin = () => {
                                       <div style={{ marginBottom: 6 }}>
                                         <div style={{ color: '#6c757d', fontWeight: 700, fontSize: 13 }}>Ref</div>
                                         <div style={{ fontWeight: 600 }}>
-                                          {tarea.referencias && tarea.referencias.length > 0 
-                                            ? tarea.referencias.join(', ') 
-                                            : '-'}
+                                          {(() => {
+                                            console.log('🔍 [DEBUG] Referencias para tarea:', tarea.id, tarea.referencias);
+                                            if (!tarea.referencias) return '-';
+                                            if (Array.isArray(tarea.referencias)) {
+                                              return tarea.referencias.length > 0 ? tarea.referencias.join(', ') : '-';
+                                            }
+                                            // Si no es array, intentar convertir a string
+                                            return String(tarea.referencias);
+                                          })()}
                                         </div>
                                       </div>
                                       <div style={{ marginBottom: 6 }}>

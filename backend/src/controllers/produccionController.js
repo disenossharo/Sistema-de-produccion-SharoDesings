@@ -862,81 +862,102 @@ async function buscarTareaActivaAgresiva(email, client) {
 
 // Obtener tarea en progreso del usuario autenticado
 exports.getTareaEnProgreso = async (req, res) => {
+  let client = null;
   try {
-    const email = req.user.email;
+    console.log('🔍 [DEBUG] getTareaEnProgreso iniciado');
     
-    console.log('🔍 [DEBUG] getTareaEnProgreso llamado para:', email);
+    const email = req.user?.email;
+    console.log('📧 [DEBUG] Email del usuario:', email);
     
     if (!email) {
+      console.log('❌ [DEBUG] No hay email de usuario');
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
     
-    const client = await pool.connect();
-    try {
-      // Buscar tareas en progreso de manera simple y robusta
-      const result = await client.query(
-        'SELECT * FROM produccion WHERE empleado_email = $1 AND estado = \'en_progreso\' AND hora_fin IS NULL ORDER BY created_at DESC LIMIT 1',
-        [email]
-      );
-      
-      console.log('📋 [DEBUG] Consulta para tareas en progreso:', {
-        email,
-        rowsFound: result.rows.length,
-        rows: result.rows.map(r => ({
-          id: r.id,
-          estado: r.estado,
-          hora_inicio: r.hora_inicio,
-          hora_fin: r.hora_fin,
-          efectividad: r.efectividad
-        }))
-      });
-      
-      if (result.rows.length === 0) {
-        console.log('❌ [DEBUG] No se encontraron tareas en progreso estándar');
-        return res.json(null);
-      }
-      
-      const tareaData = result.rows[0];
-      
-      // Verificar que la tarea tiene los datos básicos necesarios
-      if (!tareaData.hora_inicio) {
-        console.log('⚠️ [DEBUG] Tarea sin hora_inicio encontrada, ignorando:', tareaData.id);
-        return res.json(null);
-      }
-      
-      // Convertir IDs de tareas a nombres de operaciones
-      const tareasNombres = await convertirIdsANombres(tareaData.tareas, client);
-      
-      console.log('✅ [SUCCESS] Tarea en progreso encontrada y enviada:', {
-        id: tareaData.id,
-        empleado: email,
-        estado: tareaData.estado,
-        efectividad: tareaData.efectividad,
-        horaInicio: tareaData.hora_inicio,
-        horaFin: tareaData.hora_fin,
-        tareasConvertidas: tareasNombres
-      });
-      
-      res.json({
-        id: tareaData.id,
-        tareas: tareasNombres,
-        referencias: tareaData.referencia ? tareaData.referencia.split(', ') : [],
-        cantidadAsignada: tareaData.cantidad_asignada,
-        cantidadHecha: tareaData.cantidad_hecha,
-        horaInicio: tareaData.hora_inicio,
-        horaFin: tareaData.hora_fin,
-        efectividad: tareaData.efectividad,
-        observaciones: tareaData.observaciones,
-        fecha: tareaData.fecha,
-        tiempoEstimado: tareaData.tiempo_estimado,
-        estado: tareaData.estado
-      });
-    } finally {
-      client.release();
+    console.log('🔌 [DEBUG] Conectando a la base de datos...');
+    client = await pool.connect();
+    console.log('✅ [DEBUG] Conexión a BD exitosa');
+    
+    console.log('🔍 [DEBUG] Ejecutando consulta...');
+    const result = await client.query(
+      'SELECT * FROM produccion WHERE empleado_email = $1 AND estado = \'en_progreso\' AND hora_fin IS NULL ORDER BY created_at DESC LIMIT 1',
+      [email]
+    );
+    console.log('✅ [DEBUG] Consulta ejecutada, filas encontradas:', result.rows.length);
+    
+    if (result.rows.length === 0) {
+      console.log('❌ [DEBUG] No se encontraron tareas en progreso');
+      return res.json(null);
     }
+    
+    const tareaData = result.rows[0];
+    console.log('📋 [DEBUG] Tarea encontrada:', {
+      id: tareaData.id,
+      estado: tareaData.estado,
+      hora_inicio: tareaData.hora_inicio,
+      hora_fin: tareaData.hora_fin
+    });
+    
+    // Verificación básica
+    if (!tareaData.hora_inicio) {
+      console.log('⚠️ [DEBUG] Tarea sin hora_inicio');
+      return res.json(null);
+    }
+    
+    // Intentar convertir IDs a nombres (con protección)
+    let tareasNombres = [];
+    try {
+      console.log('🔄 [DEBUG] Convirtiendo IDs a nombres...');
+      tareasNombres = await convertirIdsANombres(tareaData.tareas, client);
+      console.log('✅ [DEBUG] Conversión exitosa:', tareasNombres);
+    } catch (conversionError) {
+      console.error('⚠️ [DEBUG] Error en conversión, usando IDs originales:', conversionError);
+      tareasNombres = tareaData.tareas || [];
+    }
+    
+    const response = {
+      id: tareaData.id,
+      tareas: tareasNombres,
+      referencias: tareaData.referencia ? tareaData.referencia.split(', ') : [],
+      cantidadAsignada: tareaData.cantidad_asignada,
+      cantidadHecha: tareaData.cantidad_hecha,
+      horaInicio: tareaData.hora_inicio,
+      horaFin: tareaData.hora_fin,
+      efectividad: tareaData.efectividad,
+      observaciones: tareaData.observaciones,
+      fecha: tareaData.fecha,
+      tiempoEstimado: tareaData.tiempo_estimado,
+      estado: tareaData.estado
+    };
+    
+    console.log('✅ [SUCCESS] Enviando respuesta:', {
+      id: response.id,
+      tareas: response.tareas,
+      estado: response.estado
+    });
+    
+    res.json(response);
+    
   } catch (e) {
-    console.error('💥 [ERROR] Error en getTareaEnProgreso:', e);
-    res.status(500).json({ error: 'Error interno del servidor al obtener tarea en progreso' });
+    console.error('💥 [ERROR] Error completo en getTareaEnProgreso:', {
+      message: e.message,
+      stack: e.stack,
+      name: e.name
+    });
+    res.status(500).json({ 
+      error: 'Error interno del servidor al obtener tarea en progreso',
+      details: e.message 
+    });
+  } finally {
+    if (client) {
+      try {
+        console.log('🔌 [DEBUG] Liberando conexión...');
+        client.release();
+        console.log('✅ [DEBUG] Conexión liberada');
+      } catch (releaseError) {
+        console.error('⚠️ [DEBUG] Error liberando conexión:', releaseError);
+      }
+    }
   }
 };
 

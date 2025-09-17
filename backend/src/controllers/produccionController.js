@@ -377,7 +377,22 @@ exports.getAllTareas = async (req, res) => {
           usuario: row.empleado_email,
           empleadoNombre: row.empleado_nombre,
           tareas: tareasNombres,
-          referencias: row.referencia ? row.referencia.split(', ') : [],
+          referencias: (() => {
+            if (!row.referencia) return [];
+            
+            // Si la referencia contiene '[object Object]', devolver array vacío
+            if (row.referencia.includes('[object Object]')) {
+              console.log('⚠️ [DEBUG] Referencia mal formateada en getAllTareas:', {
+                tareaId: row.id,
+                empleado: row.empleado_email,
+                referencia: row.referencia
+              });
+              return [];
+            }
+            
+            // Procesar referencias normalmente
+            return row.referencia.split(', ').filter(ref => ref.trim() !== '');
+          })(),
           cantidadAsignada: row.cantidad_asignada,
           cantidadHecha: row.cantidad_hecha,
           horaInicio: row.hora_inicio,

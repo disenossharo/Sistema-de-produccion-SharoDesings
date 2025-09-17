@@ -285,11 +285,14 @@ exports.getTareasActivas = async (req, res) => {
           empleadoOnline: isActuallyOnline,
           empleadoLastSeen: row.empleado_last_seen,
           tareas: tareasNombres,
-          referencias: (() => {
-            const refs = row.referencia ? row.referencia.split(', ') : [];
-            console.log('🔍 [DEBUG] Referencias para empleado:', row.empleado_email, 'Original:', row.referencia, 'Procesado:', refs);
-            return refs;
-          })(),
+        referencias: (() => {
+          const refs = row.referencia ? row.referencia.split(', ') : [];
+          console.log('🔍 [DEBUG] Referencias para empleado:', row.empleado_email, 'ID tarea:', row.id);
+          console.log('📋 [DEBUG] Referencia original en BD:', JSON.stringify(row.referencia));
+          console.log('📋 [DEBUG] Referencias procesadas:', JSON.stringify(refs));
+          console.log('📋 [DEBUG] Tipo de referencia:', typeof row.referencia);
+          return refs;
+        })(),
           cantidadAsignada: row.cantidad_asignada,
           cantidadHecha: row.cantidad_hecha,
           horaInicio: row.hora_inicio,

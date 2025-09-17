@@ -56,14 +56,34 @@ export async function getHistorial(token) {
 
 // Obtener tarea en progreso del usuario autenticado
 export async function getTareaEnProgreso(token) {
-  const res = await fetch(`${API_BASE}/produccion/tarea-en-progreso`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || `Error ${res.status}: No se pudo obtener la tarea en progreso`);
+  console.log('🌐 [API] getTareaEnProgreso llamado');
+  console.log('🔑 [API] Token:', token ? 'Presente' : 'Ausente');
+  console.log('📍 [API] URL:', `${API_BASE}/produccion/tarea-en-progreso`);
+  
+  try {
+    const res = await fetch(`${API_BASE}/produccion/tarea-en-progreso`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    console.log('📡 [API] Respuesta recibida:', {
+      status: res.status,
+      ok: res.ok,
+      statusText: res.statusText
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('❌ [API] Error en respuesta:', errorData);
+      throw new Error(errorData.error || `Error ${res.status}: No se pudo obtener la tarea en progreso`);
+    }
+    
+    const data = await res.json();
+    console.log('✅ [API] Datos recibidos:', data);
+    return data;
+  } catch (error) {
+    console.error('💥 [API] Error en getTareaEnProgreso:', error);
+    throw error;
   }
-  return await res.json();
 }
 
 // Obtener todos los empleados (para admin)

@@ -364,11 +364,19 @@ const Empleado = () => {
   // Obtener tarea en progreso al cargar
   useEffect(() => {
     async function fetchTareaEnProgreso() {
-      if (!usuario || !token) return;
+      console.log('🔍 [RECUPERACIÓN] useEffect ejecutado');
+      console.log('👤 [RECUPERACIÓN] Usuario:', usuario);
+      console.log('🔑 [RECUPERACIÓN] Token:', token ? 'Presente' : 'Ausente');
+      
+      if (!usuario || !token) {
+        console.log('❌ [RECUPERACIÓN] Usuario o token faltante, saliendo');
+        return;
+      }
       
       console.log('🔍 [RECUPERACIÓN] Buscando tarea en progreso para:', usuario.email);
       setTareaEnProgresoCargando(true);
       try {
+        console.log('📞 [RECUPERACIÓN] Llamando a api.getTareaEnProgreso...');
         const tareaData = await api.getTareaEnProgreso(token);
         
         console.log('📋 [RECUPERACIÓN] Respuesta del backend:', tareaData);

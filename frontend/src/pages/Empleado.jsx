@@ -1147,7 +1147,7 @@ const Empleado = () => {
     // Calcular efectividad basada en cantidad hecha vs asignada
     let efectividadCantidad = 100;
     if (cantidadNum > 0) {
-      efectividadCantidad = Math.max(0, Math.min(100, (cantidadHechaNum / cantidadNum) * 100));
+      efectividadCantidad = Math.round(Math.max(0, Math.min(100, (cantidadHechaNum / cantidadNum) * 100)) * 100) / 100;
     }
     
     // Calcular efectividad basada en tiempo (si hay tiempo estimado)
@@ -1158,7 +1158,7 @@ const Empleado = () => {
       tiempoTranscurridoTarea = (new Date() - horaInicio) / 60000; // en minutos
       if (tiempoTranscurridoTarea > tiempoEstimadoValido) {
         // Si se excedió el tiempo, la efectividad baja proporcionalmente
-        efectividadTiempo = Math.max(0, (tiempoEstimadoValido / tiempoTranscurridoTarea) * 100);
+        efectividadTiempo = Math.round(Math.max(0, (tiempoEstimadoValido / tiempoTranscurridoTarea) * 100) * 100) / 100;
       }
     }
     
@@ -1174,12 +1174,12 @@ const Empleado = () => {
         // Si la cantidad está completa pero el tiempo excede, penalizar más
         if (efectividadCantidad >= 100 && factorTiempo < 1) {
           // Si completó la cantidad pero se demoró más, usar principalmente el factor de tiempo
-          efectividadFinal = Math.round(factorTiempo * 100 * 10) / 10;
+          efectividadFinal = Math.round(factorTiempo * 100 * 100) / 100; // 2 decimales máximo
         } else {
           // Promedio más balanceado (60% cantidad, 40% tiempo)
           efectividadFinal = Math.round(
-            (efectividadCantidad * 0.6 + efectividadTiempo * 0.4) * 10
-          ) / 10;
+            (efectividadCantidad * 0.6 + efectividadTiempo * 0.4) * 100
+          ) / 100; // 2 decimales máximo
         }
       } else {
         // Solo cantidad
@@ -1292,7 +1292,7 @@ const Empleado = () => {
       // Si ya hay cantidad hecha, calcular eficiencia basada en cantidad
       const cantidadHechaNum = Number(cantidadHecha);
       const cantidadAsignadaNum = Number(cantidad);
-      efectividadEnTiempo = Math.max(0, Math.min(100, (cantidadHechaNum / cantidadAsignadaNum) * 100));
+      efectividadEnTiempo = Math.round(Math.max(0, Math.min(100, (cantidadHechaNum / cantidadAsignadaNum) * 100)) * 100) / 100;
       console.log('📊 Eficiencia en tiempo real (cantidad):', efectividadEnTiempo, '%');
     } else if (tiempoEstimadoValido && tiempoEstimadoValido > 0) {
       // Si no hay cantidad hecha pero hay tiempo estimado, calcular por tiempo
@@ -1300,7 +1300,7 @@ const Empleado = () => {
       if (transcurrido <= tiempoEstimadoValido) {
         efectividadEnTiempo = 100;
       } else {
-        efectividadEnTiempo = Math.max(0, (tiempoEstimadoValido / transcurrido) * 100);
+        efectividadEnTiempo = Math.round(Math.max(0, (tiempoEstimadoValido / transcurrido) * 100) * 100) / 100;
       }
       console.log('⏰ Eficiencia en tiempo real (tiempo):', efectividadEnTiempo, '%');
     } else {
@@ -1316,7 +1316,7 @@ const Empleado = () => {
     const tareasHoy = historial.filter(h => typeof h.fecha === 'string' && h.fecha.split(',')[0].trim() === fechaHoyStr);
     if (tareasHoy.length > 0) {
       const suma = tareasHoy.reduce((acc, h) => acc + Number(h.efectividad), 0);
-      efectividadEnTiempo = (suma / tareasHoy.length).toFixed(1);
+      efectividadEnTiempo = Math.round((suma / tareasHoy.length) * 100) / 100;
       console.log('📈 Eficiencia promedio del día:', efectividadEnTiempo, '%');
     } else {
       efectividadEnTiempo = 100;

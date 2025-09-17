@@ -334,6 +334,33 @@ const Empleado = () => {
     if (usuario) fetchHistorial();
   }, [usuario, token, logout, navigate]);
 
+  // Función para forzar recuperación de tarea
+  const handleForzarRecuperacion = async () => {
+    if (!usuario || !token) return;
+    
+    console.log('🔄 [FORZAR] Iniciando recuperación forzada para:', usuario.email);
+    setTareaEnProgresoCargando(true);
+    
+    try {
+      // Hacer múltiples intentos de recuperación
+      const tareaData = await api.getTareaEnProgreso(token);
+      
+      if (tareaData) {
+        console.log('✅ [FORZAR] Tarea recuperada exitosamente');
+        // Recargar la página para asegurar que se actualice todo
+        window.location.reload();
+      } else {
+        console.log('❌ [FORZAR] No se pudo recuperar ninguna tarea');
+        alert('No se encontró ninguna tarea activa. Contacta al administrador.');
+      }
+    } catch (error) {
+      console.error('💥 [FORZAR] Error en recuperación forzada:', error);
+      alert('Error al recuperar tarea. Contacta al administrador.');
+    } finally {
+      setTareaEnProgresoCargando(false);
+    }
+  };
+
   // Obtener tarea en progreso al cargar
   useEffect(() => {
     async function fetchTareaEnProgreso() {
@@ -2081,6 +2108,40 @@ const Empleado = () => {
                     <div style={{ fontSize: 18, color: '#6c757d', marginBottom: 20 }}>
                       Ve a la pestaña "Inicio" para crear una nueva tarea
                     </div>
+                    
+                    <div style={{ marginBottom: 20, padding: '16px', background: '#fff3cd', borderRadius: 12, border: '1px solid #ffeaa7' }}>
+                      <div style={{ fontSize: 16, color: '#856404', fontWeight: 600, marginBottom: 12 }}>
+                        ⚠️ ¿Perdiste tu tarea al cerrar sesión?
+                      </div>
+                      <div style={{ fontSize: 14, color: '#856404', marginBottom: 16 }}>
+                        Si se te cerró la sesión mientras trabajabas, puedes recuperar tu tarea aquí
+                      </div>
+                      <Button 
+                        variant="warning" 
+                        size="lg"
+                        onClick={handleForzarRecuperacion}
+                        disabled={tareaEnProgresoCargando}
+                        style={{ 
+                          fontWeight: 600, 
+                          borderRadius: 10,
+                          padding: '10px 20px',
+                          fontSize: 16,
+                          marginBottom: 8
+                        }}
+                      >
+                        {tareaEnProgresoCargando ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Recuperando...
+                          </>
+                        ) : (
+                          <>
+                            🔄 Recuperar Mi Tarea
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
                     <Button 
                       variant="primary" 
                       size="lg" 

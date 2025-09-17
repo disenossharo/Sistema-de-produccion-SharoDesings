@@ -790,10 +790,77 @@ exports.getEstadisticas = async (req, res) => {
   }
 };
 
+// Función auxiliar para buscar tareas activas de manera más agresiva
+async function buscarTareaActivaAgresiva(email, client) {
+  console.log('🔍 [AGRESIVA] Iniciando búsqueda agresiva para:', email);
+  
+  // 1. Buscar tareas en progreso sin hora_fin
+  let result = await client.query(
+    'SELECT * FROM produccion WHERE empleado_email = $1 AND estado = \'en_progreso\' AND hora_fin IS NULL ORDER BY created_at DESC LIMIT 1',
+    [email]
+  );
+  
+  if (result.rows.length > 0) {
+    console.log('✅ [AGRESIVA] Encontrada tarea en progreso estándar');
+    return result.rows[0];
+  }
+  
+  // 2. Buscar cualquier tarea sin hora_fin (independientemente del estado)
+  result = await client.query(
+    'SELECT * FROM produccion WHERE empleado_email = $1 AND hora_fin IS NULL ORDER BY created_at DESC LIMIT 1',
+    [email]
+  );
+  
+  if (result.rows.length > 0) {
+    console.log('✅ [AGRESIVA] Encontrada tarea sin hora_fin, forzando estado a en_progreso');
+    const tarea = result.rows[0];
+    
+    // Actualizar el estado a en_progreso si no lo está
+    if (tarea.estado !== 'en_progreso') {
+      await client.query(
+        'UPDATE produccion SET estado = \'en_progreso\' WHERE id = $1',
+        [tarea.id]
+      );
+      tarea.estado = 'en_progreso';
+      console.log('🔄 [AGRESIVA] Estado actualizado a en_progreso para tarea:', tarea.id);
+    }
+    
+    return tarea;
+  }
+  
+  // 3. Buscar la tarea más reciente del día actual
+  const hoy = new Date().toISOString().split('T')[0];
+  result = await client.query(
+    'SELECT * FROM produccion WHERE empleado_email = $1 AND DATE(created_at) = $2 ORDER BY created_at DESC LIMIT 1',
+    [email, hoy]
+  );
+  
+  if (result.rows.length > 0) {
+    const tarea = result.rows[0];
+    console.log('✅ [AGRESIVA] Encontrada tarea del día actual, verificando si se puede reactivar');
+    
+    // Si la tarea no tiene hora_fin, la reactivamos
+    if (!tarea.hora_fin) {
+      await client.query(
+        'UPDATE produccion SET estado = \'en_progreso\' WHERE id = $1',
+        [tarea.id]
+      );
+      tarea.estado = 'en_progreso';
+      console.log('🔄 [AGRESIVA] Tarea del día reactivada:', tarea.id);
+      return tarea;
+    }
+  }
+  
+  console.log('❌ [AGRESIVA] No se encontró ninguna tarea activa');
+  return null;
+}
+
 // Obtener tarea en progreso del usuario autenticado
 exports.getTareaEnProgreso = async (req, res) => {
   try {
     const email = req.user.email;
+    
+    console.log('🔍 [DEBUG] getTareaEnProgreso llamado para:', email);
     
     if (!email) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -801,54 +868,55 @@ exports.getTareaEnProgreso = async (req, res) => {
     
     const client = await pool.connect();
     try {
-      const result = await client.query(
-        'SELECT * FROM produccion WHERE empleado_email = $1 AND estado = \'en_progreso\' AND hora_fin IS NULL ORDER BY created_at DESC LIMIT 1',
+      // Primero, buscar todas las tareas del empleado para debugging
+      const allTasksResult = await client.query(
+        'SELECT id, estado, hora_inicio, hora_fin, efectividad, created_at FROM produccion WHERE empleado_email = $1 ORDER BY created_at DESC LIMIT 5',
         [email]
       );
       
-      if (result.rows.length === 0) {
+      console.log('📋 [DEBUG] Todas las tareas recientes del empleado:', allTasksResult.rows);
+      
+      // Usar búsqueda agresiva para encontrar tareas activas
+      const tareaData = await buscarTareaActivaAgresiva(email, client);
+      
+      if (!tareaData) {
+        console.log('❌ [DEBUG] No se encontraron tareas activas con búsqueda agresiva');
         return res.json(null);
       }
       
-      const tareaData = result.rows[0];
+      // Si llegamos aquí, la búsqueda agresiva encontró una tarea válida
+      // Convertir IDs de tareas a nombres de operaciones
+      const tareasNombres = await convertirIdsANombres(tareaData.tareas, client);
       
-      // Verificar que la tarea tiene hora_inicio (requisito básico)
-      if (tareaData.hora_inicio) {
-        // Convertir IDs de tareas a nombres de operaciones
-        const tareasNombres = await convertirIdsANombres(tareaData.tareas, client);
-        
-        console.log('✅ Tarea en progreso encontrada:', {
-          id: tareaData.id,
-          empleado: email,
-          estado: tareaData.estado,
-          efectividad: tareaData.efectividad,
-          horaInicio: tareaData.hora_inicio,
-          horaFin: tareaData.hora_fin
-        });
-        
-        res.json({
-          id: tareaData.id,
-          tareas: tareasNombres,
-          referencias: tareaData.referencia ? tareaData.referencia.split(', ') : [],
-          cantidadAsignada: tareaData.cantidad_asignada,
-          cantidadHecha: tareaData.cantidad_hecha,
-          horaInicio: tareaData.hora_inicio,
-          horaFin: tareaData.hora_fin,
-          efectividad: tareaData.efectividad,
-          observaciones: tareaData.observaciones,
-          fecha: tareaData.fecha,
-          tiempoEstimado: tareaData.tiempo_estimado,
-          estado: tareaData.estado
-        });
-      } else {
-        console.log('⚠️ Tarea sin hora_inicio encontrada, ignorando:', tareaData.id);
-        res.json(null);
-      }
+      console.log('✅ [SUCCESS] Tarea activa encontrada y enviada:', {
+        id: tareaData.id,
+        empleado: email,
+        estado: tareaData.estado,
+        efectividad: tareaData.efectividad,
+        horaInicio: tareaData.hora_inicio,
+        horaFin: tareaData.hora_fin,
+        tareasConvertidas: tareasNombres
+      });
+      
+      res.json({
+        id: tareaData.id,
+        tareas: tareasNombres,
+        referencias: tareaData.referencia ? tareaData.referencia.split(', ') : [],
+        cantidadAsignada: tareaData.cantidad_asignada,
+        cantidadHecha: tareaData.cantidad_hecha,
+        horaInicio: tareaData.hora_inicio,
+        horaFin: tareaData.hora_fin,
+        efectividad: tareaData.efectividad,
+        observaciones: tareaData.observaciones,
+        fecha: tareaData.fecha,
+        tiempoEstimado: tareaData.tiempo_estimado,
+        estado: tareaData.estado
+      });
     } finally {
       client.release();
     }
   } catch (e) {
-    console.error('💥 Error en getTareaEnProgreso:', e);
+    console.error('💥 [ERROR] Error en getTareaEnProgreso:', e);
     res.status(500).json({ error: 'Error interno del servidor al obtener tarea en progreso' });
   }
 };

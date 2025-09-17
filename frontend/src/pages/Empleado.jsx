@@ -1339,6 +1339,15 @@ const Empleado = () => {
           tiempoTranscurridoReal = (new Date() - horaInicio) / 60000; // en minutos
         }
         
+        console.log('💾 [DEBUG] Enviando datos al backend:', {
+          tareaId: tareaIdEnProgreso,
+          cantidadHecha: Number(cantidadHecha),
+          efectividad: Number(efectividad),
+          efectividadTipo: typeof efectividad,
+          tiempoTranscurrido: tiempoTranscurridoReal,
+          observaciones: obs.trim()
+        });
+        
         await api.actualizarTareaFinalizada(token, tareaIdEnProgreso, {
           cantidadHecha: Number(cantidadHecha),
           efectividad: Number(efectividad),

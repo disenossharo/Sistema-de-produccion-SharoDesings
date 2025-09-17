@@ -435,10 +435,13 @@ exports.crearTareaEnProgreso = async (req, res) => {
     let referenciasFinales = [];
     if (Array.isArray(referencias) && referencias.length > 0) {
       // Extraer códigos de referencias si son objetos
+      console.log('🔍 [DEBUG] Referencias recibidas en crearTarea:', JSON.stringify(referencias, null, 2));
       referenciasFinales = referencias.map(ref => {
         if (typeof ref === 'object' && ref !== null) {
           console.log('🔍 [DEBUG] Referencia objeto recibida:', ref);
-          return ref.codigo || ref.id || ref.nombre || String(ref);
+          const codigo = ref.codigo || ref.id || ref.nombre || String(ref);
+          console.log('🔍 [DEBUG] Código extraído:', codigo);
+          return codigo;
         }
         return String(ref);
       });
@@ -633,7 +636,10 @@ exports.actualizarTareaFinalizada = async (req, res) => {
       const tareaActualizada = result.rows[0];
       console.log('✅ Tarea actualizada exitosamente:', {
         id: tareaActualizada.id,
-        efectividad: tareaActualizada.efectividad,
+        efectividadRecibida: efectividad,
+        efectividadGuardada: tareaActualizada.efectividad,
+        cantidadHecha: tareaActualizada.cantidad_hecha,
+        cantidadAsignada: tareaActualizada.cantidad_asignada,
         tiempoTranscurrido: tareaActualizada.tiempo_transcurrido
       });
       

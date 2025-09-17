@@ -1912,42 +1912,84 @@ const Empleado = () => {
                       
                       {/* Mostrar tiempo estimado total */}
                       {cantidad && (tiempoCalculadoAuto > 0 || tiempoEstimadoValido > 0) && (
-                        <div className="mt-3 p-3 bg-info bg-opacity-10 rounded border border-info">
-                          <div className="text-center">
-                            <strong className="text-info">⏱️ Tiempo Estimado Total:</strong>
-                            <div className="h4 text-info mb-0">
-                              {tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : tiempoEstimadoValido} minutos
-                            </div>
-                            <small className="text-muted d-block">
-                              {tareasSeleccionadas.length} operación(es) × {cantidad} unidad(es)
-                            </small>
-                            {tiempoCalculadoAuto > 0 && (
-                              <Badge bg="success" className="mt-2">
-                                ✅ Tiempo calculado por referencias específicas
-                              </Badge>
-                            )}
-                            {calculandoTiempo && (
-                              <div className="mt-2">
-                                <Spinner animation="border" size="sm" variant="info" />
-                                <span className="ms-2 text-info">Calculando tiempo...</span>
+                        <div className="mt-3">
+                          <div className="p-3 bg-info bg-opacity-10 rounded border border-info" style={{ borderRadius: '12px' }}>
+                            <div className="text-center">
+                              <strong className="text-info" style={{ fontSize: '16px', fontWeight: 600 }}>⏱️ Tiempo Estimado Total:</strong>
+                              <div className="h4 text-info mb-2" style={{ fontSize: '24px', fontWeight: 700, lineHeight: '1.2' }}>
+                                {tiempoCalculadoAuto > 0 ? tiempoCalculadoAuto : tiempoEstimadoValido} minutos
                               </div>
-                            )}
-                            {errorCalculoTiempo && (
-                              <Alert variant="warning" className="mt-2 mb-0 py-2" style={{ fontSize: 14 }}>
-                                ⚠️ {errorCalculoTiempo}. Usando cálculo manual.
-                              </Alert>
-                            )}
+                              <small className="text-muted d-block mb-3" style={{ fontSize: '14px' }}>
+                                {tareasSeleccionadas.length} operación(es) × {cantidad} unidad(es)
+                              </small>
+                              
+                              {calculandoTiempo && (
+                                <div className="mt-2 mb-2">
+                                  <Spinner animation="border" size="sm" variant="info" />
+                                  <span className="ms-2 text-info" style={{ fontSize: '14px' }}>Calculando tiempo...</span>
+                                </div>
+                              )}
+                              
+                              {errorCalculoTiempo && (
+                                <Alert variant="warning" className="mt-2 mb-0 py-2" style={{ fontSize: 14, borderRadius: '8px' }}>
+                                  ⚠️ {errorCalculoTiempo}. Usando cálculo manual.
+                                </Alert>
+                              )}
+                            </div>
                           </div>
+                          
+                          {/* Banner verde mejorado */}
+                          {tiempoCalculadoAuto > 0 && (
+                            <div 
+                              className="mt-2 p-2 text-center" 
+                              style={{ 
+                                background: '#d4edda',
+                                border: '1px solid #c3e6cb',
+                                borderRadius: '8px',
+                                color: '#155724',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                margin: '8px 0 0 0'
+                              }}
+                            >
+                              ✅ Tiempo calculado por referencias específicas
+                            </div>
+                          )}
                         </div>
                       )}
                     </Form.Group>
                   )}
                   <Form.Group className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Cantidad</Form.Label>
-                    <Form.Control type="number" value={cantidad} onChange={e => setCantidad(e.target.value)} style={{ fontSize: 16, borderRadius: 8 }} />
+                    <Form.Control 
+                      type="number" 
+                      value={cantidad} 
+                      onChange={e => setCantidad(e.target.value)} 
+                      style={{ 
+                        fontSize: 18, 
+                        borderRadius: 10, 
+                        padding: '12px 16px',
+                        border: '2px solid #e9ecef',
+                        height: '50px'
+                      }}
+                      placeholder="Ingresa la cantidad"
+                    />
                   </Form.Group>
-                  <Button className="w-100 fw-bold" variant="primary" onClick={handleComenzar} style={{ fontSize: 20, borderRadius: 10, padding: '12px 0', marginTop: 8 }}>
-                    Comenzar tarea
+                  <Button 
+                    className="w-100 fw-bold" 
+                    variant="primary" 
+                    onClick={handleComenzar} 
+                    style={{ 
+                      fontSize: 20, 
+                      borderRadius: 12, 
+                      padding: '16px 0', 
+                      marginTop: 12,
+                      height: '56px',
+                      fontWeight: 700,
+                      boxShadow: '0 4px 12px rgba(13, 110, 253, 0.3)'
+                    }}
+                  >
+                    🚀 Comenzar tarea
                   </Button>
                 </Form>
               )}
@@ -2394,17 +2436,53 @@ const Empleado = () => {
                 <Row>
                   <Col md={6} className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Nombre</Form.Label>
-                    <Form.Control name="nombre" value={perfil?.nombre} onChange={handlePerfilChange} disabled={perfilCargando} style={{ fontSize: 16, borderRadius: 8 }} />
+                    <Form.Control 
+                      name="nombre" 
+                      value={perfil?.nombre} 
+                      onChange={handlePerfilChange} 
+                      disabled={perfilCargando} 
+                      style={{ 
+                        fontSize: 18, 
+                        borderRadius: 10, 
+                        padding: '12px 16px',
+                        border: '2px solid #e9ecef',
+                        height: '50px'
+                      }}
+                    />
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Apellidos</Form.Label>
-                    <Form.Control name="apellidos" value={perfil?.apellidos} onChange={handlePerfilChange} disabled={perfilCargando} style={{ fontSize: 16, borderRadius: 8 }} />
+                    <Form.Control 
+                      name="apellidos" 
+                      value={perfil?.apellidos} 
+                      onChange={handlePerfilChange} 
+                      disabled={perfilCargando} 
+                      style={{ 
+                        fontSize: 18, 
+                        borderRadius: 10, 
+                        padding: '12px 16px',
+                        border: '2px solid #e9ecef',
+                        height: '50px'
+                      }}
+                    />
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6} className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Cédula</Form.Label>
-                    <Form.Control name="cedula" value={perfil?.cedula} onChange={handlePerfilChange} disabled={perfilCargando} style={{ fontSize: 16, borderRadius: 8 }} />
+                    <Form.Control 
+                      name="cedula" 
+                      value={perfil?.cedula} 
+                      onChange={handlePerfilChange} 
+                      disabled={perfilCargando} 
+                      style={{ 
+                        fontSize: 18, 
+                        borderRadius: 10, 
+                        padding: '12px 16px',
+                        border: '2px solid #e9ecef',
+                        height: '50px'
+                      }}
+                    />
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Label style={{ fontWeight: 700, fontSize: 18 }}>Cargo/Máquina</Form.Label>

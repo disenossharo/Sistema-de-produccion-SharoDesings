@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { testConnection, createTables } = require('./config/database');
-// Scripts de mantenimiento removidos durante la limpieza del código
+// Scripts de mantenimiento removidos durante la limpieza del código - v16.0
+// IMPORTANTE: Todos los scripts de migración han sido eliminados
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -190,11 +191,12 @@ app.use('*', (req, res) => {
 async function initializeServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    console.log('🔧 CORS configurado para Railway - v15.0 - ACTUALIZACIÓN FORZADA');
+    console.log('🔧 CORS configurado para Railway - v16.0 - DESPLIEGUE FORZADO');
     console.log('📅 Timestamp:', new Date().toISOString());
     console.log('🔍 Railway debería mostrar este mensaje en los logs');
     console.log('⚠️  CORS_ORIGIN eliminado de Railway para evitar conflictos');
     console.log('🔧 Usando npm install para instalar dependencias');
+    console.log('✅ Scripts de mantenimiento removidos - Sistema limpio');
     
     // Probar conexión a PostgreSQL
     const isConnected = await testConnection();

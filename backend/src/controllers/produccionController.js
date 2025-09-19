@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const XLSX = require('xlsx');
 
 
 // Función para calcular tiempo estimado basado en referencias y operaciones
@@ -1683,5 +1684,199 @@ exports.extenderTiempoTarea = async (req, res) => {
   } catch (error) {
     console.error('❌ Error al extender tiempo de tarea:', error);
     res.status(500).json({ error: 'Error interno del servidor al extender tiempo' });
+  }
+};
+
+// Exportar datos de empleado a Excel
+exports.exportarAExcel = async (req, res) => {
+  try {
+    const { email, filtro, fechaInicio, fechaFin } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email del empleado requerido' });
+    }
+    
+    const client = await pool.connect();
+    
+    try {
+      // Obtener datos del empleado
+      const empleadoResult = await client.query(
+        'SELECT nombre, email FROM empleados WHERE email = $1',
+        [email]
+      );
+      
+      if (empleadoResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Empleado no encontrado' });
+      }
+      
+      const empleado = empleadoResult.rows[0];
+      
+      // Construir query según el filtro
+      let query = `
+        SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
+               p.cantidad_hecha, p.hora_inicio, p.hora_fin, p.efectividad, 
+               p.observaciones, p.fecha, p.tiempo_estimado, p.tiempo_transcurrido, p.estado,
+               e.nombre as empleado_nombre
+        FROM produccion p 
+        INNER JOIN empleados e ON p.empleado_email = e.email 
+        WHERE p.empleado_email = $1
+      `;
+      
+      const params = [email];
+      
+      if (filtro === 'dia' && fechaInicio) {
+        const fecha = new Date(fechaInicio);
+        const dia = fecha.getDate().toString().padStart(2, '0');
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const fechaStr = `${dia}/${mes}/${anio}`;
+        
+        query += ` AND p.fecha LIKE $2`;
+        params.push(`${fechaStr}%`);
+      } else if (filtro === 'semana' && fechaInicio && fechaFin) {
+        query += ` AND p.fecha >= $2 AND p.fecha <= $3`;
+        params.push(fechaInicio, fechaFin);
+      } else if (filtro === 'mes' && fechaInicio) {
+        const fecha = new Date(fechaInicio);
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+        const anio = fecha.getFullYear();
+        
+        query += ` AND p.fecha LIKE $2`;
+        params.push(`%/${mes}/${anio}%`);
+      }
+      
+      query += ` ORDER BY p.created_at DESC`;
+      
+      const result = await client.query(query, params);
+      
+      // Obtener operaciones para mapear IDs a nombres
+      const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');
+      const operacionesMap = {};
+      operacionesResult.rows.forEach(op => {
+        operacionesMap[op.id] = op.nombre;
+      });
+      
+      // Procesar datos
+      const datosProcesados = result.rows.map(row => {
+        // Convertir IDs de tareas a nombres
+        let tareasNombres = [];
+        if (row.tareas && Array.isArray(row.tareas)) {
+          tareasNombres = row.tareas.map(tareaId => {
+            if (isNaN(tareaId)) {
+              return tareaId;
+            }
+            return operacionesMap[tareaId] || `Operación ${tareaId}`;
+          });
+        }
+        
+        // Procesar referencias
+        let referencias = [];
+        if (row.referencia && !row.referencia.includes('[object Object]')) {
+          referencias = row.referencia.split(', ').filter(ref => ref.trim() !== '');
+        }
+        
+        // Calcular tiempo tardado
+        let tiempoTardado = 0;
+        if (row.hora_inicio && row.hora_fin) {
+          const inicio = new Date(row.hora_inicio);
+          const fin = new Date(row.hora_fin);
+          tiempoTardado = Math.round((fin - inicio) / 60000); // en minutos
+        } else if (row.tiempo_transcurrido) {
+          tiempoTardado = row.tiempo_transcurrido;
+        }
+        
+        return {
+          'ID': row.id,
+          'Fecha': row.fecha,
+          'Empleado': row.empleado_nombre,
+          'Operaciones': tareasNombres.join(', '),
+          'Referencias': referencias.join(', '),
+          'Cantidad Asignada': row.cantidad_asignada,
+          'Cantidad Hecha': row.cantidad_hecha,
+          'Tiempo Estimado (min)': row.tiempo_estimado || 0,
+          'Tiempo Tardado (min)': tiempoTardado,
+          'Efectividad (%)': row.efectividad ? Math.round(row.efectividad * 100) / 100 : 0,
+          'Estado': row.estado,
+          'Observaciones': row.observaciones || ''
+        };
+      });
+      
+      // Crear libro de Excel
+      const wb = XLSX.utils.book_new();
+      
+      // Hoja 1: Resumen Ejecutivo
+      const resumenData = [
+        ['RESUMEN EJECUTIVO'],
+        [''],
+        ['Empleado:', empleado.nombre],
+        ['Email:', empleado.email],
+        ['Período:', filtro],
+        ['Total de Tareas:', datosProcesados.length],
+        ['Tareas Completadas:', datosProcesados.filter(d => d.Estado === 'finalizada').length],
+        ['Efectividad Promedio:', datosProcesados.length > 0 ? 
+          Math.round((datosProcesados.reduce((sum, d) => sum + d['Efectividad (%)'], 0) / datosProcesados.length) * 100) / 100 : 0 + '%'],
+        ['Tiempo Total Estimado:', datosProcesados.reduce((sum, d) => sum + d['Tiempo Estimado (min)'], 0) + ' min'],
+        ['Tiempo Total Real:', datosProcesados.reduce((sum, d) => sum + d['Tiempo Tardado (min)'], 0) + ' min'],
+        [''],
+        ['Fecha de Generación:', new Date().toLocaleString()]
+      ];
+      
+      const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+      
+      // Hoja 2: Detalle de Tareas
+      const wsDetalle = XLSX.utils.json_to_sheet(datosProcesados);
+      XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle de Tareas');
+      
+      // Hoja 3: Análisis por Operación
+      const operacionesAnalisis = {};
+      datosProcesados.forEach(dato => {
+        const ops = dato.Operaciones.split(', ');
+        ops.forEach(op => {
+          if (!operacionesAnalisis[op]) {
+            operacionesAnalisis[op] = {
+              'Operación': op,
+              'Total Tareas': 0,
+              'Efectividad Promedio': 0,
+              'Tiempo Promedio': 0,
+              'Suma Efectividad': 0,
+              'Suma Tiempo': 0
+            };
+          }
+          operacionesAnalisis[op]['Total Tareas']++;
+          operacionesAnalisis[op]['Suma Efectividad'] += dato['Efectividad (%)'];
+          operacionesAnalisis[op]['Suma Tiempo'] += dato['Tiempo Tardado (min)'];
+        });
+      });
+      
+      const analisisData = Object.values(operacionesAnalisis).map(op => ({
+        'Operación': op.Operación,
+        'Total Tareas': op['Total Tareas'],
+        'Efectividad Promedio (%)': Math.round((op['Suma Efectividad'] / op['Total Tareas']) * 100) / 100,
+        'Tiempo Promedio (min)': Math.round((op['Suma Tiempo'] / op['Total Tareas']) * 100) / 100
+      }));
+      
+      const wsAnalisis = XLSX.utils.json_to_sheet(analisisData);
+      XLSX.utils.book_append_sheet(wb, wsAnalisis, 'Análisis por Operación');
+      
+      // Generar buffer del archivo
+      const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      
+      // Configurar headers para descarga
+      const nombreArchivo = `Analisis_${empleado.nombre.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
+      res.setHeader('Content-Length', excelBuffer.length);
+      
+      res.send(excelBuffer);
+      
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('❌ Error al exportar a Excel:', error);
+    res.status(500).json({ error: 'Error interno del servidor al exportar datos' });
   }
 }; 

@@ -1888,44 +1888,166 @@ exports.exportarAExcel = async (req, res) => {
       detalleSheet.getColumn(7).width = 15; // Estado
       detalleSheet.getColumn(8).width = 30; // Observaciones
       
-      // HOJA 2: RESUMEN EJECUTIVO SIMPLE
+      // HOJA 2: RESUMEN EJECUTIVO ORGANIZADO
       const resumenSheet = workbook.addWorksheet('RESUMEN');
       
-      // Título simple
-      resumenSheet.getCell('A1').value = 'REPORTE DE PRODUCTIVIDAD - SHARODESINGS';
-      resumenSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: '2E86AB' } };
+      // Título principal
+      resumenSheet.mergeCells('A1:D1');
+      const titleCell = resumenSheet.getCell('A1');
+      titleCell.value = 'ANÁLISIS DE PRODUCTIVIDAD - EMPLEADO';
+      titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFF' } };
+      titleCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '2E86AB' }
+      };
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      resumenSheet.getRow(1).height = 30;
       
-      // Información básica
-      resumenSheet.getCell('A3').value = 'Empleado:';
-      resumenSheet.getCell('B3').value = empleado.nombre;
-      resumenSheet.getCell('A4').value = 'Email:';
-      resumenSheet.getCell('B4').value = empleado.email;
-      resumenSheet.getCell('A5').value = 'Período:';
-      resumenSheet.getCell('B5').value = filtro;
-      resumenSheet.getCell('A6').value = 'Fecha de Generación:';
-      resumenSheet.getCell('B6').value = new Date().toLocaleString();
+      // Borde verde debajo del título
+      resumenSheet.getRow(2).height = 3;
+      for (let col = 1; col <= 4; col++) {
+        resumenSheet.getCell(2, col).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: '28A745' }
+        };
+      }
       
-      // Estadísticas simples
+      // SECCIÓN 1: INFORMACIÓN DEL EMPLEADO
+      resumenSheet.mergeCells('A4:D4');
+      const empleadoHeader = resumenSheet.getCell('A4');
+      empleadoHeader.value = 'INFORMACIÓN DEL EMPLEADO';
+      empleadoHeader.font = { bold: true, size: 12, color: { argb: 'FFFFFF' } };
+      empleadoHeader.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '5DADE2' }
+      };
+      empleadoHeader.alignment = { horizontal: 'left', vertical: 'middle' };
+      resumenSheet.getRow(4).height = 25;
+      
+      // Obtener información adicional del empleado
+      const empleadoDetalleResult = await client.query(
+        'SELECT nombre, email, cargo_maquina, cedula FROM empleados WHERE email = $1',
+        [email]
+      );
+      const empleadoDetalle = empleadoDetalleResult.rows[0];
+      
+      // Información del empleado
+      resumenSheet.getCell('A5').value = 'Nombre:';
+      resumenSheet.getCell('B5').value = empleadoDetalle.nombre || empleado.nombre;
+      resumenSheet.getCell('A6').value = 'Email:';
+      resumenSheet.getCell('B6').value = empleadoDetalle.email || empleado.email;
+      resumenSheet.getCell('A7').value = 'Cargo:';
+      resumenSheet.getCell('B7').value = empleadoDetalle.cargo_maquina || 'N/A';
+      resumenSheet.getCell('A8').value = 'Cédula:';
+      resumenSheet.getCell('B8').value = empleadoDetalle.cedula || 'N/A';
+      
+      // SECCIÓN 2: PERÍODO DE ANÁLISIS
+      resumenSheet.mergeCells('A10:D10');
+      const periodoHeader = resumenSheet.getCell('A10');
+      periodoHeader.value = 'PERÍODO DE ANÁLISIS';
+      periodoHeader.font = { bold: true, size: 12, color: { argb: 'FFFFFF' } };
+      periodoHeader.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '5DADE2' }
+      };
+      periodoHeader.alignment = { horizontal: 'left', vertical: 'middle' };
+      resumenSheet.getRow(10).height = 25;
+      
+      // Información del período
+      resumenSheet.getCell('A11').value = 'Filtro:';
+      resumenSheet.getCell('B11').value = `Por ${filtro.charAt(0).toUpperCase() + filtro.slice(1)}`;
+      resumenSheet.getCell('A12').value = 'Total de tareas:';
+      resumenSheet.getCell('B12').value = datosProcesados.length;
+      resumenSheet.getCell('A13').value = 'Fecha de exportación:';
+      resumenSheet.getCell('B13').value = new Date().toLocaleString();
+      
+      // SECCIÓN 3: RESUMEN
+      resumenSheet.mergeCells('A15:D15');
+      const resumenHeader = resumenSheet.getCell('A15');
+      resumenHeader.value = 'RESUMEN';
+      resumenHeader.font = { bold: true, size: 12, color: { argb: 'FFFFFF' } };
+      resumenHeader.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '2E86AB' }
+      };
+      resumenHeader.alignment = { horizontal: 'left', vertical: 'middle' };
+      resumenSheet.getRow(15).height = 25;
+      
+      // Estadísticas del resumen
       const tareasCompletadas = datosProcesados.filter(d => d.estado === 'finalizada').length;
+      const tareasEnProgreso = datosProcesados.filter(d => d.estado === 'en_progreso').length;
       const efectividadPromedio = datosProcesados.length > 0 ? 
-        Math.round((datosProcesados.reduce((sum, d) => sum + d.efectividad, 0) / datosProcesados.length) * 100) / 100 : 0;
-      const tiempoTotalEstimado = Math.round(datosProcesados.reduce((sum, d) => sum + d.tiempoEstimado, 0) * 10) / 10;
-      const tiempoTotalReal = Math.round(datosProcesados.reduce((sum, d) => sum + d.tiempoTardado, 0) * 10) / 10;
+        Math.round((datosProcesados.reduce((sum, d) => sum + d.efectividad, 0) / datosProcesados.length) * 10) / 10 : 0;
       
-      resumenSheet.getCell('A8').value = 'Total de Tareas:';
-      resumenSheet.getCell('B8').value = datosProcesados.length;
-      resumenSheet.getCell('A9').value = 'Tareas Completadas:';
-      resumenSheet.getCell('B9').value = tareasCompletadas;
-      resumenSheet.getCell('A10').value = 'Efectividad Promedio:';
-      resumenSheet.getCell('B10').value = `${efectividadPromedio}%`;
-      resumenSheet.getCell('A11').value = 'Tiempo Total Estimado:';
-      resumenSheet.getCell('B11').value = `${tiempoTotalEstimado} min`;
-      resumenSheet.getCell('A12').value = 'Tiempo Total Real:';
-      resumenSheet.getCell('B12').value = `${tiempoTotalReal} min`;
+      resumenSheet.getCell('A16').value = 'Total tareas:';
+      resumenSheet.getCell('B16').value = datosProcesados.length;
+      resumenSheet.getCell('A17').value = 'Tareas completadas:';
+      resumenSheet.getCell('B17').value = tareasCompletadas;
+      resumenSheet.getCell('A18').value = 'Tareas en progreso:';
+      resumenSheet.getCell('B18').value = tareasEnProgreso;
+      resumenSheet.getCell('A19').value = 'Promedio efectividad:';
+      resumenSheet.getCell('B19').value = `${efectividadPromedio}%`;
+      
+      // Aplicar formato a las celdas de datos
+      for (let i = 5; i <= 8; i++) {
+        resumenSheet.getCell(`A${i}`).font = { bold: true };
+        resumenSheet.getCell(`B${i}`).font = { bold: true, color: { argb: '2E86AB' } };
+      }
+      
+      for (let i = 11; i <= 13; i++) {
+        resumenSheet.getCell(`A${i}`).font = { bold: true };
+        resumenSheet.getCell(`B${i}`).font = { bold: true, color: { argb: '2E86AB' } };
+      }
+      
+      for (let i = 16; i <= 19; i++) {
+        resumenSheet.getCell(`A${i}`).font = { bold: true };
+        resumenSheet.getCell(`B${i}`).font = { bold: true, color: { argb: '2E86AB' } };
+      }
+      
+      // Aplicar bordes a las secciones
+      for (let row = 4; row <= 8; row++) {
+        for (let col = 1; col <= 2; col++) {
+          resumenSheet.getCell(row, col).border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        }
+      }
+      
+      for (let row = 10; row <= 13; row++) {
+        for (let col = 1; col <= 2; col++) {
+          resumenSheet.getCell(row, col).border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        }
+      }
+      
+      for (let row = 15; row <= 19; row++) {
+        for (let col = 1; col <= 2; col++) {
+          resumenSheet.getCell(row, col).border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        }
+      }
       
       // Ajustar ancho de columnas
       resumenSheet.getColumn('A').width = 25;
       resumenSheet.getColumn('B').width = 30;
+      resumenSheet.getColumn('C').width = 15;
+      resumenSheet.getColumn('D').width = 15;
       
       // Generar buffer del archivo
       const buffer = await workbook.xlsx.writeBuffer();

@@ -1711,7 +1711,7 @@ exports.exportarAExcel = async (req, res) => {
       
       const empleado = empleadoResult.rows[0];
       
-      // Construir query según el filtro
+      // Construir query según el filtro - OBTENER TODAS LAS TAREAS
       let query = `
         SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
                p.cantidad_hecha, p.hora_inicio, p.hora_fin, p.efectividad, 
@@ -1775,14 +1775,15 @@ exports.exportarAExcel = async (req, res) => {
           referencias = row.referencia.split(', ').filter(ref => ref.trim() !== '');
         }
         
-        // Calcular tiempo tardado
+        // Calcular tiempo tardado - LIMITAR DECIMALES
         let tiempoTardado = 0;
         if (row.hora_inicio && row.hora_fin) {
           const inicio = new Date(row.hora_inicio);
           const fin = new Date(row.hora_fin);
-          tiempoTardado = Math.round((fin - inicio) / 60000); // en minutos
+          const tiempoEnMinutos = (fin - inicio) / 60000;
+          tiempoTardado = Math.round(tiempoEnMinutos * 10) / 10; // Máximo 1 decimal
         } else if (row.tiempo_transcurrido) {
-          tiempoTardado = row.tiempo_transcurrido;
+          tiempoTardado = Math.round(row.tiempo_transcurrido * 10) / 10; // Máximo 1 decimal
         }
         
         return {
@@ -1793,7 +1794,7 @@ exports.exportarAExcel = async (req, res) => {
           referencias: referencias.join(', '),
           cantidadAsignada: row.cantidad_asignada,
           cantidadHecha: row.cantidad_hecha,
-          tiempoEstimado: row.tiempo_estimado || 0,
+          tiempoEstimado: row.tiempo_estimado ? Math.round(row.tiempo_estimado * 10) / 10 : 0,
           tiempoTardado: tiempoTardado,
           efectividad: row.efectividad ? Math.round(row.efectividad * 100) / 100 : 0,
           estado: row.estado,
@@ -1801,93 +1802,16 @@ exports.exportarAExcel = async (req, res) => {
         };
       });
       
-      // Crear libro de Excel con ExcelJS
+      // Crear libro de Excel con formato simple y organizado
       const workbook = new ExcelJS.Workbook();
       
-      // Configurar propiedades del libro
-      workbook.creator = 'Sistema de Producción SharoDesings';
-      workbook.lastModifiedBy = 'Admin';
-      workbook.created = new Date();
-      workbook.modified = new Date();
+      // HOJA PRINCIPAL: DETALLE DE TAREAS (como estaba antes)
+      const detalleSheet = workbook.addWorksheet('DETALLE DE TAREAS');
       
-      // HOJA 1: RESUMEN EJECUTIVO
-      const resumenSheet = workbook.addWorksheet('📊 Resumen Ejecutivo');
-      
-      // Título principal
-      resumenSheet.mergeCells('A1:D1');
-      const titleCell = resumenSheet.getCell('A1');
-      titleCell.value = 'REPORTE DE PRODUCTIVIDAD - SHARODESINGS';
-      titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFF' } };
-      titleCell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: '2E86AB' }
-      };
-      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      resumenSheet.getRow(1).height = 30;
-      
-      // Información del empleado
-      resumenSheet.getCell('A3').value = 'INFORMACIÓN DEL EMPLEADO';
-      resumenSheet.getCell('A3').font = { bold: true, size: 14, color: { argb: '2E86AB' } };
-      resumenSheet.getCell('A3').fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'E3F2FD' }
-      };
-      
-      resumenSheet.getCell('A4').value = 'Nombre:';
-      resumenSheet.getCell('B4').value = empleado.nombre;
-      resumenSheet.getCell('A5').value = 'Email:';
-      resumenSheet.getCell('B5').value = empleado.email;
-      resumenSheet.getCell('A6').value = 'Período:';
-      resumenSheet.getCell('B6').value = filtro;
-      resumenSheet.getCell('A7').value = 'Fecha de Generación:';
-      resumenSheet.getCell('B7').value = new Date().toLocaleString();
-      
-      // Estadísticas
-      resumenSheet.getCell('A9').value = 'ESTADÍSTICAS GENERALES';
-      resumenSheet.getCell('A9').font = { bold: true, size: 14, color: { argb: '2E86AB' } };
-      resumenSheet.getCell('A9').fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'E3F2FD' }
-      };
-      
-      const tareasCompletadas = datosProcesados.filter(d => d.estado === 'finalizada').length;
-      const efectividadPromedio = datosProcesados.length > 0 ? 
-        Math.round((datosProcesados.reduce((sum, d) => sum + d.efectividad, 0) / datosProcesados.length) * 100) / 100 : 0;
-      const tiempoTotalEstimado = datosProcesados.reduce((sum, d) => sum + d.tiempoEstimado, 0);
-      const tiempoTotalReal = datosProcesados.reduce((sum, d) => sum + d.tiempoTardado, 0);
-      
-      resumenSheet.getCell('A10').value = 'Total de Tareas:';
-      resumenSheet.getCell('B10').value = datosProcesados.length;
-      resumenSheet.getCell('A11').value = 'Tareas Completadas:';
-      resumenSheet.getCell('B11').value = tareasCompletadas;
-      resumenSheet.getCell('A12').value = 'Efectividad Promedio:';
-      resumenSheet.getCell('B12').value = `${efectividadPromedio}%`;
-      resumenSheet.getCell('A13').value = 'Tiempo Total Estimado:';
-      resumenSheet.getCell('B13').value = `${tiempoTotalEstimado} min`;
-      resumenSheet.getCell('A14').value = 'Tiempo Total Real:';
-      resumenSheet.getCell('B14').value = `${tiempoTotalReal} min`;
-      
-      // Aplicar formato a las celdas de estadísticas
-      for (let i = 10; i <= 14; i++) {
-        resumenSheet.getCell(`A${i}`).font = { bold: true };
-        resumenSheet.getCell(`B${i}`).font = { bold: true, color: { argb: '2E86AB' } };
-      }
-      
-      // Ajustar ancho de columnas
-      resumenSheet.getColumn('A').width = 25;
-      resumenSheet.getColumn('B').width = 30;
-      
-      // HOJA 2: DETALLE DE TAREAS
-      const detalleSheet = workbook.addWorksheet('📋 Detalle de Tareas');
-      
-      // Configurar encabezados
+      // Configurar encabezados simples
       const headers = [
-        'ID', 'Fecha', 'Empleado', 'Operaciones', 'Referencias',
-        'Cant. Asignada', 'Cant. Hecha', 'Tiempo Estimado (min)',
-        'Tiempo Tardado (min)', 'Efectividad (%)', 'Estado', 'Observaciones'
+        'Fecha', 'Tareas', 'Referencia', 'Cantidad Asignada', 'Cantidad Hecha', 
+        'Efectividad (%)', 'Estado', 'Observaciones'
       ];
       
       const headerRow = detalleSheet.getRow(1);
@@ -1909,24 +1833,20 @@ exports.exportarAExcel = async (req, res) => {
         };
       });
       
-      // Agregar datos
+      // Agregar TODAS las tareas (sin filtros restrictivos)
       datosProcesados.forEach((dato, index) => {
         const row = detalleSheet.getRow(index + 2);
-        row.getCell(1).value = dato.id;
-        row.getCell(2).value = dato.fecha;
-        row.getCell(3).value = dato.empleado;
-        row.getCell(4).value = dato.operaciones;
-        row.getCell(5).value = dato.referencias;
-        row.getCell(6).value = dato.cantidadAsignada;
-        row.getCell(7).value = dato.cantidadHecha;
-        row.getCell(8).value = dato.tiempoEstimado;
-        row.getCell(9).value = dato.tiempoTardado;
-        row.getCell(10).value = dato.efectividad;
-        row.getCell(11).value = dato.estado;
-        row.getCell(12).value = dato.observaciones;
+        row.getCell(1).value = dato.fecha;
+        row.getCell(2).value = dato.operaciones;
+        row.getCell(3).value = dato.referencias || '-';
+        row.getCell(4).value = dato.cantidadAsignada;
+        row.getCell(5).value = dato.cantidadHecha;
+        row.getCell(6).value = dato.efectividad;
+        row.getCell(7).value = dato.estado;
+        row.getCell(8).value = dato.observaciones || 'Sin observaciones';
         
         // Aplicar bordes a toda la fila
-        for (let col = 1; col <= 12; col++) {
+        for (let col = 1; col <= 8; col++) {
           row.getCell(col).border = {
             top: { style: 'thin' },
             left: { style: 'thin' },
@@ -1935,9 +1855,9 @@ exports.exportarAExcel = async (req, res) => {
           };
         }
         
-        // Colorear filas alternadas
+        // Colorear filas alternadas para mejor legibilidad
         if (index % 2 === 0) {
-          for (let col = 1; col <= 12; col++) {
+          for (let col = 1; col <= 8; col++) {
             row.getCell(col).fill = {
               type: 'pattern',
               pattern: 'solid',
@@ -1946,8 +1866,9 @@ exports.exportarAExcel = async (req, res) => {
           }
         }
         
-        // Formato especial para efectividad
-        const efectividadCell = row.getCell(10);
+        // Formato especial para efectividad (máximo 2 decimales)
+        const efectividadCell = row.getCell(6);
+        efectividadCell.numFmt = '0.00'; // Formato con 2 decimales máximo
         if (dato.efectividad >= 80) {
           efectividadCell.font = { color: { argb: '28A745' }, bold: true };
         } else if (dato.efectividad >= 60) {
@@ -1957,130 +1878,54 @@ exports.exportarAExcel = async (req, res) => {
         }
       });
       
-      // Ajustar ancho de columnas
-      detalleSheet.getColumn(1).width = 8;   // ID
-      detalleSheet.getColumn(2).width = 20;  // Fecha
-      detalleSheet.getColumn(3).width = 20;  // Empleado
-      detalleSheet.getColumn(4).width = 30;  // Operaciones
-      detalleSheet.getColumn(5).width = 20;  // Referencias
-      detalleSheet.getColumn(6).width = 15;  // Cant. Asignada
-      detalleSheet.getColumn(7).width = 15;  // Cant. Hecha
-      detalleSheet.getColumn(8).width = 18;  // Tiempo Estimado
-      detalleSheet.getColumn(9).width = 18;  // Tiempo Tardado
-      detalleSheet.getColumn(10).width = 15; // Efectividad
-      detalleSheet.getColumn(11).width = 15; // Estado
-      detalleSheet.getColumn(12).width = 30; // Observaciones
+      // Ajustar ancho de columnas para mejor legibilidad
+      detalleSheet.getColumn(1).width = 20; // Fecha
+      detalleSheet.getColumn(2).width = 40; // Tareas
+      detalleSheet.getColumn(3).width = 15; // Referencia
+      detalleSheet.getColumn(4).width = 18; // Cantidad Asignada
+      detalleSheet.getColumn(5).width = 18; // Cantidad Hecha
+      detalleSheet.getColumn(6).width = 15; // Efectividad
+      detalleSheet.getColumn(7).width = 15; // Estado
+      detalleSheet.getColumn(8).width = 30; // Observaciones
       
-      // HOJA 3: ANÁLISIS POR OPERACIÓN
-      const analisisSheet = workbook.addWorksheet('📈 Análisis por Operación');
+      // HOJA 2: RESUMEN EJECUTIVO SIMPLE
+      const resumenSheet = workbook.addWorksheet('RESUMEN');
       
-      // Calcular análisis por operación
-      const operacionesAnalisis = {};
-      datosProcesados.forEach(dato => {
-        const ops = dato.operaciones.split(', ');
-        ops.forEach(op => {
-          if (op.trim() && !operacionesAnalisis[op.trim()]) {
-            operacionesAnalisis[op.trim()] = {
-              operacion: op.trim(),
-              totalTareas: 0,
-              sumaEfectividad: 0,
-              sumaTiempo: 0
-            };
-          }
-          if (op.trim()) {
-            operacionesAnalisis[op.trim()].totalTareas++;
-            operacionesAnalisis[op.trim()].sumaEfectividad += dato.efectividad;
-            operacionesAnalisis[op.trim()].sumaTiempo += dato.tiempoTardado;
-          }
-        });
-      });
+      // Título simple
+      resumenSheet.getCell('A1').value = 'REPORTE DE PRODUCTIVIDAD - SHARODESINGS';
+      resumenSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: '2E86AB' } };
       
-      // Título de la hoja
-      analisisSheet.mergeCells('A1:D1');
-      const analisisTitle = analisisSheet.getCell('A1');
-      analisisTitle.value = 'ANÁLISIS DE RENDIMIENTO POR OPERACIÓN';
-      analisisTitle.font = { bold: true, size: 14, color: { argb: 'FFFFFF' } };
-      analisisTitle.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: '2E86AB' }
-      };
-      analisisTitle.alignment = { horizontal: 'center', vertical: 'middle' };
-      analisisSheet.getRow(1).height = 25;
+      // Información básica
+      resumenSheet.getCell('A3').value = 'Empleado:';
+      resumenSheet.getCell('B3').value = empleado.nombre;
+      resumenSheet.getCell('A4').value = 'Email:';
+      resumenSheet.getCell('B4').value = empleado.email;
+      resumenSheet.getCell('A5').value = 'Período:';
+      resumenSheet.getCell('B5').value = filtro;
+      resumenSheet.getCell('A6').value = 'Fecha de Generación:';
+      resumenSheet.getCell('B6').value = new Date().toLocaleString();
       
-      // Encabezados
-      const analisisHeaders = ['Operación', 'Total Tareas', 'Efectividad Promedio (%)', 'Tiempo Promedio (min)'];
-      const analisisHeaderRow = analisisSheet.getRow(3);
-      analisisHeaders.forEach((header, index) => {
-        const cell = analisisHeaderRow.getCell(index + 1);
-        cell.value = header;
-        cell.font = { bold: true, color: { argb: 'FFFFFF' } };
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: '2E86AB' }
-        };
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-      });
+      // Estadísticas simples
+      const tareasCompletadas = datosProcesados.filter(d => d.estado === 'finalizada').length;
+      const efectividadPromedio = datosProcesados.length > 0 ? 
+        Math.round((datosProcesados.reduce((sum, d) => sum + d.efectividad, 0) / datosProcesados.length) * 100) / 100 : 0;
+      const tiempoTotalEstimado = Math.round(datosProcesados.reduce((sum, d) => sum + d.tiempoEstimado, 0) * 10) / 10;
+      const tiempoTotalReal = Math.round(datosProcesados.reduce((sum, d) => sum + d.tiempoTardado, 0) * 10) / 10;
       
-      // Agregar datos de análisis
-      const analisisData = Object.values(operacionesAnalisis).map(op => ({
-        operacion: op.operacion,
-        totalTareas: op.totalTareas,
-        efectividadPromedio: Math.round((op.sumaEfectividad / op.totalTareas) * 100) / 100,
-        tiempoPromedio: Math.round((op.sumaTiempo / op.totalTareas) * 100) / 100
-      }));
-      
-      analisisData.forEach((dato, index) => {
-        const row = analisisSheet.getRow(index + 4);
-        row.getCell(1).value = dato.operacion;
-        row.getCell(2).value = dato.totalTareas;
-        row.getCell(3).value = dato.efectividadPromedio;
-        row.getCell(4).value = dato.tiempoPromedio;
-        
-        // Aplicar bordes
-        for (let col = 1; col <= 4; col++) {
-          row.getCell(col).border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            bottom: { style: 'thin' },
-            right: { style: 'thin' }
-          };
-        }
-        
-        // Colorear filas alternadas
-        if (index % 2 === 0) {
-          for (let col = 1; col <= 4; col++) {
-            row.getCell(col).fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: 'F8F9FA' }
-            };
-          }
-        }
-        
-        // Formato para efectividad
-        const efectividadCell = row.getCell(3);
-        if (dato.efectividadPromedio >= 80) {
-          efectividadCell.font = { color: { argb: '28A745' }, bold: true };
-        } else if (dato.efectividadPromedio >= 60) {
-          efectividadCell.font = { color: { argb: 'FFC107' }, bold: true };
-        } else {
-          efectividadCell.font = { color: { argb: 'DC3545' }, bold: true };
-        }
-      });
+      resumenSheet.getCell('A8').value = 'Total de Tareas:';
+      resumenSheet.getCell('B8').value = datosProcesados.length;
+      resumenSheet.getCell('A9').value = 'Tareas Completadas:';
+      resumenSheet.getCell('B9').value = tareasCompletadas;
+      resumenSheet.getCell('A10').value = 'Efectividad Promedio:';
+      resumenSheet.getCell('B10').value = `${efectividadPromedio}%`;
+      resumenSheet.getCell('A11').value = 'Tiempo Total Estimado:';
+      resumenSheet.getCell('B11').value = `${tiempoTotalEstimado} min`;
+      resumenSheet.getCell('A12').value = 'Tiempo Total Real:';
+      resumenSheet.getCell('B12').value = `${tiempoTotalReal} min`;
       
       // Ajustar ancho de columnas
-      analisisSheet.getColumn(1).width = 35; // Operación
-      analisisSheet.getColumn(2).width = 15; // Total Tareas
-      analisisSheet.getColumn(3).width = 20; // Efectividad
-      analisisSheet.getColumn(4).width = 20; // Tiempo Promedio
+      resumenSheet.getColumn('A').width = 25;
+      resumenSheet.getColumn('B').width = 30;
       
       // Generar buffer del archivo
       const buffer = await workbook.xlsx.writeBuffer();

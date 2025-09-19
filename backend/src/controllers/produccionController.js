@@ -1734,6 +1734,7 @@ exports.exportarAExcel = async (req, res) => {
         query += ` AND p.fecha LIKE $2`;
         params.push(`${fechaStr}%`);
       } else if (filtro === 'semana' && fechaInicio && fechaFin) {
+        // Para filtro por semana, usar fechas específicas
         query += ` AND p.fecha >= $2 AND p.fecha <= $3`;
         params.push(fechaInicio, fechaFin);
       } else if (filtro === 'mes' && fechaInicio) {
@@ -1745,9 +1746,41 @@ exports.exportarAExcel = async (req, res) => {
         params.push(`%/${mes}/${anio}%`);
       }
       
+      // Si no hay filtro específico o no se aplicó ningún filtro, obtener TODAS las tareas del empleado
+      // Esto asegura que siempre haya datos en el Excel
+      
       query += ` ORDER BY p.created_at DESC`;
       
+      // Debug: Mostrar la query y parámetros
+      console.log('🔍 [DEBUG] Query de exportación:', query);
+      console.log('🔍 [DEBUG] Parámetros:', params);
+      console.log('🔍 [DEBUG] Filtro:', filtro, 'FechaInicio:', fechaInicio, 'FechaFin:', fechaFin);
+      
       const result = await client.query(query, params);
+      
+      console.log('🔍 [DEBUG] Resultados encontrados:', result.rows.length);
+      if (result.rows.length > 0) {
+        console.log('🔍 [DEBUG] Primera tarea:', result.rows[0].fecha);
+      }
+      
+      // Si no se encontraron resultados con el filtro específico, obtener las últimas 50 tareas del empleado
+      if (result.rows.length === 0) {
+        console.log('⚠️ [WARNING] No se encontraron tareas con el filtro específico, obteniendo tareas recientes...');
+        const fallbackQuery = `
+          SELECT p.id, p.empleado_email, p.tareas, p.referencia, p.cantidad_asignada, 
+                 p.cantidad_hecha, p.hora_inicio, p.hora_fin, p.efectividad, 
+                 p.observaciones, p.fecha, p.tiempo_estimado, p.tiempo_transcurrido, p.estado,
+                 e.nombre as empleado_nombre
+          FROM produccion p 
+          INNER JOIN empleados e ON p.empleado_email = e.email 
+          WHERE p.empleado_email = $1
+          ORDER BY p.created_at DESC
+          LIMIT 50
+        `;
+        const fallbackResult = await client.query(fallbackQuery, [email]);
+        console.log('🔍 [DEBUG] Tareas de respaldo encontradas:', fallbackResult.rows.length);
+        result.rows = fallbackResult.rows;
+      }
       
       // Obtener operaciones para mapear IDs a nombres
       const operacionesResult = await client.query('SELECT id, nombre FROM operaciones WHERE activa = true');

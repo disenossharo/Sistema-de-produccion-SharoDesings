@@ -22,7 +22,7 @@ Bienvenido al Sistema de Gestión de Producción de SharoDesings. Este manual te
 ### **1. Iniciar Sesión**
 1. Abre tu navegador web
 2. Ve a la dirección del sistema
-3. Ingresa tu **email** y **contraseña**
+3. Ingresa tu **email** y **contraseña (cedula)**
 4. Haz clic en **"Iniciar Sesión"**
 
 ### **2. Recuperación de Sesión**
@@ -156,12 +156,6 @@ Cuando hayas terminado todas las prendas:
 3. Haz clic en **"Guardar Cambios"**
 4. **Confirmación**: Recibirás un mensaje de éxito
 
-### **🔒 Cambiar Contraseña**
-1. En el modal de edición, ve a la sección **"Cambiar Contraseña"**
-2. **Contraseña Actual**: Ingresa tu contraseña actual
-3. **Nueva Contraseña**: Ingresa tu nueva contraseña
-4. **Confirmar Contraseña**: Repite la nueva contraseña
-5. Haz clic en **"Cambiar Contraseña"**
 
 ---
 

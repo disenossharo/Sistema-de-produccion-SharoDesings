@@ -26,6 +26,7 @@ const corsOptions = {
   origin: [
     'https://sistema-produccion-sharo-v2.vercel.app',
     'https://sistema-produccion-sharo.vercel.app',
+    'https://sistema-de-produccion-sharo.vercel.app',
     'http://localhost:3000',
     'http://localhost:5173',
     'http://127.0.0.1:3000',
@@ -42,15 +43,8 @@ app.use(cors(corsOptions));
 
 // Middleware adicional para asegurar CORS en todas las respuestas
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = corsOptions.origin;
-  
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-  
+  // Permitir todos los orígenes para solucionar problemas de CORS
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'false');

@@ -3,12 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { testConnection, createTables } = require('./config/database');
-const addCategoriaColumn = require('../scripts/add-categoria-operaciones');
-const fixProduccionTable = require('../scripts/maintenance/fixProduccionTable');
-const { addReferenciaOperacionesRelation } = require('../scripts/maintenance/addReferenciaOperacionesRelation');
-const { fixTiempoEstimadoColumn } = require('../scripts/maintenance/fixTiempoEstimadoColumn');
-const { syncRailwayStructure } = require('../scripts/maintenance/syncRailwayStructure');
-const { forceRailwayUpdate } = require('../scripts/maintenance/forceRailwayUpdate');
+// Scripts de mantenimiento removidos durante la limpieza del código
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
@@ -212,50 +207,7 @@ async function initializeServer() {
     await createTables();
     console.log('✅ Tablas de base de datos verificadas/creadas');
     
-    // Ejecutar migraciones
-          try {
-            await addCategoriaColumn();
-            console.log('✅ Migración de categoría ejecutada');
-          } catch (error) {
-            console.error('⚠️ Error en migración de categoría (continuando):', error.message);
-          }
-          
-          try {
-            await fixProduccionTable();
-            console.log('✅ Verificación de tabla produccion completada');
-          } catch (error) {
-            console.error('⚠️ Error verificando tabla produccion (continuando):', error.message);
-          }
-          
-             try {
-               await addReferenciaOperacionesRelation();
-               console.log('✅ Relación referencias-operaciones configurada');
-             } catch (error) {
-               console.error('⚠️ Error configurando relación referencias-operaciones (continuando):', error.message);
-             }
-
-             try {
-               await fixTiempoEstimadoColumn();
-               console.log('✅ Columna tiempo_estimado corregida');
-             } catch (error) {
-               console.error('⚠️ Error corrigiendo columna tiempo_estimado (continuando):', error.message);
-             }
-
-             // Sincronizar estructura con Railway
-             try {
-               await syncRailwayStructure();
-               console.log('✅ Estructura sincronizada con Railway');
-             } catch (error) {
-               console.error('⚠️ Error sincronizando con Railway (continuando):', error.message);
-             }
-
-             // Forzar actualización de Railway
-             try {
-               await forceRailwayUpdate();
-               console.log('✅ Actualización forzada de Railway completada');
-             } catch (error) {
-               console.error('⚠️ Error en actualización forzada (continuando):', error.message);
-             }
+    // Sistema inicializado correctamente
     
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {

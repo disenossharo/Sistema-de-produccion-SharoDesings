@@ -8,13 +8,37 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
   try {
     console.log('🧮 Calculando tiempo estimado para:', { tareas, referencias, cantidadAsignada });
     
+    // Validaciones de entrada
+    if (!Array.isArray(tareas) || tareas.length === 0) {
+      console.log('❌ Error: tareas debe ser un array no vacío');
+      return 0;
+    }
+    
+    if (!Array.isArray(referencias)) {
+      console.log('❌ Error: referencias debe ser un array');
+      return 0;
+    }
+    
+    if (!cantidadAsignada || cantidadAsignada <= 0) {
+      console.log('❌ Error: cantidadAsignada debe ser mayor a 0');
+      return 0;
+    }
+    
     let tiempoTotal = 0;
     
     for (const tarea of tareas) {
-      const operacionId = tarea.id || tarea;
-      
-      // Buscar la operación con sus referencias vinculadas
-      const operacionResult = await client.query(`
+      try {
+        const operacionId = tarea.id || tarea;
+        console.log(`🔍 Procesando operación ID: ${operacionId}`);
+        
+        // Validar que el ID de operación sea válido
+        if (!operacionId || (typeof operacionId !== 'number' && typeof operacionId !== 'string')) {
+          console.log(`❌ ID de operación inválido: ${operacionId}`);
+          continue;
+        }
+        
+        // Buscar la operación con sus referencias vinculadas
+        const operacionResult = await client.query(`
         SELECT o.id, o.nombre, o.tiempo_por_unidad,
                COALESCE(
                  JSON_AGG(
@@ -49,6 +73,8 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
         let referenciaEncontrada = false;
         let tieneTiempoEspecifico = false;
         
+        const tiemposEspecificos = [];
+        
         for (const refSeleccionada of referencias) {
           const refId = refSeleccionada.id || refSeleccionada;
           const refCodigo = refSeleccionada.codigo || refSeleccionada;
@@ -65,15 +91,31 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
             referenciaEncontrada = true;
             const tiempoEspecifico = refVinculada.tiempo_por_referencia;
             if (tiempoEspecifico && tiempoEspecifico > 0) {
-              // Si hay tiempo específico, usarlo (sumar si hay múltiples referencias)
-              tiempoOperacion += tiempoEspecifico;
+              // Guardar el tiempo específico para calcular promedio después
+              tiemposEspecificos.push(tiempoEspecifico);
               tieneTiempoEspecifico = true;
-              console.log(`✅ Tiempo específico para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
+              console.log(`✅ Tiempo específico encontrado para ${operacion.nombre} con ${refVinculada.codigo}: ${tiempoEspecifico} min`);
             } else {
               console.log(`⚠️ Referencia ${refVinculada.codigo} vinculada pero sin tiempo específico`);
             }
           } else {
             console.log(`❌ Referencia ${refCodigo} no encontrada en las referencias vinculadas`);
+          }
+        }
+        
+        // Calcular tiempo basado en múltiples referencias
+        if (tiemposEspecificos.length > 0) {
+          if (tiemposEspecificos.length === 1) {
+            // Una sola referencia con tiempo específico
+            tiempoOperacion = tiemposEspecificos[0];
+            console.log(`📊 Una referencia con tiempo específico: ${tiempoOperacion} min`);
+          } else {
+            // Múltiples referencias con tiempos específicos - usar promedio
+            const sumaTiempos = tiemposEspecificos.reduce((sum, tiempo) => sum + tiempo, 0);
+            tiempoOperacion = sumaTiempos / tiemposEspecificos.length;
+            console.log(`📊 Múltiples referencias (${tiemposEspecificos.length}) con tiempos: [${tiemposEspecificos.join(', ')}] min`);
+            console.log(`📊 Suma total: ${sumaTiempos} min, Tiempo promedio: ${tiempoOperacion} min`);
+            console.log(`📊 Ejemplo: [0.53, 0.6, 0.2] = (0.53+0.6+0.2)/3 = ${tiempoOperacion} min`);
           }
         }
         
@@ -96,11 +138,28 @@ async function calcularTiempoEstimado(tareas, referencias, cantidadAsignada) {
         tiempoTotal += operacion.tiempo_por_unidad;
         console.log(`ℹ️ Operación sin referencias específicas ${operacion.nombre}: ${operacion.tiempo_por_unidad} min`);
       }
+      } catch (operacionError) {
+        console.error(`❌ Error procesando operación ${operacionId}:`, operacionError);
+        // Continuar con la siguiente operación en lugar de fallar completamente
+        continue;
+      }
+    }
+    
+    // Validar que se haya calculado algún tiempo
+    if (tiempoTotal === 0) {
+      console.log('⚠️ No se pudo calcular tiempo para ninguna operación');
+      return 0;
     }
     
     // Multiplicar por la cantidad asignada
     const tiempoFinal = tiempoTotal * cantidadAsignada;
     console.log(`🧮 Tiempo calculado: ${tiempoTotal} min/uni × ${cantidadAsignada} uni = ${tiempoFinal} min`);
+    
+    // Validar que el tiempo final sea válido
+    if (isNaN(tiempoFinal) || tiempoFinal < 0) {
+      console.log('❌ Tiempo final inválido:', tiempoFinal);
+      return 0;
+    }
     
     // Redondear a 1 decimal para evitar números con muchos decimales
     const tiempoFinalRedondeado = Math.round(tiempoFinal * 10) / 10;
